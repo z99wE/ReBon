@@ -5,21 +5,28 @@ import { Activity, Award, Flame, Leaf, Sparkles, TrendingDown, TrendingUp, Zap }
 import { Link } from "wouter";
 import { ARCHETYPES } from "../../../shared/carbonData";
 
+const STAT_STYLES: Record<string, { wrap: string; iconWrap: string; iconColor: string }> = {
+  primary:      { wrap: "border-violet-500/25 hover:border-violet-500/50",  iconWrap: "bg-violet-500/10 border-violet-500/20",  iconColor: "text-violet-400" },
+  "green-400":  { wrap: "border-emerald-500/25 hover:border-emerald-500/50", iconWrap: "bg-emerald-500/10 border-emerald-500/20", iconColor: "text-emerald-400" },
+  "orange-400": { wrap: "border-amber-500/25 hover:border-amber-500/50",    iconWrap: "bg-amber-500/10 border-amber-500/20",    iconColor: "text-amber-400" },
+  "yellow-400": { wrap: "border-yellow-500/25 hover:border-yellow-500/50",  iconWrap: "bg-yellow-500/10 border-yellow-500/20",  iconColor: "text-yellow-400" },
+};
 function StatCard({ label, value, unit, icon: Icon, color, trend }: { label: string; value: string | number; unit?: string; icon: any; color: string; trend?: "up" | "down" | "neutral" }) {
+  const s = STAT_STYLES[color] ?? STAT_STYLES.primary;
   return (
-    <div className="card-glass p-5 rounded-xl border border-border hover:border-primary/30 transition-all group">
+    <div className={`card-glass p-5 rounded-xl border ${s.wrap} transition-all hover-lift`}>
       <div className="flex items-start justify-between mb-3">
-        <div className={`w-10 h-10 rounded-lg bg-${color}/10 border border-${color}/20 flex items-center justify-center`}>
-          <Icon className={`w-5 h-5 text-${color}`} />
+        <div className={`w-10 h-10 rounded-xl ${s.iconWrap} border flex items-center justify-center`}>
+          <Icon className={`w-5 h-5 ${s.iconColor}`} aria-hidden="true" />
         </div>
         {trend && (
-          <div className={`flex items-center gap-1 text-xs font-medium ${trend === "down" ? "text-green-400" : trend === "up" ? "text-red-400" : "text-muted-foreground"}`}>
-            {trend === "down" ? <TrendingDown className="w-3 h-3" /> : trend === "up" ? <TrendingUp className="w-3 h-3" /> : null}
+          <div className={`flex items-center gap-1 text-xs font-semibold ${trend === "down" ? "text-emerald-400" : trend === "up" ? "text-rose-400" : "text-zinc-500"}`} aria-label={trend === "down" ? "trending down" : "trending up"}>
+            {trend === "down" ? <TrendingDown className="w-3 h-3" aria-hidden="true" /> : trend === "up" ? <TrendingUp className="w-3 h-3" aria-hidden="true" /> : null}
           </div>
         )}
       </div>
-      <div className="text-2xl font-black text-foreground">{value}<span className="text-sm font-medium text-muted-foreground ml-1">{unit}</span></div>
-      <div className="text-xs text-muted-foreground mt-1">{label}</div>
+      <div className="text-2xl font-black text-white">{value}<span className="text-sm font-medium text-zinc-400 ml-1">{unit}</span></div>
+      <div className="text-xs text-zinc-500 mt-1">{label}</div>
     </div>
   );
 }
@@ -40,8 +47,8 @@ export default function Dashboard() {
           <h2 className="text-2xl font-black text-foreground mb-2">Sign in to view your dashboard</h2>
           <p className="text-muted-foreground">Track your carbon footprint and compete with peers</p>
         </div>
-        <a href={getLoginUrl()} className="btn-primary px-8 py-3 rounded-xl font-semibold flex items-center gap-2">
-          <Sparkles className="w-4 h-4" /> Get Started
+        <a href="/login" className="btn-primary px-8 py-3 rounded-xl font-semibold flex items-center gap-2">
+          <Sparkles className="w-4 h-4" aria-hidden="true" /> Get Started
         </a>
       </div>
     );
@@ -57,8 +64,8 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-black text-foreground">
-            Welcome back, <span className="text-gradient-primary">{user?.name?.split(" ")[0] ?? "Hero"}</span>
+          <h1 className="text-2xl font-black text-white">
+            Welcome back, <span className="text-gradient">{user?.name?.split(" ")[0] ?? "Hero"}</span>
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
             {archetype ? `${archetype.icon} ${archetype.label}` : "Complete onboarding to get your Carbon DNA"}

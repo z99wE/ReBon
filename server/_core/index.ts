@@ -2,6 +2,8 @@ import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
 import net from "net";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { registerStorageProxy } from "./storageProxy";
@@ -31,12 +33,60 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 async function startServer() {
   const app = express();
   const server = createServer(app);
-  // Configure body parser with larger size limit for file uploads
+
+  // ── Security headers (Helmet) ───────────────────────────────────────────────
+  // CSP disabled to allow Vite HMR in dev; re-enable with strict policy in prod
+  app.use(
+    helmet({
+      contentSecurityPolicy: false,
+      crossOriginEmbedderPolicy: false,
+    })
+  );
+
+  // ── Rate limiting ────────────────────────────────────────────────────────────
+  // Auth endpoints: 10 requests per 15 minutes (brute-force protection)
+  const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    message: { error: "Too many auth attempts. Please try again in 15 minutes." },
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
+  // AI endpoints: 30 requests per minute (cost + abuse protection)
+  const aiLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 30,
+    message: { error: "AI rate limit reached. Please wait a moment before trying again." },
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
+  // General API: 200 requests per minute
+  const generalLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 200,
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
+  // Apply specific limiters before the general one
+  app.use("/api/trpc/auth.sendOtp", authLimiter);
+  app.use("/api/trpc/auth.verifyOtp", authLimiter);
+  app.use("/api/trpc/assistant", aiLimiter);
+  app.use("/api/trpc/challenges.generate", aiLimiter);
+  app.use("/api/trpc/stories.generate", aiLimiter);
+  app.use("/api/trpc/activities.logVoice", aiLimiter);
+  app.use("/api/trpc", generalLimiter);
+
+  // ── Body parser ──────────────────────────────────────────────────────────────
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
+
   registerStorageProxy(app);
   registerOAuthRoutes(app);
-  // tRPC API
+
+  // ── tRPC API ─────────────────────────────────────────────────────────────────
   app.use(
     "/api/trpc",
     createExpressMiddleware({
@@ -44,6 +94,7 @@ async function startServer() {
       createContext,
     })
   );
+
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);

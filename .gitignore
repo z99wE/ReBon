@@ -112,3 +112,14 @@ temp/
 # Manus version file (auto-generated, not part of source)
 client/public/__manus__/version.json
 .project-config.json
+
+# Screenshots, videos, and large test fixtures
+screenshots/
+videos/
+test-results/
+playwright-report/
+*.mp4
+*.webm
+
+# Manus internal logs (not source code)
+.manus-logs/

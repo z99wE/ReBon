@@ -1,295 +1,140 @@
+import { Link } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { getLoginUrl } from "@/const";
-import { useLocation } from "wouter";
-import { useEffect } from "react";
-import { ArrowRight, Zap, Users, Trophy, GitCompare, Bot, Mic } from "lucide-react";
+import { Leaf, Zap, Users, BarChart2, Bot, ArrowRight, Globe, Shield, Mic } from "lucide-react";
 
-const ASCII_EARTH = `
-    .--.
-   /    \\
-  | o  o |
-  |  __  |
-   \\    /
-    '--'
-`;
-
-const ASCII_LEAF = `
-  ╭─╮
- ╱   ╲
-│ ●   │
- ╲   ╱
-  ╰─╯
-`;
-
-const ASCII_BANNER = `
-██████╗ ███████╗██████╗  ██████╗ ███╗   ██╗
-██╔══██╗██╔════╝██╔══██╗██╔═══██╗████╗  ██║
-██████╔╝█████╗  ██████╔╝██║   ██║██╔██╗ ██║
-██╔══██╗██╔══╝  ██╔══██╗██║   ██║██║╚██╗██║
-██║  ██║███████╗██████╔╝╚██████╔╝██║ ╚████║
-╚═╝  ╚═╝╚══════╝╚═════╝  ╚═════╝ ╚═╝  ╚═══╝
-`;
-
-const features = [
-  {
-    icon: Mic,
-    tag: "deepgram",
-    title: "Voice Carbon Logging",
-    desc: "Say \"I drove 20km and had steak for lunch\" — Deepgram transcribes, Groq parses it into CO₂ entries instantly.",
-  },
-  {
-    icon: Bot,
-    tag: "groq · nvidia nim · sarvam",
-    title: "ReBon AI Assistant",
-    desc: "Multi-model routing: Groq for speed, NVIDIA NIM for deep analysis, Sarvam AI for multilingual support.",
-  },
-  {
-    icon: Trophy,
-    tag: "elo rating",
-    title: "Live Leaderboard",
-    desc: "Chess-style Elo scoring. Beat peers with similar carbon baselines. Weekly seasons, rival matchups.",
-  },
-  {
-    icon: Zap,
-    tag: "graph algorithm",
-    title: "CarbonInfluencer",
-    desc: "Graph-based influence scoring amplifies top reducers. Cascading behaviour change through social proof.",
-  },
-  {
-    icon: GitCompare,
-    tag: "privacy-preserving",
-    title: "CarbonMirror",
-    desc: "Anonymised peer comparison within your lifestyle archetype. See category gaps without revealing identities.",
-  },
-  {
-    icon: Users,
-    tag: "collective impact",
-    title: "CarbonCollective",
-    desc: "Form tribes, pool reductions. What-if scenarios: \"If our group goes vegan, we save 2,340 kg this month.\"",
-  },
+const FEATURES = [
+  { icon: Mic,      color: "text-violet-400", bg: "gradient-violet", title: "Voice Logging",       desc: "Say 'I drove 15km to work' — Deepgram transcribes, AI extracts carbon data instantly." },
+  { icon: Bot,      color: "text-indigo-400", bg: "gradient-violet", title: "ReBon AI Assistant",  desc: "Multi-model AI routing across Groq, NVIDIA NIM, and Sarvam AI for multilingual coaching." },
+  { icon: Trophy,   color: "text-amber-400",  bg: "gradient-amber",  title: "Elo Leaderboard",     desc: "Real-time Elo-rated competition with weekly seasons and rival matchups." },
+  { icon: Users,    color: "text-cyan-400",   bg: "gradient-cyan",   title: "CarbonCollective",    desc: "Form tribes, pool your reductions, and model collective what-if scenarios." },
+  { icon: BarChart2,color: "text-rose-400",   bg: "gradient-rose",   title: "CarbonMirror",        desc: "Anonymised peer comparison with differential privacy. See where you rank." },
+  { icon: Globe,    color: "text-emerald-400",bg: "gradient-green",  title: "CarbonStory NLG",     desc: "AI generates emotionally compelling shareable narratives about your impact." },
 ];
 
+import { Trophy } from "lucide-react";
+
 export default function Home() {
-  const { isAuthenticated, loading } = useAuth();
-  const [, navigate] = useLocation();
-
-  useEffect(() => {
-    if (!loading && isAuthenticated) navigate("/dashboard");
-  }, [isAuthenticated, loading]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center" aria-label="Loading">
-        <div className="font-mono text-muted-foreground text-sm">
-          <span className="text-primary">$</span> initialising rebon<span className="cursor-blink" />
-        </div>
-      </div>
-    );
-  }
+  const { isAuthenticated } = useAuth();
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      {/* Skip to content */}
-      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-primary text-primary-foreground px-4 py-2 rounded z-50 font-mono text-sm">
-        Skip to main content
-      </a>
-
-      {/* Top bar */}
-      <header className="border-b border-border px-6 py-3 flex items-center justify-between">
+    <div className="min-h-screen mesh-bg text-white overflow-hidden">
+      {/* Nav */}
+      <nav className="flex items-center justify-between px-6 py-4 border-b border-zinc-800/60 backdrop-blur-sm sticky top-0 z-20 bg-zinc-950/60" aria-label="Site navigation">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded border border-primary/40 bg-primary/10 flex items-center justify-center font-mono font-bold text-xs text-primary" aria-hidden="true">Re</div>
-          <span className="font-mono font-bold text-sm text-foreground">ReBon</span>
-          <span className="rebon-tag rebon-tag-green ml-1">v1.0</span>
+          <div className="w-8 h-8 rounded-xl gradient-primary flex items-center justify-center glow-violet">
+            <Leaf className="w-4 h-4 text-white" aria-hidden="true" />
+          </div>
+          <span className="font-black text-lg tracking-tight">ReBon</span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="hidden sm:block font-mono text-xs text-muted-foreground">Hack2Kill · Google PromptWars</span>
-          <a
-            href={getLoginUrl()}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded border border-primary/40 bg-primary/10 text-primary font-mono text-xs hover:bg-primary/20 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            aria-label="Sign in to ReBon"
-          >
-            Sign in <ArrowRight className="w-3 h-3" aria-hidden="true" />
-          </a>
+          {isAuthenticated ? (
+            <Link href="/dashboard" className="btn-primary px-4 py-2 rounded-xl text-sm flex items-center gap-2">
+              Open App <ArrowRight className="w-4 h-4" aria-hidden="true" />
+            </Link>
+          ) : (
+            <>
+              <Link href="/login" className="text-sm text-zinc-400 hover:text-white transition-colors px-3 py-2">Sign in</Link>
+              <Link href="/login" className="btn-primary px-4 py-2 rounded-xl text-sm flex items-center gap-2">
+                Get started <ArrowRight className="w-4 h-4" aria-hidden="true" />
+              </Link>
+            </>
+          )}
         </div>
-      </header>
+      </nav>
 
-      <main id="main-content">
-        {/* Hero */}
-        <section className="relative overflow-hidden border-b border-border" aria-labelledby="hero-heading">
-          {/* ASCII background art */}
-          <div className="absolute inset-0 flex items-center justify-end pr-8 pointer-events-none" aria-hidden="true">
-            <pre className="ascii-art text-[0.7rem] leading-[1.3] opacity-60">{ASCII_BANNER}</pre>
+      {/* Hero */}
+      <section className="relative px-6 pt-24 pb-20 text-center max-w-4xl mx-auto" aria-labelledby="hero-heading">
+        {/* Abstract blobs */}
+        <div className="absolute top-10 left-1/4 w-72 h-72 blob bg-violet-600/10 blur-2xl pointer-events-none" aria-hidden="true" />
+        <div className="absolute top-20 right-1/4 w-56 h-56 blob bg-emerald-500/10 blur-2xl pointer-events-none" style={{ animationDelay: "3s" }} aria-hidden="true" />
+
+        <div className="relative z-10">
+          <div className="inline-flex items-center gap-2 badge-violet px-3 py-1.5 rounded-full text-xs font-semibold mb-6">
+            <Zap className="w-3.5 h-3.5" aria-hidden="true" /> Powered by Groq · NVIDIA NIM · Deepgram · Sarvam AI
           </div>
 
-          <div className="relative max-w-4xl mx-auto px-6 py-20 lg:py-28">
-            {/* Status */}
-            <div className="flex items-center gap-2 mb-6">
-              <span className="live-dot" aria-hidden="true" />
-              <span className="font-mono text-xs text-primary">system online · carbon intelligence active</span>
-            </div>
+          <h1 id="hero-heading" className="text-5xl sm:text-6xl font-black leading-tight mb-6">
+            Track your carbon.<br />
+            <span className="text-gradient">Beat your rivals.</span>
+          </h1>
 
-            <h1 id="hero-heading" className="text-4xl lg:text-6xl font-bold font-mono mb-4 leading-tight">
-              <span className="text-gradient-green">Track.</span>{" "}
-              <span className="text-gradient-amber">Compete.</span>{" "}
-              <span className="text-foreground">Reduce.</span>
-            </h1>
+          <p className="text-lg text-zinc-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+            ReBon is an AI-powered carbon intelligence platform that turns climate action into a social movement.
+            Log activities by voice, compete on live leaderboards, and let AI coach you to net-zero.
+          </p>
 
-            <p className="text-muted-foreground text-lg max-w-xl mb-3 leading-relaxed">
-              ReBon turns climate action into a living, competitive, community-driven movement.
-              Log carbon with your voice. Battle peers on the leaderboard. Let AI coach your habits.
-            </p>
-
-            <div className="font-mono text-xs text-muted-foreground mb-8 space-y-1">
-              <div><span className="text-primary">$</span> models: groq · nvidia-nim · deepgram · sarvam-ai</div>
-              <div><span className="text-primary">$</span> features: voice-log · elo-ranking · ai-challenges · nlg-stories</div>
-            </div>
-
-            <div className="flex flex-wrap gap-3">
-              <a
-                href={getLoginUrl()}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded bg-primary text-primary-foreground font-mono text-sm font-semibold hover:bg-primary/90 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                aria-label="Get started with ReBon"
-              >
-                Get Started <ArrowRight className="w-4 h-4" aria-hidden="true" />
-              </a>
-              <a
-                href="https://github.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded border border-border text-muted-foreground font-mono text-sm hover:text-foreground hover:border-primary/40 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                aria-label="View source code on GitHub"
-              >
-                View Source
-              </a>
-            </div>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link
+              href={isAuthenticated ? "/dashboard" : "/login"}
+              className="btn-primary px-6 py-3 rounded-xl text-base flex items-center gap-2 w-full sm:w-auto justify-center"
+            >
+              Start tracking free <ArrowRight className="w-4 h-4" aria-hidden="true" />
+            </Link>
+            <Link
+              href="/leaderboard"
+              className="px-6 py-3 rounded-xl text-base border border-zinc-700 text-zinc-300 hover:border-zinc-500 hover:text-white transition-all flex items-center gap-2 w-full sm:w-auto justify-center"
+            >
+              View leaderboard <Trophy className="w-4 h-4" aria-hidden="true" />
+            </Link>
           </div>
-        </section>
-
-        {/* ASCII art section divider */}
-        <div className="border-b border-border px-6 py-4 flex items-center gap-4 bg-[oklch(0.08_0.005_240)]" aria-hidden="true">
-          <pre className="ascii-art-bright text-[0.5rem] leading-tight">{`┌─────────────────────────────────────────────────────────────────────┐
-│  CARBON INTELLIGENCE PLATFORM  ·  6 AI-POWERED FEATURES  ·  LIVE   │
-└─────────────────────────────────────────────────────────────────────┘`}</pre>
         </div>
+      </section>
 
-        {/* Features grid */}
-        <section className="max-w-5xl mx-auto px-6 py-16" aria-labelledby="features-heading">
-          <div className="mb-10">
-            <div className="font-mono text-xs text-muted-foreground mb-2">
-              <span className="text-primary">$</span> ls features/
+      {/* Stats bar */}
+      <section className="px-6 pb-16" aria-label="Platform statistics">
+        <div className="max-w-3xl mx-auto grid grid-cols-3 gap-4">
+          {[
+            { value: "4 AI Models", label: "Multi-model routing" },
+            { value: "9 Features",  label: "Fully integrated" },
+            { value: "Real-time",   label: "Live leaderboards" },
+          ].map(({ value, label }) => (
+            <div key={label} className="card-glass rounded-2xl p-5 text-center hover-lift">
+              <div className="text-2xl font-black text-gradient mb-1">{value}</div>
+              <div className="text-xs text-zinc-500">{label}</div>
             </div>
-            <h2 id="features-heading" className="text-2xl font-bold font-mono text-foreground">
-              What ReBon does
-            </h2>
-          </div>
+          ))}
+        </div>
+      </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {features.map(({ icon: Icon, tag, title, desc }) => (
-              <article
-                key={title}
-                className="rebon-card p-5 hover-lift"
-                aria-label={title}
-              >
-                <div className="flex items-start gap-3 mb-3">
-                  <div className="w-8 h-8 rounded border border-primary/30 bg-primary/8 flex items-center justify-center flex-shrink-0" aria-hidden="true">
-                    <Icon className="w-4 h-4 text-primary" />
-                  </div>
-                  <span className="rebon-tag rebon-tag-muted mt-1">{tag}</span>
+      {/* Features */}
+      <section className="px-6 pb-20" aria-labelledby="features-heading">
+        <div className="max-w-4xl mx-auto">
+          <h2 id="features-heading" className="text-3xl font-black text-center mb-3">Everything you need to go net-zero</h2>
+          <p className="text-zinc-500 text-center mb-12 text-sm">Six AI-powered features working together</p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {FEATURES.map(({ icon: Icon, color, bg, title, desc }) => (
+              <article key={title} className={`card-glass ${bg} rounded-2xl p-5 hover-lift`}>
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${bg}`}>
+                  <Icon className={`w-4.5 h-4.5 ${color}`} aria-hidden="true" />
                 </div>
-                <h3 className="font-mono font-semibold text-sm text-foreground mb-2">{title}</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
+                <h3 className="font-bold text-white text-sm mb-1.5">{title}</h3>
+                <p className="text-xs text-zinc-400 leading-relaxed">{desc}</p>
               </article>
             ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Architecture section */}
-        <section className="border-t border-border bg-[oklch(0.08_0.005_240)]" aria-labelledby="arch-heading">
-          <div className="max-w-5xl mx-auto px-6 py-12">
-            <div className="font-mono text-xs text-muted-foreground mb-2">
-              <span className="text-primary">$</span> cat architecture.md
-            </div>
-            <h2 id="arch-heading" className="text-xl font-bold font-mono text-foreground mb-6">How it works</h2>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-              {/* ASCII architecture diagram */}
-              <div>
-                <pre className="ascii-art-bright text-[0.52rem] leading-[1.4] font-mono">{`┌──────────────────────────────────────┐
-│         React 19 Frontend            │
-│  Dashboard · Log · AI · Leaderboard  │
-└──────────────────┬───────────────────┘
-                   │ tRPC (type-safe)
-┌──────────────────▼───────────────────┐
-│         Express 4 Backend            │
-│                                      │
-│  ┌──────────┐  ┌──────────────────┐  │
-│  │ AI Router│  │  Carbon Engine   │  │
-│  │ Groq     │  │  EMISSION_FACTORS│  │
-│  │ NIM      │  │  Elo Calculator  │  │
-│  │ Deepgram │  │  Archetype Model │  │
-│  │ Sarvam   │  └──────────────────┘  │
-│  └──────────┘                        │
-└──────────────────┬───────────────────┘
-                   │ Drizzle ORM
-┌──────────────────▼───────────────────┐
-│         MySQL / TiDB Database        │
-│  users · activities · challenges     │
-│  stories · leaderboard · collectives │
-└──────────────────────────────────────┘`}</pre>
-              </div>
-
-              {/* AI routing table */}
-              <div className="space-y-3">
-                <div className="font-mono text-xs text-muted-foreground mb-3">AI model routing:</div>
-                {[
-                  { provider: "Groq", model: "llama-3.3-70b", use: "Fast inference, challenges, parsing", tag: "fast" },
-                  { provider: "NVIDIA NIM", model: "llama-3.3-70b", use: "Deep analysis, stories, what-if", tag: "deep" },
-                  { provider: "Deepgram", model: "nova-2", use: "Voice transcription", tag: "voice" },
-                  { provider: "Sarvam AI", model: "saaras:v2", use: "Multilingual support", tag: "i18n" },
-                ].map(({ provider, model, use, tag }) => (
-                  <div key={provider} className="flex items-start gap-3 p-3 rounded border border-border bg-card">
-                    <span className="rebon-tag rebon-tag-green w-14 justify-center flex-shrink-0">{tag}</span>
-                    <div className="min-w-0">
-                      <div className="font-mono text-xs text-foreground font-medium">{provider}</div>
-                      <div className="font-mono text-[10px] text-muted-foreground">{model} · {use}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+      {/* CTA */}
+      <section className="px-6 pb-24" aria-labelledby="cta-heading">
+        <div className="max-w-2xl mx-auto text-center card-glass rounded-3xl p-10 relative overflow-hidden">
+          <div className="absolute inset-0 gradient-violet opacity-50" aria-hidden="true" />
+          <div className="relative z-10">
+            <Shield className="w-8 h-8 text-violet-400 mx-auto mb-4" aria-hidden="true" />
+            <h2 id="cta-heading" className="text-2xl font-black mb-3">Sign in with email or phone</h2>
+            <p className="text-zinc-400 text-sm mb-6">No password required. Get a 6-digit code and you're in. Works for any hackathon judge.</p>
+            <Link href="/login" className="btn-primary px-6 py-3 rounded-xl text-sm inline-flex items-center gap-2">
+              Sign in now <ArrowRight className="w-4 h-4" aria-hidden="true" />
+            </Link>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* CTA */}
-        <section className="border-t border-border px-6 py-12 text-center" aria-labelledby="cta-heading">
-          <div className="max-w-lg mx-auto">
-            <pre className="ascii-art-bright text-[0.5rem] leading-tight mb-6 mx-auto w-fit" aria-hidden="true">{`  🌱  every kg CO₂ counts  🌱`}</pre>
-            <h2 id="cta-heading" className="font-mono text-xl font-bold text-foreground mb-3">
-              Ready to track your footprint?
-            </h2>
-            <p className="text-muted-foreground text-sm font-mono mb-6">
-              Complete Carbon DNA onboarding in 2 minutes. Get your archetype, roadmap, and first AI challenge.
-            </p>
-            <a
-              href={getLoginUrl()}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded bg-primary text-primary-foreground font-mono text-sm font-semibold hover:bg-primary/90 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-              aria-label="Sign in and start tracking your carbon footprint"
-            >
-              Start now <ArrowRight className="w-4 h-4" aria-hidden="true" />
-            </a>
-          </div>
-        </section>
-
-        {/* Footer */}
-        <footer className="border-t border-border px-6 py-4 flex flex-wrap items-center justify-between gap-2">
-          <span className="font-mono text-[10px] text-muted-foreground">
-            Built for Hack2Kill · Google PromptWars 2026
-          </span>
-          <span className="font-mono text-[10px] text-muted-foreground">
-            67 tests passing · TypeScript · tRPC · Drizzle ORM
-          </span>
-        </footer>
-      </main>
+      {/* Footer */}
+      <footer className="border-t border-zinc-800/60 px-6 py-6 text-center text-xs text-zinc-600">
+        <p>ReBon — Built for Hack2Kill PromptWars · Google · 2026</p>
+      </footer>
     </div>
   );
 }

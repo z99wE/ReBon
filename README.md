@@ -128,8 +128,8 @@ After each logging session, ReBon AI generates a personalised narrative using th
 | Backend | Express 4, tRPC 11, Node.js 22 |
 | Database | MySQL / TiDB via Drizzle ORM |
 | AI Routing | Groq, NVIDIA NIM, Deepgram, Sarvam AI |
-| Auth | Manus OAuth (JWT session cookies) |
-| Testing | Vitest (67 tests, 3 test files) |
+| Auth | Email/Phone OTP (JWT session cookies, no external provider) |
+| Testing | Vitest (104 tests, 4 test files) |
 | Fonts | Jost, Inter (Google Fonts) |
 
 ---
@@ -144,16 +144,14 @@ cd rebon-carbon
 # Install dependencies
 pnpm install
 
-# Set environment variables (copy .env.example and fill in values)
-cp .env.example .env
-
+# Set environment variables (see ENV_SETUP.md for full list)
 # Required environment variables:
 # GROQ_API_KEY=gsk_...
 # NVIDIA_NIM_API_KEY=nvapi-...
 # DEEPGRAM_API_KEY=...
 # SARVAM_API_KEY=sk_...
 # DATABASE_URL=mysql://...
-# JWT_SECRET=...
+# JWT_SECRET=... (min 32 chars)
 
 # Run database migrations
 pnpm drizzle-kit generate
@@ -184,7 +182,7 @@ pnpm test
 
 7. **AI challenge generation** uses the user's archetype, recent activity history, and a static list of trending climate topics. A production system would integrate real-time climate news APIs.
 
-8. **Authentication** uses Manus OAuth. For standalone deployment, replace with any standard OAuth2 provider (Google, GitHub, etc.).
+8. **Authentication** uses email/phone OTP — a 6-digit code is sent to the user's email or phone. In development, the OTP is logged to the server console. In production, configure an SMTP server (email) or Twilio (SMS) in the environment variables. No external OAuth provider is required.
 
 ---
 
@@ -195,7 +193,7 @@ pnpm test
 | **Code Quality** | TypeScript end-to-end, tRPC type safety, modular router architecture, shared constants in `shared/carbonData.ts` |
 | **Security** | JWT session cookies (httpOnly, secure, sameSite=none), input validation via Zod schemas, protected procedures for all mutations, no client-side secrets |
 | **Efficiency** | Lazy DB connection, optimistic UI updates, Groq for low-latency paths, database indexes on userId and createdAt |
-| **Testing** | 67 vitest tests across 3 test files covering carbon calculations, archetype segmentation, Elo system, security validation, AI configuration, and auth flows |
+| **Testing** | 104 vitest tests across 4 test files covering carbon calculations, archetype segmentation, Elo system, OTP validation, input sanitisation, AI configuration, and auth flows |
 | **Accessibility** | Semantic HTML, ARIA labels on interactive elements, keyboard navigation, focus rings, `prefers-reduced-motion` respected in animations, sufficient colour contrast ratios |
 
 ---
@@ -213,8 +211,10 @@ rebon-carbon/
 │   ├── db.ts           # Database query helpers
 │   ├── services/
 │   │   └── aiRouter.ts # Multi-model AI routing
+│   ├── core.test.ts    # 37 core logic unit tests
 │   ├── rebon.test.ts   # 57 feature tests
-│   └── aiRouter.test.ts # 9 AI routing tests
+│   ├── aiRouter.test.ts # 9 AI routing tests
+│   └── auth.logout.test.ts # 1 auth test
 ├── shared/
 │   └── carbonData.ts   # EMISSION_FACTORS, ARCHETYPES, algorithms
 ├── drizzle/

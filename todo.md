@@ -64,3 +64,16 @@
 - [x] Save checkpoint
 - [x] Prepare GitHub-ready README
 - [x] Write ENV_SETUP.md for local development
+
+## Phase 10: Auth, UI Overhaul & Quality Hardening
+- [x] Fix duplicate electricity_kwh key in LogActivity.tsx
+- [x] Remove build output, coverage folders, node_modules from git tracking
+- [x] Add .gitignore entries for dist/, coverage/, screenshots/
+- [x] Implement email/OTP authentication (no Manus dependency)
+- [x] Implement phone number OTP authentication
+- [x] Build auth pages: login, verify OTP, register
+- [x] Redesign UI to Stripe-inspired: vibrant gradients, abstract shapes, colourful
+- [x] Refactor tests: focused unit tests, mock externals, integration smoke tests
+- [x] Add rate limiting to auth and AI endpoints
+- [x] Add security headers (helmet.js)
+- [x] Final accessibility audit and keyboard navigation check

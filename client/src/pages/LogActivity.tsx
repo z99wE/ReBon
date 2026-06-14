@@ -100,9 +100,9 @@ export default function LogActivity() {
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {ACTIVITY_PRESETS[cat].map((preset: any) => (
               <button
-                key={preset.subcategory}
+                key={preset.id}
                 onClick={() => setSelectedPreset({ ...preset, category: cat })}
-                className={`p-3 rounded-lg border text-left transition-all ${selectedPreset?.subcategory === preset.subcategory ? "border-primary bg-primary/10" : "border-border hover:border-primary/40 hover:bg-muted/50"}`}
+                className={`p-3 rounded-lg border text-left transition-all ${selectedPreset?.id === preset.id ? "border-primary bg-primary/10" : "border-border hover:border-primary/40 hover:bg-muted/50"}`}
               >
                 <div className="text-lg mb-1">{preset.icon}</div>
                 <div className="text-xs font-medium text-foreground leading-tight">{preset.label}</div>

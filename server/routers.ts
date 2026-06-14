@@ -14,7 +14,11 @@ import {
   logActivity, savePeerSnapshot, saveStory, updateUserInfluenceScore,
   updateUserProfile, upsertLeaderboardEntry,
 } from "./db";
+import { upsertUser } from "./db";
 import { routeAI, transcribeWithDeepgram } from "./services/aiRouter";
+import { createOtpSession, sendEmailOtp, sendPhoneOtp, verifyOtpSession } from "./services/otpAuth";
+import { SignJWT } from "jose";
+import { ENV } from "./_core/env";
 import { nanoid } from "nanoid";
 
 function getWeekNumber(date: Date): number {
@@ -43,6 +47,35 @@ export const appRouter = router({
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
     }),
+    sendOtp: publicProcedure
+      .input(z.object({ identifier: z.string().min(3).max(320), identifierType: z.enum(["email", "phone"]) }))
+      .mutation(async ({ input }) => {
+        if (input.identifierType === "email") {
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.identifier)) throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid email address" });
+        } else {
+          if (!/^\+?[1-9]\d{6,14}$/.test(input.identifier.replace(/\s/g, ""))) throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid phone number" });
+        }
+        const { otp, rateLimited } = await createOtpSession(input.identifier, input.identifierType);
+        if (rateLimited) throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: "Please wait 60 seconds before requesting a new code" });
+        let preview: string | undefined;
+        if (input.identifierType === "email") { const r = await sendEmailOtp(input.identifier, otp); preview = r.preview; }
+        else { const r = await sendPhoneOtp(input.identifier, otp); preview = r.preview; }
+        return { sent: true, preview: process.env.NODE_ENV !== "production" ? preview : undefined };
+      }),
+    verifyOtp: publicProcedure
+      .input(z.object({ identifier: z.string().min(3).max(320), otp: z.string().length(6).regex(/^\d{6}$/, "OTP must be 6 digits"), name: z.string().min(1).max(64).optional() }))
+      .mutation(async ({ input, ctx }) => {
+        const result = await verifyOtpSession(input.identifier, input.otp);
+        if (!result.success) throw new TRPCError({ code: "UNAUTHORIZED", message: result.error });
+        const openId = `otp:${input.identifier.toLowerCase()}`;
+        const isEmail = input.identifier.includes("@");
+        await upsertUser({ openId, name: input.name || (isEmail ? input.identifier.split("@")[0] : input.identifier), email: isEmail ? input.identifier.toLowerCase() : undefined, loginMethod: isEmail ? "email_otp" : "phone_otp", lastSignedIn: new Date() });
+        const secret = new TextEncoder().encode(ENV.cookieSecret);
+        const token = await new SignJWT({ openId }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("30d").sign(secret);
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, token, { ...cookieOptions, maxAge: 30 * 24 * 60 * 60 * 1000 });
+        return { success: true };
+      }),
   }),
 
   user: router({

@@ -173,6 +173,18 @@ export const peerSnapshots = mysqlTable("peer_snapshots", {
   snapshotDate: timestamp("snapshotDate").defaultNow().notNull(),
 });
 
+// ─── OTP Auth Sessions ────────────────────────────────────────────────────────
+export const otpSessions = mysqlTable("otp_sessions", {
+  id: int("id").autoincrement().primaryKey(),
+  identifier: varchar("identifier", { length: 320 }).notNull(), // email or phone
+  identifierType: mysqlEnum("identifierType", ["email", "phone"]).notNull(),
+  otpHash: varchar("otpHash", { length: 128 }).notNull(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  attempts: int("attempts").default(0).notNull(),
+  verified: boolean("verified").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 export type Activity = typeof activities.$inferSelect;

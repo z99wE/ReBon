@@ -15,11 +15,13 @@ import Mirror from "./pages/Mirror";
 import Stories from "./pages/Stories";
 import Assistant from "./pages/Assistant";
 import NotFound from "./pages/NotFound";
+import Login from "./pages/Login";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/login" component={Login} />
       <Route path="/onboarding" component={Onboarding} />
       <Route path="/dashboard">{() => <RebonLayout><Dashboard /></RebonLayout>}</Route>
       <Route path="/log">{() => <RebonLayout><LogActivity /></RebonLayout>}</Route>
