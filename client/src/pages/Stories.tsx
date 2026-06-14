@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { BookOpen, Loader2, Share2, Sparkles, TreePine, Car, Zap } from "lucide-react";
+import { IconBookOpen, IconCar, IconPulse, IconShare, IconStar, IconTree, IconZap } from "@/components/Icons";
 import { toast } from "sonner";
 
 export default function Stories() {
@@ -24,20 +24,20 @@ export default function Stories() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-black text-white flex items-center gap-2"><BookOpen className="w-6 h-6 text-pink-400" /> CarbonStory</h1>
-        <p className="text-white/50 text-sm mt-1">AI-generated narratives about your climate impact</p>
+        <h1 className="text-2xl font-black text-white flex items-center gap-2"><IconBookOpen className="w-6 h-6 text-pink-400" /> CarbonStory</h1>
+        <p className="text-white/50 text-sm mt-1">Numbers don't move people. Stories do. Turn your data into narratives worth sharing.</p>
       </div>
 
       {!isAuthenticated ? (
         <div className="card-glass rounded-xl border border-white/10 p-8 text-center">
-          <BookOpen className="w-10 h-10 text-white/50 mx-auto mb-3" />
+          <IconBookOpen className="w-10 h-10 text-white/50 mx-auto mb-3" />
           <p className="text-white/50">Sign in to generate your impact story</p>
         </div>
       ) : (
         <>
           {/* Generate */}
           <div className="card-glass rounded-xl border border-pink-400/20 p-5 space-y-4">
-            <h3 className="font-bold text-white flex items-center gap-2"><Sparkles className="w-4 h-4 text-pink-400" /> Generate New Story</h3>
+            <h3 className="font-bold text-white flex items-center gap-2"><IconStar className="w-4 h-4 text-pink-400" /> Generate New Story</h3>
             <div className="flex gap-2">
               {(["week", "month", "alltime"] as const).map(p => (
                 <button key={p} onClick={() => setPeriod(p)} className={`flex-1 py-2 rounded-lg text-xs font-semibold border transition-all capitalize ${period === p ? "border-pink-400/50 bg-pink-400/10 text-pink-400" : "border-white/10 text-white/50 hover:bg-white/5"}`}>
@@ -46,7 +46,7 @@ export default function Stories() {
               ))}
             </div>
             <button onClick={() => generateMutation.mutate({ period })} disabled={generateMutation.isPending} className="w-full btn-primary py-3 rounded-xl font-semibold flex items-center justify-center gap-2">
-              {generateMutation.isPending ? <><Loader2 className="w-4 h-4 animate-spin" /> Crafting your story...</> : <><Sparkles className="w-4 h-4" /> Generate Story</>}
+              {generateMutation.isPending ? <><IconPulse className="w-4 h-4 animate-spin" /> Crafting your story...</> : <><IconStar className="w-4 h-4" /> Generate Story</>}
             </button>
           </div>
 
@@ -61,9 +61,9 @@ export default function Stories() {
               </div>
               <div className="grid grid-cols-3 gap-3 pt-2">
                 {[
-                  { icon: TreePine, label: "Trees equiv.", value: generateMutation.data.equivalents?.trees ?? 0, color: "text-green-400" },
-                  { icon: Car, label: "km not driven", value: generateMutation.data.equivalents?.km_not_driven ?? 0, color: "text-blue-400" },
-                  { icon: Zap, label: "kg CO₂", value: generateMutation.data.carbonSavedKg?.toFixed(1) ?? 0, color: "text-yellow-400" },
+                  { icon: IconTree, label: "Trees equiv.", value: generateMutation.data.equivalents?.trees ?? 0, color: "text-green-400" },
+                  { icon: IconCar, label: "km not driven", value: generateMutation.data.equivalents?.km_not_driven ?? 0, color: "text-blue-400" },
+                  { icon: IconZap, label: "kg CO₂", value: generateMutation.data.carbonSavedKg?.toFixed(1) ?? 0, color: "text-yellow-400" },
                 ].map(stat => (
                   <div key={stat.label} className="text-center p-3 rounded-xl bg-white/5/50 border border-white/10">
                     <stat.icon className={`w-5 h-5 mx-auto mb-1 ${stat.color}`} />
@@ -89,7 +89,7 @@ export default function Stories() {
                       <p className="text-sm text-white/50 mt-1 line-clamp-2">{story.narrative}</p>
                     </div>
                     <button onClick={() => handleShare(story)} className="p-2 rounded-lg hover:bg-white/5 transition-colors flex-shrink-0">
-                      <Share2 className="w-4 h-4 text-white/50" />
+                      <IconShare className="w-4 h-4 text-white/50" />
                     </button>
                   </div>
                   <div className="flex items-center gap-4 text-xs text-white/50">

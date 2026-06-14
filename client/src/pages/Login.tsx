@@ -2,7 +2,7 @@ import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
-import { Leaf, Mail, Phone, ArrowRight, Shield, Zap, Globe } from "lucide-react";
+import { IconArrowForward, IconGlobe, IconLeaf, IconMail, IconPhone, IconShield, IconZap } from "@/components/Icons";
 
 type Step = "identifier" | "otp" | "name";
 
@@ -64,7 +64,7 @@ export default function Login() {
       <div className="relative z-10 mb-8 text-center">
         <div className="inline-flex items-center gap-3 mb-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
-            <Leaf className="w-5 h-5 text-white" />
+            <IconLeaf className="w-5 h-5 text-white" />
           </div>
           <span className="text-2xl font-black text-white tracking-tight">ReBon</span>
         </div>
@@ -88,7 +88,7 @@ export default function Login() {
                   className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${identifierType === "email" ? "bg-violet-600 text-white shadow-sm" : "text-zinc-400 hover:text-zinc-200"}`}
                   aria-pressed={identifierType === "email"}
                 >
-                  <Mail className="w-4 h-4" aria-hidden="true" /> Email
+                  <IconMail className="w-4 h-4" aria-hidden="true" /> Email
                 </button>
                 <button
                   type="button"
@@ -96,13 +96,13 @@ export default function Login() {
                   className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${identifierType === "phone" ? "bg-violet-600 text-white shadow-sm" : "text-zinc-400 hover:text-zinc-200"}`}
                   aria-pressed={identifierType === "phone"}
                 >
-                  <Phone className="w-4 h-4" aria-hidden="true" /> Phone
+                  <IconPhone className="w-4 h-4" aria-hidden="true" /> IconPhone
                 </button>
               </div>
 
               <div className="mb-4">
                 <label htmlFor="identifier" className="block text-sm font-medium text-zinc-300 mb-1.5">
-                  {identifierType === "email" ? "Email address" : "Phone number"}
+                  {identifierType === "email" ? "Email address" : "IconPhone number"}
                 </label>
                 <input
                   id="identifier"
@@ -129,7 +129,7 @@ export default function Login() {
                 {sendOtpMutation.isPending ? (
                   <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" aria-hidden="true" />
                 ) : (
-                  <>Send code <ArrowRight className="w-4 h-4" aria-hidden="true" /></>
+                  <>IconArrowForward code <IconArrowForward className="w-4 h-4" aria-hidden="true" /></>
                 )}
               </button>
             </form>
@@ -151,7 +151,7 @@ export default function Login() {
 
               {devOtp && (
                 <div className="mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm flex items-center gap-2">
-                  <Zap className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+                  <IconZap className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
                   <span>Dev mode — your code is <strong className="font-mono text-base">{devOtp}</strong></span>
                 </div>
               )}
@@ -198,7 +198,7 @@ export default function Login() {
                 {verifyOtpMutation.isPending ? (
                   <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" aria-hidden="true" />
                 ) : (
-                  <>Verify &amp; enter ReBon <ArrowRight className="w-4 h-4" aria-hidden="true" /></>
+                  <>Verify &amp; enter ReBon <IconArrowForward className="w-4 h-4" aria-hidden="true" /></>
                 )}
               </button>
 
@@ -216,9 +216,9 @@ export default function Login() {
 
         {/* Trust badges */}
         <div className="mt-6 flex items-center justify-center gap-6 text-xs text-zinc-600">
-          <span className="flex items-center gap-1.5"><Shield className="w-3.5 h-3.5" aria-hidden="true" /> No password stored</span>
-          <span className="flex items-center gap-1.5"><Zap className="w-3.5 h-3.5" aria-hidden="true" /> Instant access</span>
-          <span className="flex items-center gap-1.5"><Globe className="w-3.5 h-3.5" aria-hidden="true" /> Any device</span>
+          <span className="flex items-center gap-1.5"><IconShield className="w-3.5 h-3.5" aria-hidden="true" /> No password stored</span>
+          <span className="flex items-center gap-1.5"><IconZap className="w-3.5 h-3.5" aria-hidden="true" /> Instant access</span>
+          <span className="flex items-center gap-1.5"><IconGlobe className="w-3.5 h-3.5" aria-hidden="true" /> Any device</span>
         </div>
       </div>
     </div>

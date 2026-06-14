@@ -4,7 +4,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { useLocation } from "wouter";
 import { ONBOARDING_QUESTIONS, ARCHETYPES } from "../../../shared/carbonData";
-import { ArrowLeft, ArrowRight, Leaf, Sparkles, CheckCircle } from "lucide-react";
+import { IconArrowForward, IconArrowLeft, IconCheckmark, IconLeaf, IconPulse, IconStar } from "@/components/Icons";
 import { toast } from "sonner";
 
 export default function Onboarding() {
@@ -23,10 +23,10 @@ export default function Onboarding() {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">
         <div className="text-center space-y-4">
-          <Leaf className="w-12 h-12 text-primary mx-auto" />
+          <IconLeaf className="w-12 h-12 text-primary mx-auto" />
           <h2 className="text-xl font-bold">Sign in to get your Carbon DNA</h2>
           <a href={getLoginUrl()} className="btn-primary px-6 py-3 rounded-xl font-semibold inline-flex items-center gap-2">
-            <Sparkles className="w-4 h-4" /> Sign In
+            <IconStar className="w-4 h-4" /> Sign In
           </a>
         </div>
       </div>
@@ -57,7 +57,7 @@ export default function Onboarding() {
               <div className="w-40 h-40 rounded-full bg-indigo-600/5 animate-ping opacity-20" />
             </div>
             <div className="relative w-32 h-32 rounded-full bg-indigo-600/10 border-2 border-primary/40 flex items-center justify-center mx-auto text-6xl">
-              {arch?.icon ?? "🌱"}
+              {arch?.icon ?? ""}
             </div>
           </div>
           <div>
@@ -66,7 +66,7 @@ export default function Onboarding() {
             <p className="text-white/50">{arch?.description ?? "You're on your carbon reduction journey."}</p>
           </div>
           <div className="card-glass rounded-xl border border-primary/20 p-5 text-left">
-            <div className="text-sm font-bold text-white mb-3 flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-400" /> Your 90-Day Roadmap</div>
+            <div className="text-sm font-bold text-white mb-3 flex items-center gap-2"><IconCheckmark className="w-4 h-4 text-green-400" /> Your 90-Day Roadmap</div>
             {result.roadmap?.phases?.slice(0, 3).map((phase: any) => (
               <div key={phase.phase} className="mb-3">
                 <div className="text-xs font-bold text-primary mb-1">Phase {phase.phase}: {phase.title}</div>
@@ -79,7 +79,7 @@ export default function Onboarding() {
             ))}
           </div>
           <button onClick={() => navigate("/dashboard")} className="btn-primary px-8 py-3 rounded-xl font-bold text-lg w-full flex items-center justify-center gap-2">
-            <Sparkles className="w-5 h-5" /> Enter ReBon
+            <IconStar className="w-5 h-5" /> Enter ReBon
           </button>
         </div>
       </div>
@@ -92,7 +92,7 @@ export default function Onboarding() {
         {/* Header */}
         <div className="text-center">
           <div className="w-16 h-16 rounded-full bg-indigo-600/10 border border-primary/30 flex items-center justify-center mx-auto mb-4">
-            <Leaf className="w-8 h-8 text-primary" />
+            <IconLeaf className="w-8 h-8 text-primary" />
           </div>
           <h1 className="text-2xl font-black text-gradient-primary">Discover Your Carbon DNA</h1>
           <p className="text-white/50 text-sm mt-2">Answer {ONBOARDING_QUESTIONS.length} quick questions to get your personalized profile</p>
@@ -132,11 +132,11 @@ export default function Onboarding() {
             <div className="flex justify-between">
               {step > 0 && (
                 <button onClick={() => setStep(s => s - 1)} className="flex items-center gap-2 text-sm text-white/50 hover:text-white transition-colors">
-                  <ArrowLeft className="w-4 h-4" /> Back
+                  <IconArrowLeft className="w-4 h-4" /> Back
                 </button>
               )}
               <div className="ml-auto text-xs text-white/50 flex items-center gap-1">
-                {isLast ? "Last question" : <><ArrowRight className="w-3 h-3" /> Select to continue</>}
+                {isLast ? "Last question" : <><IconArrowForward className="w-3 h-3" /> Select to continue</>}
               </div>
             </div>
           </div>
@@ -144,7 +144,7 @@ export default function Onboarding() {
 
         {completeMutation.isPending && (
           <div className="text-center text-sm text-primary animate-pulse flex items-center justify-center gap-2">
-            <Sparkles className="w-4 h-4" /> Analyzing your Carbon DNA...
+            <IconStar className="w-4 h-4" /> Analyzing your Carbon DNA...
           </div>
         )}
       </div>

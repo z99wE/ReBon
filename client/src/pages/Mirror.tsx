@@ -1,6 +1,6 @@
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { GitCompare, Loader2, TrendingDown, TrendingUp, Users } from "lucide-react";
+import { IconGitCompare, IconPeople, IconPulse, IconTrendingDown, IconTrendingUp } from "@/components/Icons";
 import { toast } from "sonner";
 import { ARCHETYPES } from "../../../shared/carbonData";
 
@@ -17,19 +17,19 @@ export default function Mirror() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-black text-white flex items-center gap-2"><GitCompare className="w-6 h-6 text-blue-400" /> CarbonMirror</h1>
-        <p className="text-white/50 text-sm mt-1">See how you compare to anonymous peers with the same lifestyle</p>
+        <h1 className="text-2xl font-black text-white flex items-center gap-2"><IconGitCompare className="w-6 h-6 text-blue-400" /> CarbonMirror</h1>
+        <p className="text-white/50 text-sm mt-1">You can't improve what you don't understand. Benchmark against peers who live exactly like you.</p>
       </div>
 
       {!isAuthenticated ? (
         <div className="card-glass rounded-xl border border-white/10 p-8 text-center">
-          <GitCompare className="w-10 h-10 text-white/50 mx-auto mb-3" />
+          <IconGitCompare className="w-10 h-10 text-white/50 mx-auto mb-3" />
           <p className="text-white/50">Sign in to compare with peers</p>
         </div>
       ) : (
         <>
           <button onClick={() => compareMutation.mutate()} disabled={compareMutation.isPending} className="btn-primary px-6 py-3 rounded-xl font-semibold flex items-center gap-2 w-full justify-center">
-            {compareMutation.isPending ? <><Loader2 className="w-4 h-4 animate-spin" /> Analyzing peers...</> : <><GitCompare className="w-4 h-4" /> Run Peer Comparison</>}
+            {compareMutation.isPending ? <><IconPulse className="w-4 h-4 animate-spin" /> Analyzing peers...</> : <><IconGitCompare className="w-4 h-4" /> Run Peer Comparison</>}
           </button>
 
           {data && (
@@ -54,7 +54,7 @@ export default function Mirror() {
                   <div className="text-xs text-white/50">kg CO₂</div>
                 </div>
                 <div className="card-glass rounded-xl border border-white/10 p-5 text-center">
-                  <div className="text-xs text-white/50 mb-2 flex items-center justify-center gap-1"><Users className="w-3 h-3" /> Peer Average</div>
+                  <div className="text-xs text-white/50 mb-2 flex items-center justify-center gap-1"><IconPeople className="w-3 h-3" /> Peer Average</div>
                   <div className="text-3xl font-black text-white">{data.peerAvgKg.toFixed(1)}</div>
                   <div className="text-xs text-white/50">kg CO₂ ({(data as any).peerCount ?? 0} peers)</div>
                 </div>
@@ -73,7 +73,7 @@ export default function Mirror() {
                   </div>
                 </div>
                 <div className={`flex items-center gap-2 text-sm font-semibold ${better ? "text-green-400" : "text-red-400"}`}>
-                  {better ? <TrendingDown className="w-4 h-4" /> : <TrendingUp className="w-4 h-4" />}
+                  {better ? <IconTrendingDown className="w-4 h-4" /> : <IconTrendingUp className="w-4 h-4" />}
                   {better ? `${Math.abs(diff).toFixed(1)} kg below peer average` : `${diff.toFixed(1)} kg above peer average`}
                 </div>
               </div>
@@ -81,7 +81,7 @@ export default function Mirror() {
               {/* AI Insights */}
               {(data as any).insights && (
                 <div className="card-glass rounded-xl border border-primary/20 p-5 space-y-3">
-                  <div className="text-sm font-bold text-white">🤖 ReBon AI Insights</div>
+                  <div className="text-sm font-bold text-white">ReBon Insights</div>
                   {((data as any).insights as string[]).map((insight, i) => (
                     <div key={i} className="flex items-start gap-2 text-sm text-white/50">
                       <span className="text-primary mt-0.5 flex-shrink-0">→</span>

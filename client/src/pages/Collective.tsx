@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { Users, Plus, Loader2, Sparkles, Copy } from "lucide-react";
+import { IconAdd, IconArrowForward, IconCheckmark, IconCopy, IconGlobe, IconPeople, IconPulse, IconStar } from "@/components/Icons";
 import { toast } from "sonner";
 
 export default function Collective() {
@@ -24,13 +24,13 @@ export default function Collective() {
     <div className="space-y-6">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-black text-white flex items-center gap-2"><Users className="w-6 h-6 text-purple-400" /> CarbonCollective</h1>
-          <p className="text-white/50 text-sm mt-1">Pool your reduction efforts with others</p>
+          <h1 className="text-2xl font-black text-white flex items-center gap-2"><IconPeople className="w-6 h-6 text-purple-400" /> CarbonCollective</h1>
+          <p className="text-white/50 text-sm mt-1">One person going vegan saves 0.8 tonnes. A tribe of 50 saves 40 tonnes. Start your movement.</p>
         </div>
         {isAuthenticated && (
           <div className="flex gap-2">
             <button onClick={() => setShowJoin(!showJoin)} className="px-3 py-2 rounded-lg border border-white/10 text-sm hover:bg-white/5 transition-colors">Join</button>
-            <button onClick={() => setShowCreate(!showCreate)} className="btn-primary px-3 py-2 rounded-lg text-sm flex items-center gap-1"><Plus className="w-4 h-4" /> Create</button>
+            <button onClick={() => setShowCreate(!showCreate)} className="btn-primary px-3 py-2 rounded-lg text-sm flex items-center gap-1"><IconAdd className="w-4 h-4" /> Create</button>
           </div>
         )}
       </div>
@@ -44,7 +44,7 @@ export default function Collective() {
           <div className="flex gap-2">
             <button onClick={() => setShowCreate(false)} className="flex-1 py-2 rounded-lg border border-white/10 text-sm text-white/50 hover:bg-white/5">Cancel</button>
             <button onClick={() => createMutation.mutate({ name, description: desc })} disabled={!name || createMutation.isPending} className="flex-1 btn-primary py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-1">
-              {createMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Create"}
+              {createMutation.isPending ? <IconPulse className="w-4 h-4 animate-spin" /> : "Create"}
             </button>
           </div>
         </div>
@@ -58,7 +58,7 @@ export default function Collective() {
           <div className="flex gap-2">
             <button onClick={() => setShowJoin(false)} className="flex-1 py-2 rounded-lg border border-white/10 text-sm text-white/50 hover:bg-white/5">Cancel</button>
             <button onClick={() => joinMutation.mutate({ inviteCode })} disabled={inviteCode.length < 4 || joinMutation.isPending} className="flex-1 btn-primary py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-1">
-              {joinMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Join"}
+              {joinMutation.isPending ? <IconPulse className="w-4 h-4 animate-spin" /> : "Join"}
             </button>
           </div>
         </div>
@@ -82,20 +82,20 @@ export default function Collective() {
               </div>
               <div className="flex items-center gap-2 mb-3">
                 <div className="flex-1 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs font-mono text-white/50">{c.inviteCode}</div>
-                <button onClick={() => { navigator.clipboard.writeText(c.inviteCode); toast.success("Copied!"); }} className="p-1.5 rounded-lg hover:bg-white/5 transition-colors"><Copy className="w-4 h-4 text-white/50" /></button>
+                <button onClick={() => { navigator.clipboard.writeText(c.inviteCode); toast.success("Copied!"); }} className="p-1.5 rounded-lg hover:bg-white/5 transition-colors"><IconCopy className="w-4 h-4 text-white/50" /></button>
               </div>
               {/* What-If Calculator */}
               <div className="border-t border-white/10 pt-3 space-y-2">
-                <div className="text-xs font-bold text-white flex items-center gap-1"><Sparkles className="w-3 h-3 text-primary" /> What-If Scenario</div>
+                <div className="text-xs font-bold text-white flex items-center gap-1"><IconStar className="w-3 h-3 text-primary" /> What-If Scenario</div>
                 <div className="flex gap-2">
                   <input value={selectedCollective === c.id ? whatIfScenario : ""} onChange={e => { setSelectedCollective(c.id); setWhatIfScenario(e.target.value); }} placeholder='e.g. "Everyone goes vegan for a month"' className="flex-1 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs text-white placeholder:text-white/50" />
                   <button onClick={() => { setSelectedCollective(c.id); whatIfMutation.mutate({ collectiveId: c.id, scenario: whatIfScenario }); }} disabled={!whatIfScenario || whatIfMutation.isPending} className="px-3 py-1.5 btn-primary rounded-lg text-xs font-semibold">
-                    {whatIfMutation.isPending && selectedCollective === c.id ? <Loader2 className="w-3 h-3 animate-spin" /> : "Calculate"}
+                    {whatIfMutation.isPending && selectedCollective === c.id ? <IconPulse className="w-3 h-3 animate-spin" /> : "Calculate"}
                   </button>
                 </div>
                 {whatIfMutation.data && selectedCollective === c.id && (
                   <div className="p-3 rounded-lg bg-indigo-600/5 border border-primary/20 text-xs space-y-1">
-                    <div className="text-green-400 font-bold">💚 {whatIfMutation.data.totalWeeklyKg?.toFixed(1)} kg CO₂ saved/week collectively</div>
+                    <div className="text-green-400 font-bold"> {whatIfMutation.data.totalWeeklyKg?.toFixed(1)} kg CO₂ saved/week collectively</div>
                     <div className="text-white/50">{whatIfMutation.data.equivalent}</div>
                     <div className="text-white">{whatIfMutation.data.insight}</div>
                   </div>
@@ -111,7 +111,7 @@ export default function Collective() {
         <h3 className="font-bold text-white">Public Collectives</h3>
         {publicQuery.data?.length === 0 ? (
           <div className="card-glass rounded-xl border border-white/10 p-8 text-center">
-            <Users className="w-10 h-10 text-white/50 mx-auto mb-3" />
+            <IconPeople className="w-10 h-10 text-white/50 mx-auto mb-3" />
             <p className="text-white/50">No collectives yet. Create the first one!</p>
           </div>
         ) : (

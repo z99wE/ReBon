@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
-import { Bot, Send, Loader2, Sparkles, Cpu, Zap } from "lucide-react";
+import { IconAdd, IconArrowForward, IconChatbubble, IconCheckmark, IconCpu, IconPulse, IconRobot, IconStar, IconZap } from "@/components/Icons";
 import { toast } from "sonner";
 import { Streamdown } from "streamdown";
 
@@ -17,7 +17,7 @@ const SUGGESTED_PROMPTS = [
 ];
 
 const providerColors: Record<string, string> = { groq: "text-orange-400", nvidia_nim: "text-green-400", sarvam: "text-blue-400" };
-const providerLabels: Record<string, string> = { groq: "Groq", nvidia_nim: "NVIDIA NIM", sarvam: "Sarvam AI" };
+const providerLabels: Record<string, string> = { groq: "Fast", nvidia_nim: "Deep Analysis", sarvam: "Multilingual" };
 
 export default function Assistant() {
   const { isAuthenticated } = useAuth();
@@ -48,14 +48,14 @@ export default function Assistant() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6">
         <div className="w-20 h-20 rounded-full bg-indigo-600/10 border border-primary/30 flex items-center justify-center mx-auto pulse-glow">
-          <Bot className="w-10 h-10 text-primary" />
+          <IconRobot className="w-10 h-10 text-primary" />
         </div>
         <div>
           <h2 className="text-2xl font-black text-white mb-2">Meet ReBon AI</h2>
-          <p className="text-white/50 max-w-sm">Your intelligent carbon coach powered by Groq, NVIDIA NIM, and Sarvam AI</p>
+          <p className="text-white/50 max-w-sm">Your intelligent carbon coach, available 24/7</p>
         </div>
         <a href={getLoginUrl()} className="btn-primary px-8 py-3 rounded-xl font-semibold flex items-center gap-2">
-          <Sparkles className="w-4 h-4" /> Sign In to Chat
+          <IconStar className="w-4 h-4" /> Sign In to Chat
         </a>
       </div>
     );
@@ -66,13 +66,13 @@ export default function Assistant() {
       {/* Header */}
       <div className="flex items-center gap-3 mb-4 pb-4 border-b border-white/10">
         <div className="w-10 h-10 rounded-full bg-indigo-600/10 border border-primary/30 flex items-center justify-center pulse-glow">
-          <Bot className="w-5 h-5 text-primary" />
+          <IconRobot className="w-5 h-5 text-primary" />
         </div>
         <div>
           <h1 className="font-black text-white">ReBon AI</h1>
           <div className="flex items-center gap-2 text-xs text-white/50">
             <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-            Multi-model routing: Groq · NVIDIA NIM · Sarvam AI
+            Adaptive intelligence · Context-aware · Always learning
           </div>
         </div>
       </div>
@@ -82,7 +82,7 @@ export default function Assistant() {
         {messages.length === 0 && (
           <div className="space-y-6 py-4">
             <div className="text-center">
-              <div className="text-4xl mb-3">🌱</div>
+              <div className="text-4xl mb-3"></div>
               <h3 className="font-bold text-white mb-1">Hi! I'm ReBon AI</h3>
               <p className="text-sm text-white/50">Ask me anything about your carbon footprint, climate science, or how to reduce your impact.</p>
             </div>
@@ -100,7 +100,7 @@ export default function Assistant() {
           <div key={idx} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
             {msg.role === "assistant" && (
               <div className="w-7 h-7 rounded-full bg-indigo-600/10 border border-primary/30 flex items-center justify-center flex-shrink-0 mr-2 mt-1">
-                <Bot className="w-3.5 h-3.5 text-primary" />
+                <IconRobot className="w-3.5 h-3.5 text-primary" />
               </div>
             )}
             <div className={`max-w-[85%] ${msg.role === "user" ? "bg-indigo-600/15 border border-primary/30 rounded-2xl rounded-tr-sm" : "bg-white/5/50 border border-white/10 rounded-2xl rounded-tl-sm"} px-4 py-3`}>
@@ -113,7 +113,7 @@ export default function Assistant() {
               )}
               {msg.provider && (
                 <div className={`flex items-center gap-1 mt-2 text-[10px] ${providerColors[msg.provider] ?? "text-white/50"}`}>
-                  <Cpu className="w-2.5 h-2.5" />
+                  <IconCpu className="w-2.5 h-2.5" />
                   {providerLabels[msg.provider] ?? msg.provider}
                   {msg.latencyMs && <span className="text-white/50 ml-1">{msg.latencyMs}ms</span>}
                 </div>
@@ -125,11 +125,11 @@ export default function Assistant() {
         {chatMutation.isPending && (
           <div className="flex justify-start">
             <div className="w-7 h-7 rounded-full bg-indigo-600/10 border border-primary/30 flex items-center justify-center flex-shrink-0 mr-2 mt-1">
-              <Bot className="w-3.5 h-3.5 text-primary" />
+              <IconRobot className="w-3.5 h-3.5 text-primary" />
             </div>
             <div className="bg-white/5/50 border border-white/10 rounded-2xl rounded-tl-sm px-4 py-3">
               <div className="flex items-center gap-2 text-sm text-white/50">
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <IconPulse className="w-3.5 h-3.5 animate-spin" />
                 <span>Thinking</span>
                 <span className="flex gap-0.5">
                   <span className="w-1 h-1 rounded-full bg-indigo-600 animate-bounce" style={{ animationDelay: "0ms" }} />
@@ -159,12 +159,12 @@ export default function Assistant() {
             disabled={!input.trim() || chatMutation.isPending}
             className="w-12 h-12 rounded-xl btn-primary flex items-center justify-center flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {chatMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+            {chatMutation.isPending ? <IconPulse className="w-4 h-4 animate-spin" /> : <IconArrowForward className="w-4 h-4" />}
           </button>
         </div>
         <div className="flex items-center gap-2 mt-2 text-[10px] text-white/50">
-          <Zap className="w-2.5 h-2.5" />
-          Powered by multi-model routing: Groq (fast) · NVIDIA NIM (deep) · Sarvam AI (multilingual)
+          <IconZap className="w-2.5 h-2.5" />
+          Contextual intelligence · Instant responses · Deep analysis · Multilingual support
         </div>
       </div>
     </div>

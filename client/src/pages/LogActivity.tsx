@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { ACTIVITY_PRESETS } from "../../../shared/carbonData";
-import { Activity, Mic, MicOff, Loader2, CheckCircle, Plus } from "lucide-react";
+import { IconAdd, IconCar, IconCart, IconCheckmark, IconFlash, IconMic, IconMicOff, IconPulse, IconRestaurant } from "@/components/Icons";
 import { toast } from "sonner";
 
 export default function LogActivity() {
@@ -14,10 +14,10 @@ export default function LogActivity() {
   const mediaRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
-  const logMutation = trpc.activities.log.useMutation({ onSuccess: () => { toast.success("Activity logged!"); setSelectedPreset(null); setVoiceResult(null); }, onError: e => toast.error(e.message) });
+  const logMutation = trpc.activities.log.useMutation({ onSuccess: () => { toast.success("IconPulse logged!"); setSelectedPreset(null); setVoiceResult(null); }, onError: e => toast.error(e.message) });
   const voiceMutation = trpc.activities.logVoice.useMutation({ onSuccess: (d) => { setVoiceResult(d); setRecording(false); }, onError: e => { toast.error(e.message); setRecording(false); } });
   const challengesQuery = trpc.challenges.list.useQuery(undefined, { enabled: isAuthenticated });
-  const completeMutation = trpc.challenges.complete.useMutation({ onSuccess: () => toast.success("Challenge completed! 🎉"), onError: e => toast.error(e.message) });
+  const completeMutation = trpc.challenges.complete.useMutation({ onSuccess: () => toast.success("Challenge completed! "), onError: e => toast.error(e.message) });
 
   const startRecording = async () => {
     try {
@@ -48,23 +48,23 @@ export default function LogActivity() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-black text-white">Log Activity</h1>
+        <h1 className="text-2xl font-black text-white">Log IconPulse</h1>
         <p className="text-white/50 text-sm mt-1">Track your carbon footprint via quick-tap presets or voice</p>
       </div>
 
       {/* Voice Input */}
       <div className="card-glass rounded-xl border border-white/10 p-6">
-        <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Mic className="w-4 h-4 text-primary" /> Voice Logging (Deepgram AI)</h3>
+        <h3 className="font-bold text-white mb-4 flex items-center gap-2"><IconMic className="w-4 h-4 text-primary" /> Speak to Log</h3>
         <div className="flex flex-col items-center gap-4">
           <button
             onClick={recording ? stopRecording : startRecording}
             disabled={voiceMutation.isPending}
             className={`w-20 h-20 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${recording ? "bg-red-500/20 border-red-500 animate-pulse" : "bg-indigo-600/10 border-primary/40 hover:bg-indigo-600/20"}`}
           >
-            {voiceMutation.isPending ? <Loader2 className="w-8 h-8 animate-spin text-primary" /> : recording ? <MicOff className="w-8 h-8 text-red-400" /> : <Mic className="w-8 h-8 text-primary" />}
+            {voiceMutation.isPending ? <IconPulse className="w-8 h-8 animate-spin text-primary" /> : recording ? <IconMicOff className="w-8 h-8 text-red-400" /> : <IconMic className="w-8 h-8 text-primary" />}
           </button>
           <p className="text-sm text-white/50 text-center">
-            {recording ? "Recording... tap to stop" : voiceMutation.isPending ? "Transcribing with Deepgram..." : 'Say something like "I drove 10 miles to work"'}
+            {recording ? "Recording... tap to stop" : voiceMutation.isPending ? "Processing your voice..." : 'Say something like "I drove 10 miles to work"'}
           </p>
         </div>
         {voiceResult && (
@@ -79,7 +79,7 @@ export default function LogActivity() {
                       <div className="text-xs text-white/50">{a.carbonKg?.toFixed(2)} kg CO₂</div>
                     </div>
                     <button onClick={() => logMutation.mutate({ category: a.category, subcategory: a.subcategory, label: a.label, carbonKg: a.carbonKg, quantity: a.quantity, unit: a.unit, inputMethod: "voice", voiceTranscript: voiceResult.transcript })} disabled={logMutation.isPending} className="btn-primary px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1">
-                      <Plus className="w-3 h-3" /> Log
+                      <IconAdd className="w-3 h-3" /> Log
                     </button>
                   </div>
                 ))}
@@ -95,7 +95,7 @@ export default function LogActivity() {
       {categories.map(cat => (
         <div key={cat} className="card-glass rounded-xl border border-white/10 p-5">
           <h3 className="font-bold text-white mb-3 capitalize flex items-center gap-2">
-            <Activity className="w-4 h-4 text-primary" /> {cat}
+            <IconPulse className="w-4 h-4 text-primary" /> {cat}
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {ACTIVITY_PRESETS[cat].map((preset: any) => (
@@ -131,7 +131,7 @@ export default function LogActivity() {
           <div className="flex gap-2">
             <button onClick={() => setSelectedPreset(null)} className="flex-1 py-2 rounded-lg border border-white/10 text-sm text-white/50 hover:bg-white/5 transition-colors">Cancel</button>
             <button onClick={() => logMutation.mutate({ category: selectedPreset.category, subcategory: selectedPreset.subcategory, label: selectedPreset.label, carbonKg: selectedPreset.defaultCarbonKg * quantity, quantity, unit: selectedPreset.unit, inputMethod: "tap" })} disabled={logMutation.isPending} className="flex-1 btn-primary py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-1">
-              {logMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><CheckCircle className="w-4 h-4" /> Log</>}
+              {logMutation.isPending ? <IconPulse className="w-4 h-4 animate-spin" /> : <><IconCheckmark className="w-4 h-4" /> Log</>}
             </button>
           </div>
         </div>

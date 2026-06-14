@@ -1,379 +1,326 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { Link } from "wouter";
 import { getLoginUrl } from "@/const";
+import {
+  IconSwords, IconRobot, IconCar, IconFlash, IconRestaurant,
+  IconCart, IconLeaf, IconPulse, IconShield, IconPeople, IconArrowForward
+} from "@/components/Icons";
+import type { JSX } from "react";
 
-const CATEGORY_COLORS: Record<string, string> = {
-  transport: "#6366f1",
-  meals: "#10b981",
-  energy: "#f59e0b",
-  shopping: "#ec4899",
-  lifestyle: "#8b5cf6",
+const CATEGORY_ICONS: Record<string, JSX.Element> = {
+  transport: <IconCar className="w-4 h-4" />,
+  energy: <IconFlash className="w-4 h-4" />,
+  food: <IconRestaurant className="w-4 h-4" />,
+  shopping: <IconCart className="w-4 h-4" />,
+  lifestyle: <IconLeaf className="w-4 h-4" />,
 };
 
-const CATEGORY_ICONS: Record<string, string> = {
-  transport: "🚗",
-  meals: "🥗",
-  energy: "⚡",
-  shopping: "🛍️",
-  lifestyle: "🌿",
+const CATEGORY_LABELS: Record<string, string> = {
+  transport: "Transport",
+  energy: "Energy",
+  food: "Food & Diet",
+  shopping: "Shopping",
+  lifestyle: "Lifestyle",
 };
 
-interface NegotiationTurn {
-  agent: "initiator" | "target";
-  message: string;
-  proposedKg?: number;
-  timestamp: string;
-}
+type NegotiationTurn = { speaker: string; message: string; proposedKg?: number | null };
+
+type NegotiationResult = {
+  id: number;
+  status: string;
+  agreedKg: number | null;
+  turns: NegotiationTurn[];
+  initiatorPersona: string;
+  targetPersona: string;
+};
 
 export default function AgentArena() {
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
+  const [category, setCategory] = useState("transport");
+  const [proposedKg, setProposedKg] = useState(5);
   const [selectedPeer, setSelectedPeer] = useState<number | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState("transport");
-  const [proposedKg, setProposedKg] = useState("5");
-  const [activeNegotiation, setActiveNegotiation] = useState<{
-    id: number;
-    turns: NegotiationTurn[];
-    status: string;
-    agreedKg?: string;
-  } | null>(null);
-  const [isNegotiating, setIsNegotiating] = useState(false);
+  const [activeNeg, setActiveNeg] = useState<NegotiationResult | null>(null);
 
-  const { data: peers } = trpc.agents.getPeers.useQuery(undefined, { enabled: isAuthenticated });
-  const { data: history, refetch: refetchHistory } = trpc.agents.list.useQuery(undefined, { enabled: isAuthenticated });
+  const historyQuery = trpc.agents.list.useQuery(undefined, { enabled: isAuthenticated });
+  const peersQuery = trpc.agents.getPeers.useQuery(undefined, { enabled: isAuthenticated });
 
-  const startNegotiation = trpc.agents.initiate.useMutation({
-    onSuccess: (data: { id: number; status: string; agreedKg: number | null; turns: unknown[] }) => {
-      const turns = (data.turns as Array<{ speaker: string; message: string; proposedKg?: number }>).map(t => ({
-        agent: t.speaker as "initiator" | "target",
-        message: t.message,
-        proposedKg: t.proposedKg,
-        timestamp: new Date().toISOString(),
-      }));
-      setActiveNegotiation({
-        id: data.id,
-        turns,
-        status: data.status,
-        agreedKg: data.agreedKg != null ? String(data.agreedKg) : undefined,
-      });
-      setIsNegotiating(false);
-      refetchHistory();
+  const initiateMutation = trpc.agents.initiate.useMutation({
+    onSuccess: (data) => {
+      setActiveNeg(data as unknown as NegotiationResult);
+      historyQuery.refetch();
     },
-    onError: () => setIsNegotiating(false),
   });
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg-primary)" }}>
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center p-8">
         <div className="glass-card p-10 text-center max-w-md">
-          <div className="text-5xl mb-4">🤖</div>
-          <h2 className="text-2xl font-black text-white mb-3">Agent Arena</h2>
-          <p className="text-white/50 mb-6">Sign in to challenge peers to AI-powered carbon reduction negotiations.</p>
+          <IconShield className="w-12 h-12 text-white/20 mx-auto mb-4" />
+          <h2 className="text-2xl font-black text-white mb-3">Sign in to access Agent Arena</h2>
+          <p className="text-white/50 mb-6 text-sm leading-relaxed">
+            Deploy your personal AI agent to negotiate binding carbon reduction commitments with peers.
+          </p>
           <a href={getLoginUrl()} className="btn-primary inline-block">Sign In</a>
         </div>
       </div>
     );
   }
 
-  const handleStart = () => {
-    if (!selectedPeer) return;
-    setIsNegotiating(true);
-    startNegotiation.mutate({
-      targetUserId: selectedPeer,
-      category: selectedCategory,
-      proposedKg: parseFloat(proposedKg) || 5,
-    });
-  };
-
-  const handleAdvance = () => {
-    // Negotiation completes in a single initiate call — no advance needed
-    // Reset to allow a new negotiation
-    setActiveNegotiation(null);
-    setSelectedPeer(null);
-  };
+  const peers = peersQuery.data ?? [];
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--bg-primary)" }}>
-      {/* Hero */}
-      <div className="relative overflow-hidden border-b border-white/8">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 left-1/4 w-96 h-96 rounded-full opacity-10 blur-3xl"
-            style={{ background: "radial-gradient(circle, #6366f1, transparent)" }} />
-          <div className="absolute bottom-0 right-1/4 w-64 h-64 rounded-full opacity-8 blur-3xl"
-            style={{ background: "radial-gradient(circle, #10b981, transparent)" }} />
+    <div className="min-h-screen bg-[#050505] p-6 md:p-8">
+      {/* Header */}
+      <div className="mb-10">
+        <div className="flex items-center gap-3 mb-3">
+          <IconSwords className="w-5 h-5 text-white/30" />
+          <span className="label-tech text-white/30 text-[10px] tracking-widest">AGENT-TO-AGENT PROTOCOL · WORLD FIRST</span>
         </div>
-        <div className="max-w-6xl mx-auto px-6 py-12 relative">
-          <div className="flex items-center gap-3 mb-4">
-            <span className="label-tech text-indigo-400">EXPERIMENTAL</span>
-            <span className="w-1 h-1 rounded-full bg-white/20" />
-            <span className="label-tech">AGENT-TO-AGENT PROTOCOL</span>
-          </div>
-          <h1 className="text-4xl md:text-5xl font-black text-white mb-4 leading-tight">
-            Agent Arena
-            <span className="block text-2xl md:text-3xl font-light text-white/40 mt-1">
-              AI agents negotiate carbon reduction on your behalf
-            </span>
-          </h1>
-          <p className="text-white/50 max-w-2xl text-lg">
-            Your personal ReBon AI agent challenges a peer's agent to a structured negotiation.
-            Two AI personas debate, propose, and agree on a shared carbon reduction commitment —
-            turning social accountability into a game.
-          </p>
-        </div>
+        <h1 className="text-4xl md:text-5xl font-black text-white leading-none mb-3">
+          AGENT<br />
+          <span className="text-white/25">ARENA</span>
+        </h1>
+        <p className="text-white/40 max-w-lg text-sm leading-relaxed">
+          Deploy your personal AI agent to negotiate binding carbon reduction commitments with peers.
+          Two agents debate, counter-propose, and reach an agreement — while you watch in real time.
+          No human intervention required.
+        </p>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-10 grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left: Setup */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* How it works */}
-          <div className="glass-card p-6 border border-white/8">
-            <h3 className="text-white font-black mb-4 flex items-center gap-2">
-              <span className="text-indigo-400">⚙</span> How It Works
-            </h3>
-            <ol className="space-y-3">
-              {[
-                { step: "01", text: "Select a peer from the community" },
-                { step: "02", text: "Choose a carbon category to negotiate" },
-                { step: "03", text: "Your AI agent proposes a reduction target" },
-                { step: "04", text: "Their AI agent responds with a counter-proposal" },
-                { step: "05", text: "Agents reach a binding agreement in 3 turns" },
-              ].map((item) => (
-                <li key={item.step} className="flex items-start gap-3">
-                  <span className="label-tech text-indigo-400 shrink-0 mt-0.5">{item.step}</span>
-                  <span className="text-white/60 text-sm">{item.text}</span>
-                </li>
-              ))}
-            </ol>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Configure Panel */}
+        <div className="glass-card p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <IconRobot className="w-5 h-5 text-white/50" />
+            <div>
+              <h2 className="text-base font-black text-white tracking-tight">DEPLOY YOUR AGENT</h2>
+              <p className="text-white/30 text-xs mt-0.5">Configure your negotiation parameters</p>
+            </div>
           </div>
 
-          {/* Configure negotiation */}
-          <div className="glass-card p-6 border border-white/8">
-            <h3 className="text-white font-black mb-5">Configure Negotiation</h3>
-
-            {/* Peer selection */}
-            <div className="mb-5">
-              <label className="label-tech text-white/50 block mb-2">Select Peer</label>
-              {peers && peers.length > 0 ? (
-                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+          <div className="space-y-6">
+            {/* Peer selector */}
+            <div>
+              <label className="label-tech text-white/30 text-[10px] tracking-widest block mb-3">
+                SELECT PEER TO CHALLENGE
+              </label>
+              {peersQuery.isLoading ? (
+                <div className="text-white/30 text-sm py-4 text-center">Loading peers...</div>
+              ) : peers.length === 0 ? (
+                <div className="glass-card p-4 text-center border-white/[0.04]">
+                  <IconPeople className="w-6 h-6 text-white/20 mx-auto mb-2" />
+                  <p className="text-white/30 text-xs">No peers available yet.</p>
+                  <p className="text-white/20 text-xs mt-1">Invite others to join ReBon to unlock negotiations.</p>
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-40 overflow-y-auto">
                   {peers.map((peer) => (
                     <button
                       key={peer.id}
                       onClick={() => setSelectedPeer(peer.id)}
-                      className={`w-full text-left p-3 rounded-lg border transition-all ${
+                      className={`w-full flex items-center justify-between p-3 rounded-lg border text-sm transition-all ${
                         selectedPeer === peer.id
-                          ? "border-indigo-500/60 bg-indigo-500/10"
-                          : "border-white/8 bg-white/3 hover:bg-white/5"
+                          ? "border-white/30 bg-white/10 text-white"
+                          : "border-white/[0.06] bg-white/[0.02] text-white/50 hover:border-white/15 hover:text-white/70"
                       }`}
+                      aria-label={`Select ${peer.name ?? "Anonymous"} as negotiation peer`}
+                      aria-pressed={selectedPeer === peer.id}
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-black">
-                          {(peer.name ?? "U").charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <p className="text-white text-sm font-600">{peer.name ?? "Anonymous"}</p>
-                          <p className="text-white/30 text-xs label-tech">{peer.archetype ?? "EXPLORER"}</p>
-                        </div>
-                      </div>
+                      <span className="font-semibold">{peer.name ?? "Anonymous Warrior"}</span>
+                      <span className="label-tech text-[9px] tracking-widest text-white/30">
+                        {peer.archetype?.toUpperCase() ?? "UNKNOWN"} · ELO {peer.eloScore ?? 1000}
+                      </span>
                     </button>
                   ))}
                 </div>
-              ) : (
-                <p className="text-white/30 text-sm italic">No peers available yet. Invite friends to join ReBon!</p>
               )}
             </div>
 
             {/* Category */}
-            <div className="mb-5">
-              <label className="label-tech text-white/50 block mb-2">Carbon Category</label>
+            <div>
+              <label className="label-tech text-white/30 text-[10px] tracking-widest block mb-3">CATEGORY</label>
               <div className="grid grid-cols-3 gap-2">
-                {Object.entries(CATEGORY_ICONS).map(([cat, icon]) => (
+                {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
                   <button
-                    key={cat}
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`p-2 rounded-lg border text-center transition-all ${
-                      selectedCategory === cat
-                        ? "border-indigo-500/60 bg-indigo-500/10"
-                        : "border-white/8 bg-white/3 hover:bg-white/5"
+                    key={key}
+                    onClick={() => setCategory(key)}
+                    className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border text-xs font-semibold transition-all ${
+                      category === key
+                        ? "border-white/30 bg-white/10 text-white"
+                        : "border-white/[0.06] bg-white/[0.02] text-white/40 hover:border-white/15 hover:text-white/60"
                     }`}
+                    aria-pressed={category === key}
                   >
-                    <div className="text-lg">{icon}</div>
-                    <div className="text-[10px] text-white/50 capitalize mt-0.5">{cat}</div>
+                    <span className="text-white/50">{CATEGORY_ICONS[key]}</span>
+                    {label}
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Proposed kg */}
-            <div className="mb-6">
-              <label className="label-tech text-white/50 block mb-2">
-                Proposed Reduction (kg CO₂/week)
+            {/* Reduction target */}
+            <div>
+              <label className="label-tech text-white/30 text-[10px] tracking-widest block mb-3">
+                PROPOSED WEEKLY REDUCTION
               </label>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
                 <input
                   type="range"
-                  min="1"
-                  max="20"
-                  step="0.5"
+                  min={1}
+                  max={50}
                   value={proposedKg}
-                  onChange={(e) => setProposedKg(e.target.value)}
-                  className="flex-1 accent-indigo-500"
-                  aria-label="Proposed CO2 reduction in kg per week"
+                  onChange={(e) => setProposedKg(Number(e.target.value))}
+                  className="flex-1 accent-white"
+                  aria-label="Proposed CO₂ reduction in kg per week"
                 />
-                <span className="text-white font-black text-lg w-16 text-right">{proposedKg} kg</span>
+                <span className="text-2xl font-black text-white w-20 text-right tabular-nums">{proposedKg} kg</span>
               </div>
+              <p className="text-white/20 text-xs mt-2">CO₂ reduction commitment per week</p>
+            </div>
+
+            <div className="p-4 rounded-lg border border-white/[0.06] bg-white/[0.02]">
+              <p className="text-white/30 text-xs leading-relaxed">
+                Your agent is briefed on your carbon profile, lifestyle archetype, and historical data.
+                It will negotiate the most ambitious yet achievable commitment on your behalf.
+              </p>
             </div>
 
             <button
-              onClick={handleStart}
-              disabled={!selectedPeer || isNegotiating}
-              className="w-full btn-primary disabled:opacity-40 disabled:cursor-not-allowed"
-              aria-busy={isNegotiating}
+              onClick={() => {
+                if (!selectedPeer) return;
+                initiateMutation.mutate({ targetUserId: selectedPeer, category, proposedKg });
+              }}
+              disabled={initiateMutation.isPending || !selectedPeer}
+              className="btn-primary w-full flex items-center justify-center gap-2 py-3 disabled:opacity-40 disabled:cursor-not-allowed"
+              aria-label="Start agent-to-agent negotiation"
             >
-              {isNegotiating ? (
-                <span className="flex items-center justify-center gap-2">
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Agents Negotiating...
-                </span>
-              ) : (
-                "⚔ Start Negotiation"
-              )}
+              <IconSwords className="w-4 h-4" />
+              {initiateMutation.isPending
+                ? "Agents negotiating..."
+                : !selectedPeer
+                ? "Select a peer first"
+                : "Start Negotiation"}
             </button>
           </div>
         </div>
 
-        {/* Right: Active negotiation + history */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Active negotiation */}
-          {activeNegotiation ? (
-            <div className="glass-card border border-white/8 overflow-hidden">
-              <div className="flex items-center justify-between px-6 py-4 border-b border-white/8">
-                <div>
-                  <h3 className="text-white font-black">Live Negotiation</h3>
-                  <p className="text-white/30 text-xs label-tech mt-0.5">
-                    {selectedCategory.toUpperCase()} · {proposedKg} KG TARGET
-                  </p>
-                </div>
-                <span className={`px-3 py-1 rounded-full text-xs font-black label-tech ${
-                  activeNegotiation.status === "agreed"
-                    ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                    : activeNegotiation.status === "rejected"
-                    ? "bg-red-500/20 text-red-400 border border-red-500/30"
-                    : "bg-indigo-500/20 text-indigo-400 border border-indigo-500/30"
-                }`}>
-                  {activeNegotiation.status.toUpperCase()}
-                </span>
-              </div>
+        {/* Live Transcript */}
+        <div className="glass-card p-6 flex flex-col">
+          <div className="flex items-center gap-3 mb-6">
+            <IconPulse className="w-5 h-5 text-white/50" />
+            <div>
+              <h2 className="text-base font-black text-white tracking-tight">LIVE TRANSCRIPT</h2>
+              <p className="text-white/30 text-xs mt-0.5">Watch your agents negotiate in real time</p>
+            </div>
+          </div>
 
-              {/* Agreed banner */}
-              {activeNegotiation.status === "agreed" && activeNegotiation.agreedKg && (
-                <div className="mx-6 mt-4 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-3">
-                  <span className="text-2xl">🤝</span>
-                  <div>
-                    <p className="text-emerald-400 font-black">Agreement Reached!</p>
-                    <p className="text-white/60 text-sm">
-                      Both agents committed to reducing <strong className="text-white">{activeNegotiation.agreedKg} kg CO₂/week</strong> in {selectedCategory}
-                    </p>
+          {!activeNeg && !initiateMutation.isPending && (
+            <div className="flex flex-col items-center justify-center flex-1 min-h-48 text-center">
+              <IconSwords className="w-10 h-10 text-white/[0.07] mb-4" />
+              <p className="text-white/25 text-sm">No active negotiation.</p>
+              <p className="text-white/15 text-xs mt-2">Select a peer and deploy your agent to begin.</p>
+            </div>
+          )}
+
+          {initiateMutation.isPending && (
+            <div className="flex flex-col items-center justify-center flex-1 min-h-48 text-center">
+              <div className="w-8 h-8 border-2 border-white/10 border-t-white/60 rounded-full animate-spin mb-4" />
+              <p className="text-white/40 text-sm">Agents are negotiating...</p>
+              <p className="text-white/20 text-xs mt-2">Analysing profiles · Generating proposals · Reaching consensus</p>
+            </div>
+          )}
+
+          {activeNeg && (
+            <div className="space-y-3 max-h-80 overflow-y-auto pr-1 flex-1">
+              {activeNeg.turns.map((turn, i) => (
+                <div
+                  key={i}
+                  className={`p-3 rounded-lg text-sm ${
+                    turn.speaker === "initiator"
+                      ? "bg-white/[0.07] border border-white/10 ml-6"
+                      : "bg-white/[0.02] border border-white/[0.05] mr-6"
+                  }`}
+                >
+                  <div className="label-tech text-white/30 text-[9px] tracking-widest mb-1.5">
+                    {turn.speaker === "initiator" ? "YOUR AGENT" : "PEER AGENT"}
+                    {turn.proposedKg != null && (
+                      <span className="ml-2 text-white/20">· {turn.proposedKg} kg proposed</span>
+                    )}
                   </div>
+                  <p className="text-white/70 leading-relaxed">{turn.message}</p>
+                </div>
+              ))}
+
+              {activeNeg.agreedKg !== null && (
+                <div className="p-5 rounded-lg border border-white/20 bg-white/[0.04] text-center mt-4">
+                  <div className="label-tech text-white/30 text-[9px] tracking-widest mb-3">AGREEMENT REACHED</div>
+                  <div className="text-4xl font-black text-white mb-1 tabular-nums">{activeNeg.agreedKg} kg</div>
+                  <div className="text-white/30 text-xs">weekly CO₂ reduction · both parties bound</div>
                 </div>
               )}
 
-              {/* Turns */}
-              <div className="p-6 space-y-4 max-h-96 overflow-y-auto">
-                {activeNegotiation.turns.map((turn, i) => (
-                  <div
-                    key={i}
-                    className={`flex gap-3 ${turn.agent === "initiator" ? "" : "flex-row-reverse"}`}
-                  >
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm shrink-0 ${
-                      turn.agent === "initiator"
-                        ? "bg-indigo-500/20 border border-indigo-500/30"
-                        : "bg-purple-500/20 border border-purple-500/30"
-                    }`}>
-                      🤖
-                    </div>
-                    <div className={`max-w-[75%] ${turn.agent === "initiator" ? "" : "text-right"}`}>
-                      <p className={`label-tech text-xs mb-1 ${
-                        turn.agent === "initiator" ? "text-indigo-400" : "text-purple-400"
-                      }`}>
-                        {turn.agent === "initiator" ? `${user?.name ?? "Your"} Agent` : "Peer Agent"}
-                      </p>
-                      <div className={`p-3 rounded-xl text-sm text-white/80 ${
-                        turn.agent === "initiator"
-                          ? "bg-indigo-500/10 border border-indigo-500/20"
-                          : "bg-purple-500/10 border border-purple-500/20"
-                      }`}>
-                        {turn.message}
-                        {turn.proposedKg && (
-                          <span className="block mt-1 text-xs font-black" style={{ color: CATEGORY_COLORS[selectedCategory] }}>
-                            → Proposes: {turn.proposedKg} kg/week
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* New negotiation button */}
-              <div className="px-6 pb-6">
-                <button
-                  onClick={handleAdvance}
-                  className="w-full btn-secondary"
-                >
-                  ↩ Start Another Negotiation
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="glass-card border border-white/8 p-12 text-center">
-              <div className="text-5xl mb-4">⚔️</div>
-              <h3 className="text-white font-black text-xl mb-2">No Active Negotiation</h3>
-              <p className="text-white/40 text-sm">
-                Select a peer and configure a negotiation to watch your AI agents debate carbon reduction strategies.
-              </p>
-            </div>
-          )}
-
-          {/* History */}
-          {history && history.length > 0 && (
-            <div className="glass-card border border-white/8 overflow-hidden">
-              <div className="px-6 py-4 border-b border-white/8">
-                <h3 className="text-white font-black">Negotiation History</h3>
-                <p className="text-white/30 text-xs label-tech mt-0.5">{history.length} PAST NEGOTIATIONS</p>
-              </div>
-              <div className="divide-y divide-white/5">
-                {history.slice(0, 5).map((neg) => (
-                  <div key={neg.id} className="flex items-center justify-between px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <span className="text-xl">{CATEGORY_ICONS[neg.category] ?? "🌿"}</span>
-                      <div>
-                        <p className="text-white text-sm font-600 capitalize">{neg.category} Negotiation</p>
-                        <p className="text-white/30 text-xs label-tech">
-                          {new Date(neg.createdAt).toLocaleDateString()} · PROPOSED {neg.proposedKg} KG
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <span className={`px-2 py-0.5 rounded text-xs font-black label-tech ${
-                        neg.status === "agreed"
-                          ? "bg-emerald-500/20 text-emerald-400"
-                          : neg.status === "rejected"
-                          ? "bg-red-500/20 text-red-400"
-                          : "bg-indigo-500/20 text-indigo-400"
-                      }`}>
-                        {neg.status.toUpperCase()}
-                      </span>
-                      {neg.agreedKg && (
-                        <p className="text-white/40 text-xs mt-0.5">{neg.agreedKg} kg agreed</p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
+              {activeNeg.status === "rejected" && (
+                <div className="p-4 rounded-lg border border-white/10 bg-white/[0.02] text-center mt-4">
+                  <div className="label-tech text-white/20 text-[9px] tracking-widest mb-2">NO AGREEMENT</div>
+                  <p className="text-white/30 text-xs">Agents could not reach consensus. Try a different proposal or peer.</p>
+                </div>
+              )}
             </div>
           )}
         </div>
+      </div>
+
+      {/* History */}
+      {historyQuery.data && historyQuery.data.length > 0 && (
+        <div>
+          <div className="flex items-center gap-3 mb-5">
+            <span className="label-tech text-white/30 text-[10px] tracking-widest">NEGOTIATION HISTORY</span>
+            <div className="flex-1 h-px bg-white/[0.06]" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {historyQuery.data.map((neg) => (
+              <div
+                key={neg.id}
+                className="glass-card p-5 hover:border-white/15 transition-all cursor-default"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2 text-white/50">
+                    {CATEGORY_ICONS[neg.category] ?? <IconLeaf className="w-4 h-4" />}
+                    <span className="text-white/60 text-sm font-semibold">
+                      {CATEGORY_LABELS[neg.category] ?? neg.category}
+                    </span>
+                  </div>
+                  <span className={`label-tech text-[9px] tracking-widest px-2 py-0.5 rounded-full border ${
+                    neg.status === "agreed"
+                      ? "border-white/20 text-white/50 bg-white/[0.04]"
+                      : "border-white/[0.06] text-white/20"
+                  }`}>
+                    {neg.status.toUpperCase()}
+                  </span>
+                </div>
+                {neg.agreedKg !== null ? (
+                  <div className="text-3xl font-black text-white tabular-nums">{neg.agreedKg} kg</div>
+                ) : (
+                  <div className="text-white/25 text-sm">No agreement</div>
+                )}
+                <div className="text-white/20 text-xs mt-2">
+                  {new Date(neg.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Marketing callout */}
+      <div className="mt-12 glass-card p-8 text-center">
+        <IconArrowForward className="w-6 h-6 text-white/20 mx-auto mb-4" />
+        <h3 className="text-2xl font-black text-white mb-3">The world's first A2A carbon negotiation protocol</h3>
+        <p className="text-white/40 text-sm max-w-xl mx-auto leading-relaxed">
+          Traditional carbon pledges are forgotten by Tuesday. ReBon's Agent Arena creates binding,
+          AI-witnessed commitments between real people — turning climate action into a contract, not a suggestion.
+        </p>
       </div>
     </div>
   );

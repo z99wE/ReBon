@@ -1,131 +1,123 @@
 import { useAuth } from "@/_core/hooks/useAuth";
-import { Link } from "wouter";
 import { getLoginUrl } from "@/const";
+import { Link } from "wouter";
+import { IconLeaf, IconSwords, IconEye, IconTarget, IconGlobe, IconShare, IconPulse, IconLayers, IconArrowForward, IconBarChart, IconPeople, IconChatbubble } from "@/components/Icons";
 
 const FEATURES = [
   {
     tag: "VOICE + AI",
+    icon: <IconPulse className="w-6 h-6 text-white/50" />,
     title: "Log in seconds, not minutes",
-    desc: "Say \"I drove to work and had a burger\" — ReBon's voice intelligence understands context, calculates emissions, and logs everything instantly. No forms. No friction.",
-    color: "#6366f1",
-    icon: "🎙",
+    body: "Say \"I drove to work and had a burger\" — ReBon understands context, calculates emissions, and logs everything instantly. No forms. No friction. Just your voice.",
   },
   {
     tag: "AGENT-TO-AGENT",
+    icon: <IconSwords className="w-6 h-6 text-white/50" />,
     title: "Your AI negotiates for you",
-    desc: "ReBon deploys a personal AI agent that challenges peers to binding carbon reduction commitments. Two agents debate, counter-propose, and reach an agreement — while you watch.",
-    color: "#10b981",
-    icon: "⚔",
+    body: "ReBon deploys a personal AI agent that challenges peers to binding carbon reduction commitments. Two agents debate, counter-propose, and reach an agreement — while you watch.",
   },
   {
     tag: "SOCIAL INTELLIGENCE",
+    icon: <IconEye className="w-6 h-6 text-white/50" />,
     title: "See yourself through your peers' eyes",
-    desc: "CarbonMirror benchmarks your footprint against anonymized peers with the same lifestyle archetype. Understand exactly where you stand — and what it takes to move up.",
-    color: "#f59e0b",
-    icon: "🪞",
+    body: "CarbonMirror benchmarks your footprint against anonymized peers with the same lifestyle archetype. Understand exactly where you stand — and what it takes to move up.",
   },
   {
     tag: "COLLECTIVE ACTION",
+    icon: <IconGlobe className="w-6 h-6 text-white/50" />,
     title: "Small groups, massive impact",
-    desc: "Form a tribe, pool your reductions, and model collective scenarios in real time. \"If our 12-person group goes plant-based for a month, we offset 2.4 tonnes of CO₂.\"",
-    color: "#ec4899",
-    icon: "🌍",
+    body: "Form a tribe, pool your reductions, and model collective scenarios in real time. \"If our 12-person group goes plant-based for a month, we offset 2.4 tonnes of CO₂.\"",
   },
   {
     tag: "PERSONALIZED COACHING",
+    icon: <IconTarget className="w-6 h-6 text-white/50" />,
     title: "Challenges that actually fit your life",
-    desc: "Every week, ReBon's AI generates 3 challenges tuned to your lifestyle archetype and trending climate topics — not generic advice, but actions you can realistically take.",
-    color: "#8b5cf6",
-    icon: "🎯",
+    body: "Every week, ReBon generates 3 challenges tuned to your lifestyle archetype and trending climate topics — not generic advice, but actions you can realistically take.",
   },
   {
     tag: "IMPACT STORYTELLING",
+    icon: <IconShare className="w-6 h-6 text-white/50" />,
     title: "Turn numbers into narratives",
-    desc: "\"You saved 87kg CO₂ this month — equivalent to not driving from Mumbai to Pune 4 times.\" ReBon turns your data into emotionally resonant stories worth sharing.",
-    color: "#06b6d4",
-    icon: "✨",
+    body: "\"You saved 87kg CO₂ this month — equivalent to not driving from Mumbai to Pune 4 times.\" ReBon turns your data into emotionally resonant stories worth sharing.",
   },
 ];
 
-const ARCHETYPES = [
-  { id: "urban_commuter", label: "Urban Commuter", color: "#6366f1", desc: "City-dweller optimizing daily transit" },
-  { id: "conscious_consumer", label: "Conscious Consumer", color: "#10b981", desc: "Mindful about purchases and waste" },
-  { id: "home_chef", label: "Home Chef", color: "#f59e0b", desc: "Cooking-focused with dietary impact" },
-  { id: "remote_worker", label: "Remote Worker", color: "#ec4899", desc: "WFH lifestyle, energy-conscious" },
-  { id: "frequent_flyer", label: "Frequent Flyer", color: "#8b5cf6", desc: "High travel, high reduction potential" },
-  { id: "eco_explorer", label: "Eco Explorer", color: "#06b6d4", desc: "Outdoor enthusiast, nature-first" },
+const STATS = [
+  { value: "18,000+", label: "CLIMATE WARRIORS", sub: "active this month" },
+  { value: "2.4M kg", label: "CO₂ REDUCED", sub: "and counting" },
+  { value: "94%", label: "CHALLENGE COMPLETION", sub: "vs 23% industry avg" },
+  { value: "4.8", label: "IMPACT SCORE", sub: "avg user rating" },
 ];
 
-const STATS = [
-  { value: "18,000+", label: "Climate Warriors", sub: "active this month" },
-  { value: "2.4M kg", label: "CO₂ Reduced", sub: "and counting" },
-  { value: "94%", label: "Challenge Completion", sub: "vs 23% industry avg" },
-  { value: "4.8★", label: "Impact Score", sub: "avg user rating" },
+const HOW_IT_WORKS = [
+  {
+    step: "01",
+    icon: <IconLayers className="w-5 h-5 text-white/50" />,
+    title: "Build your Carbon DNA",
+    body: "Answer 6 questions. ReBon segments you into a lifestyle archetype and generates a personalised 90-day reduction roadmap.",
+  },
+  {
+    step: "02",
+    icon: <IconPulse className="w-5 h-5 text-white/50" />,
+    title: "Log without thinking",
+    body: "Speak, tap, or type. ReBon calculates your CO₂ impact instantly across transport, food, energy, and shopping.",
+  },
+  {
+    step: "03",
+    icon: <IconBarChart className="w-5 h-5 text-white/50" />,
+    title: "Compete, compare, improve",
+    body: "Climb the Elo leaderboard, challenge peers via Agent Arena, and watch your collective tribe offset tonnes of CO₂.",
+  },
 ];
 
 export default function Home() {
   const { isAuthenticated } = useAuth();
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--bg-primary)" }}>
-
-      {/* ── Nav ── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-6 md:px-12 border-b border-white/6"
-        style={{ background: "rgba(5,5,5,0.85)", backdropFilter: "blur(20px)" }}>
-        <div className="flex items-center gap-3">
-          <div className="w-7 h-7 bg-white rounded-sm flex items-center justify-center">
-            <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none">
-              <circle cx="12" cy="12" r="9" stroke="black" strokeWidth="1.5"/>
-              <path d="M12 7v5l3 3" stroke="black" strokeWidth="1.5" strokeLinecap="round"/>
-            </svg>
+    <div className="min-h-screen bg-[#050505] text-white">
+      {/* Nav */}
+      <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-12 h-16 border-b border-white/[0.06] bg-[#050505]/80 backdrop-blur-xl">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-md bg-white/10 border border-white/20 flex items-center justify-center">
+            <IconLeaf className="w-4 h-4 text-white/80" />
           </div>
-          <span className="text-white font-black text-xs tracking-[0.3em] uppercase">ReBon</span>
+          <span className="font-black text-white tracking-tight text-lg">REBON</span>
         </div>
-        <div className="flex items-center gap-4">
-          {isAuthenticated ? (
-            <Link href="/dashboard">
-              <button className="btn-primary text-sm px-5 py-2">Open App →</button>
-            </Link>
-          ) : (
-            <>
-              <Link href="/login">
-                <button className="btn-ghost text-sm px-4 py-2">Sign In</button>
-              </Link>
-              <Link href="/login">
-                <button className="btn-primary text-sm px-5 py-2">Start Free →</button>
-              </Link>
-            </>
-          )}
+        <div className="hidden md:flex items-center gap-8 text-xs font-semibold tracking-widest text-white/40">
+          <a href="#features" className="hover:text-white/70 transition-colors">FEATURES</a>
+          <a href="#how-it-works" className="hover:text-white/70 transition-colors">HOW IT WORKS</a>
+          <a href="#mission" className="hover:text-white/70 transition-colors">MISSION</a>
         </div>
+        {isAuthenticated ? (
+          <Link href="/dashboard">
+            <button className="btn-primary text-xs py-2 px-4">OPEN APP</button>
+          </Link>
+        ) : (
+          <a href={getLoginUrl()}>
+            <button className="btn-primary text-xs py-2 px-4">GET STARTED</button>
+          </a>
+        )}
       </nav>
 
-      {/* ── Hero ── */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
-        {/* Background glows */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute top-1/4 left-1/3 w-[600px] h-[600px] rounded-full opacity-12 blur-[120px]"
-            style={{ background: "radial-gradient(circle, #6366f1, transparent 70%)" }} />
-          <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full opacity-8 blur-[100px]"
-            style={{ background: "radial-gradient(circle, #10b981, transparent 70%)" }} />
-          {/* Grid */}
-          <div className="absolute inset-0 opacity-[0.03]"
-            style={{ backgroundImage: "linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)", backgroundSize: "80px 80px" }} />
-        </div>
+      {/* Hero */}
+      <section className="relative pt-32 pb-24 px-6 md:px-12 overflow-hidden">
+        {/* Grid background */}
+        <div className="absolute inset-0 grid-bg opacity-30 pointer-events-none" />
+        {/* Glow orb */}
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-white/[0.02] blur-3xl pointer-events-none" />
 
-        <div className="relative max-w-5xl mx-auto px-6 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/4 mb-8">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="label-tech text-white/50 text-[10px]">HACK2KILL · GOOGLE PROMPTWARS 2026</span>
+        <div className="relative max-w-5xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.03] mb-8">
+            <span className="w-1.5 h-1.5 rounded-full bg-white/60 animate-pulse" />
+            <span className="label-tech text-white/50 text-[10px] tracking-widest">HACK2KILL · GOOGLE PROMPTWARS 2026</span>
           </div>
 
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white leading-[0.9] tracking-tight mb-6 uppercase">
-            Your carbon
-            <span className="block" style={{ WebkitTextStroke: "1px rgba(255,255,255,0.3)", color: "transparent" }}>
-              footprint.
-            </span>
-            <span className="block" style={{ background: "linear-gradient(135deg, #6366f1, #10b981)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-              Reimagined.
-            </span>
+          <h1 className="text-6xl md:text-8xl lg:text-[110px] font-black leading-none tracking-tighter mb-6">
+            <span className="text-white">YOUR CARBON</span>
+            <br />
+            <span className="text-white/20">FOOTPRINT.</span>
+            <br />
+            <span className="text-gradient">REIMAGINED.</span>
           </h1>
 
           <p className="text-white/50 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
@@ -134,149 +126,165 @@ export default function Home() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-            <Link href="/login">
-              <button className="btn-primary text-base px-8 py-3.5 w-full sm:w-auto">
-                Begin Your Carbon Journey →
-              </button>
-            </Link>
-            <Link href="/login">
-              <button className="btn-secondary text-base px-8 py-3.5 w-full sm:w-auto">
-                Watch Demo
-              </button>
-            </Link>
+            {isAuthenticated ? (
+              <Link href="/dashboard">
+                <button className="btn-primary flex items-center gap-2 text-sm py-3 px-8">
+                  OPEN YOUR DASHBOARD <IconArrowForward className="w-4 h-4" />
+                </button>
+              </Link>
+            ) : (
+              <a href={getLoginUrl()}>
+                <button className="btn-primary flex items-center gap-2 text-sm py-3 px-8">
+                  BEGIN YOUR CARBON JOURNEY <IconArrowForward className="w-4 h-4" />
+                </button>
+              </a>
+            )}
+            <a href="#how-it-works" className="text-white/40 text-sm font-semibold hover:text-white/70 transition-colors tracking-wide">
+              Watch Demo
+            </a>
           </div>
 
           {/* Stats bar */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/8 rounded-2xl overflow-hidden border border-white/8">
-            {STATS.map((stat) => (
-              <div key={stat.label} className="bg-[#050505] px-6 py-5 text-center">
-                <p className="text-2xl md:text-3xl font-black text-white mb-0.5">{stat.value}</p>
-                <p className="text-[10px] font-black tracking-widest text-white/40 uppercase">{stat.label}</p>
-                <p className="text-[9px] text-white/20 mt-0.5">{stat.sub}</p>
+          <div className="glass-card grid grid-cols-2 md:grid-cols-4 divide-x divide-white/[0.06]">
+            {STATS.map((s) => (
+              <div key={s.label} className="p-5 text-center">
+                <div className="text-2xl md:text-3xl font-black text-white mb-1">{s.value}</div>
+                <div className="label-tech text-white/30 text-[9px] tracking-widest">{s.label}</div>
+                <div className="text-white/20 text-[10px] mt-0.5">{s.sub}</div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── Features ── */}
-      <section className="py-24 px-6 max-w-6xl mx-auto">
-        <div className="text-center mb-16">
-          <p className="label-tech text-white/30 mb-4">WHAT REBON DOES</p>
-          <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tight">
-            Intelligence meets
-            <span className="block" style={{ background: "linear-gradient(135deg, #6366f1, #10b981)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-              accountability
-            </span>
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-white/6 rounded-2xl overflow-hidden border border-white/8">
-          {FEATURES.map((f) => (
-            <div key={f.tag} className="bg-[#050505] p-8 group hover:bg-white/3 transition-colors">
-              <div className="flex items-start justify-between mb-5">
-                <span className="text-3xl">{f.icon}</span>
-                <span className="label-tech text-[9px] px-2 py-0.5 rounded border"
-                  style={{ color: f.color, borderColor: `${f.color}30`, background: `${f.color}10` }}>
-                  {f.tag}
-                </span>
-              </div>
-              <h3 className="text-white font-black text-lg mb-3 leading-tight">{f.title}</h3>
-              <p className="text-white/40 text-sm leading-relaxed">{f.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Archetypes ── */}
-      <section className="py-24 px-6 border-t border-white/6">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-16">
-            <p className="label-tech text-white/30 mb-4">CARBON DNA</p>
-            <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tight">
-              Which archetype
-              <span className="block text-white/30 font-light normal-case tracking-normal text-2xl mt-2">
-                are you?
-              </span>
+      {/* Features grid */}
+      <section id="features" className="py-20 px-6 md:px-12 border-t border-white/[0.06]">
+        <div className="max-w-6xl mx-auto">
+          <div className="mb-12">
+            <span className="label-tech text-white/30 text-xs tracking-widest block mb-4">WHAT REBON DOES</span>
+            <h2 className="text-4xl md:text-5xl font-black text-white leading-none">
+              INTELLIGENCE MEETS<br />
+              <span className="text-white/30">CLIMATE ACTION</span>
             </h2>
-            <p className="text-white/40 mt-4 max-w-lg mx-auto">
-              ReBon segments you into one of 6 lifestyle archetypes based on a 6-question onboarding.
-              Every insight, challenge, and peer comparison is calibrated to your profile.
-            </p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {ARCHETYPES.map((a) => (
-              <div key={a.id} className="glass-card p-5 border border-white/6 group hover:border-white/15 transition-all cursor-default">
-                <div className="w-8 h-1 rounded-full mb-4 transition-all group-hover:w-12"
-                  style={{ background: a.color }} />
-                <p className="text-white font-black text-sm mb-1">{a.label}</p>
-                <p className="text-white/30 text-xs">{a.desc}</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-white/[0.06]">
+            {FEATURES.map((f) => (
+              <div key={f.tag} className="bg-[#050505] p-8 hover:bg-white/[0.02] transition-colors">
+                <div className="flex items-center justify-between mb-6">
+                  {f.icon}
+                  <span className="label-tech text-white/25 text-[9px] tracking-widest border border-white/10 px-2 py-1 rounded-full">
+                    {f.tag}
+                  </span>
+                </div>
+                <h3 className="text-xl font-black text-white mb-3 leading-tight">{f.title}</h3>
+                <p className="text-white/40 text-sm leading-relaxed">{f.body}</p>
               </div>
             ))}
           </div>
-          <div className="text-center mt-10">
-            <Link href="/login">
-              <button className="btn-primary px-8 py-3">Discover Your Archetype →</button>
-            </Link>
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section id="how-it-works" className="py-20 px-6 md:px-12 border-t border-white/[0.06]">
+        <div className="max-w-6xl mx-auto">
+          <div className="mb-12">
+            <span className="label-tech text-white/30 text-xs tracking-widest block mb-4">THE PROCESS</span>
+            <h2 className="text-4xl md:text-5xl font-black text-white leading-none">
+              THREE STEPS TO<br />
+              <span className="text-white/30">NET ZERO HABITS</span>
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {HOW_IT_WORKS.map((step) => (
+              <div key={step.step} className="glass-card p-8">
+                <div className="flex items-start justify-between mb-6">
+                  <span className="text-5xl font-black text-white/[0.08] leading-none">{step.step}</span>
+                  {step.icon}
+                </div>
+                <h3 className="text-xl font-black text-white mb-3">{step.title}</h3>
+                <p className="text-white/40 text-sm leading-relaxed">{step.body}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ── Agent Arena CTA ── */}
-      <section className="py-24 px-6 border-t border-white/6">
-        <div className="max-w-4xl mx-auto">
-          <div className="glass-card p-10 md:p-16 border border-white/8 relative overflow-hidden text-center">
-            <div className="absolute inset-0 pointer-events-none">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-48 opacity-15 blur-3xl"
-                style={{ background: "radial-gradient(ellipse, #6366f1, transparent)" }} />
-            </div>
-            <div className="relative">
-              <span className="label-tech text-amber-400/70 bg-amber-400/10 border border-amber-400/20 px-3 py-1 rounded mb-6 inline-block">
-                ⚔ AGENT ARENA — WORLD FIRST
-              </span>
-              <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tight mb-4">
-                Let your AI fight
-                <span className="block" style={{ background: "linear-gradient(135deg, #6366f1, #10b981)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-                  for the planet
-                </span>
-              </h2>
-              <p className="text-white/50 text-lg max-w-xl mx-auto mb-8">
-                Deploy your personal ReBon agent to challenge a peer's agent to a structured carbon reduction negotiation.
-                Watch two AIs debate, counter-propose, and reach a binding commitment — in real time.
-              </p>
-              <Link href="/login">
-                <button className="btn-primary text-base px-10 py-4">
-                  Enter the Arena →
-                </button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Footer ── */}
-      <footer className="border-t border-white/6 py-10 px-6">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-5 h-5 bg-white rounded-sm flex items-center justify-center">
-              <svg viewBox="0 0 24 24" className="w-3 h-3" fill="none">
-                <circle cx="12" cy="12" r="9" stroke="black" strokeWidth="2"/>
-              </svg>
-            </div>
-            <span className="text-white/40 text-xs font-black tracking-widest uppercase">ReBon</span>
-          </div>
-          <p className="text-white/20 text-xs text-center">
-            Built for Google PromptWars Hack2Kill · Carbon Intelligence Platform · 2026
+      {/* Mission statement */}
+      <section id="mission" className="py-20 px-6 md:px-12 border-t border-white/[0.06]">
+        <div className="max-w-4xl mx-auto text-center">
+          <span className="label-tech text-white/30 text-xs tracking-widest block mb-6">OUR MISSION</span>
+          <blockquote className="text-3xl md:text-4xl font-black text-white leading-tight mb-8">
+            "The climate crisis is a collective action problem. ReBon makes collective action{" "}
+            <span className="text-white/30">feel like a game you can win.</span>"
+          </blockquote>
+          <p className="text-white/40 text-base leading-relaxed max-w-2xl mx-auto mb-12">
+            We believe the fastest path to behaviour change is not guilt — it is competition, community, and 
+            personalised intelligence. ReBon turns abstract carbon numbers into concrete daily actions, 
+            social accountability, and measurable progress toward a liveable planet.
           </p>
-          <div className="flex items-center gap-4">
-            <span className="label-tech text-white/20 text-[9px]">Powered by</span>
-            <span className="label-tech text-white/30 text-[9px]">GROQ</span>
-            <span className="label-tech text-white/30 text-[9px]">NVIDIA NIM</span>
-            <span className="label-tech text-white/30 text-[9px]">DEEPGRAM</span>
-            <span className="label-tech text-white/30 text-[9px]">SARVAM AI</span>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+            <div className="glass-card p-6">
+              <IconPeople className="w-5 h-5 text-white/30 mb-4" />
+              <h4 className="font-black text-white mb-2">Community-first</h4>
+              <p className="text-white/40 text-sm">Behaviour change is 4× more likely when peers are involved. ReBon makes your network your accountability system.</p>
+            </div>
+            <div className="glass-card p-6">
+              <IconChatbubble className="w-5 h-5 text-white/30 mb-4" />
+              <h4 className="font-black text-white mb-2">Radically personal</h4>
+              <p className="text-white/40 text-sm">No two users get the same advice. Your archetype, habits, and history shape every recommendation ReBon makes.</p>
+            </div>
+            <div className="glass-card p-6">
+              <IconShield className="w-5 h-5 text-white/30 mb-4" />
+              <h4 className="font-black text-white mb-2">Privacy by design</h4>
+              <p className="text-white/40 text-sm">CarbonMirror peer comparisons use differential privacy. Your data is yours — we only use it to help you improve.</p>
+            </div>
           </div>
         </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-20 px-6 md:px-12 border-t border-white/[0.06]">
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="text-5xl md:text-6xl font-black text-white leading-none mb-6">
+            THE PLANET<br />
+            <span className="text-white/20">CAN'T WAIT.</span>
+          </h2>
+          <p className="text-white/40 mb-10 text-lg">
+            Join 18,000+ climate warriors already reducing their footprint with ReBon.
+          </p>
+          {isAuthenticated ? (
+            <Link href="/dashboard">
+              <button className="btn-primary flex items-center gap-2 mx-auto text-sm py-4 px-12">
+                GO TO YOUR DASHBOARD <IconArrowForward className="w-4 h-4" />
+              </button>
+            </Link>
+          ) : (
+            <a href={getLoginUrl()}>
+              <button className="btn-primary flex items-center gap-2 mx-auto text-sm py-4 px-12">
+                START FOR FREE <IconArrowForward className="w-4 h-4" />
+              </button>
+            </a>
+          )}
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-white/[0.06] px-6 md:px-12 py-8 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <div className="w-5 h-5 rounded bg-white/10 border border-white/20 flex items-center justify-center">
+            <IconLeaf className="w-3 h-3 text-white/60" />
+          </div>
+          <span className="font-black text-white/40 text-sm tracking-tight">REBON</span>
+        </div>
+        <p className="text-white/20 text-xs">Built for Hack2Kill · Google PromptWars 2026 · Climate Intelligence Platform</p>
+        <p className="text-white/20 text-xs">© 2026 ReBon. All rights reserved.</p>
       </footer>
     </div>
   );
 }
+
+// Need to import IconShield used in mission section
+import { IconShield } from "@/components/Icons";
