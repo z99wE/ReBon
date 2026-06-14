@@ -87,3 +87,15 @@
 - [x] Add A2A (Agent-to-Agent) carbon negotiation feature: backend router + frontend page
 - [x] Add A2A route to App.tsx and sidebar navigation
 - [x] Update tests for A2A feature
+
+## Phase 12: Bug Fixes (Login + AI Features)
+- [x] Fix JWT payload mismatch: verifyOtp now includes appId and name fields required by sdk.verifySession
+- [x] Fix Login.tsx UI: "IconPhone" and "IconArrowForward" raw text replaced with "Phone" and "Send code"
+- [x] Fix AI JSON parsing: add parseAIJson helper to strip markdown code fences before JSON.parse
+- [x] Fix challenges.generate: sanitize AI-returned category/difficulty to valid DB enum values
+- [x] Verified: login flow works end-to-end (sendOtp → verifyOtp → authenticated session)
+- [x] Verified: ReBon AI assistant responds correctly (Groq)
+- [x] Verified: challenge generation works (3 AI-generated challenges saved to DB)
+- [x] Verified: story generation works (NVIDIA NIM narrative + equivalents)
+- [x] Verified: activity logging works
+- [x] Verified: leaderboard loads

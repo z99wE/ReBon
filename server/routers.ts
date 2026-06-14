@@ -22,6 +22,18 @@ import { SignJWT } from "jose";
 import { ENV } from "./_core/env";
 import { nanoid } from "nanoid";
 
+/** Strip markdown code fences and extract JSON from AI responses */
+function parseAIJson<T>(content: string, fallback: T): T {
+  try { return JSON.parse(content); } catch { /* try stripping markdown */ }
+  const match = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (match) { try { return JSON.parse(match[1].trim()); } catch { /* fall through */ } }
+  // Try to find first [ or { and parse from there
+  const arrStart = content.indexOf('[');
+  const objStart = content.indexOf('{');
+  const start = arrStart !== -1 && (objStart === -1 || arrStart < objStart) ? arrStart : objStart;
+  if (start !== -1) { try { return JSON.parse(content.slice(start)); } catch { /* fall through */ } }
+  return fallback;
+}
 function getWeekNumber(date: Date): number {
   const start = new Date(date.getFullYear(), 0, 1);
   return Math.ceil(((date.getTime() - start.getTime()) / 86400000 + start.getDay() + 1) / 7);
@@ -72,7 +84,8 @@ export const appRouter = router({
         const isEmail = input.identifier.includes("@");
         await upsertUser({ openId, name: input.name || (isEmail ? input.identifier.split("@")[0] : input.identifier), email: isEmail ? input.identifier.toLowerCase() : undefined, loginMethod: isEmail ? "email_otp" : "phone_otp", lastSignedIn: new Date() });
         const secret = new TextEncoder().encode(ENV.cookieSecret);
-        const token = await new SignJWT({ openId }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("30d").sign(secret);
+        const displayName = input.name || (isEmail ? input.identifier.split("@")[0] : input.identifier);
+        const token = await new SignJWT({ openId, appId: ENV.appId, name: displayName }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("30d").sign(secret);
         const cookieOptions = getSessionCookieOptions(ctx.req);
         ctx.res.cookie(COOKIE_NAME, token, { ...cookieOptions, maxAge: 30 * 24 * 60 * 60 * 1000 });
         return { success: true };
@@ -98,7 +111,7 @@ export const appRouter = router({
           maxTokens: 1024,
         });
         let roadmap = null;
-        try { roadmap = JSON.parse(roadmapResponse.content); } catch { roadmap = { phases: [] }; }
+        roadmap = parseAIJson(roadmapResponse.content, { phases: [] });
         await updateUserProfile(ctx.user.id, { archetype: archetype.id as any, archetypeLabel: archetype.label, onboardingCompleted: true, onboardingAnswers: input.answers as any, roadmap: roadmap as any });
         return { archetype, roadmap };
       }),
@@ -124,7 +137,7 @@ export const appRouter = router({
         const transcript = await transcribeWithDeepgram(audioBuffer, input.mimeType);
         const parseResponse = await routeAI({ task: "fast_inference", messages: [{ role: "system", content: "You are a carbon activity parser. Extract carbon activities from user speech. Return JSON array: [{ category, subcategory, label, carbonKg, quantity, unit }]. If nothing found, return []." }, { role: "user", content: transcript }], maxTokens: 512 });
         let parsedActivities: any[] = [];
-        try { parsedActivities = JSON.parse(parseResponse.content); } catch { parsedActivities = []; }
+        parsedActivities = parseAIJson<any[]>(parseResponse.content, []);
         return { transcript, activities: parsedActivities };
       }),
     list: protectedProcedure.input(z.object({ limit: z.number().default(50) })).query(async ({ ctx, input }) => getUserActivities(ctx.user.id, input.limit)),
@@ -141,10 +154,15 @@ export const appRouter = router({
       const trendingTopics = ["EV adoption surge", "plant-based diet movement", "solar energy boom", "fast fashion impact", "flight shame movement"];
       const trending = trendingTopics[Math.floor(Math.random() * trendingTopics.length)];
       const response = await routeAI({ task: "challenge_generate", messages: [{ role: "system", content: "You are ReBon AI. Generate 3 personalized weekly carbon challenges as JSON." }, { role: "user", content: `Archetype: ${user.archetypeLabel ?? "General"}. Trending: ${trending}. Return JSON array: [{ title, description, category, difficulty, carbonSavingKg, pointsReward, trendingTopic }]` }], maxTokens: 1024 });
-      let challengeData: any[] = [];
-      try { challengeData = JSON.parse(response.content); } catch { challengeData = []; }
+      const challengeData: any[] = parseAIJson<any[]>(response.content, []);
+      const validCategories = ["transport","meals","energy","shopping","lifestyle"];
+      const validDifficulties = ["easy","medium","hard"];
       for (const c of challengeData.slice(0, 3)) {
-        await createChallenge({ userId: ctx.user.id, title: c.title ?? "Weekly Challenge", description: c.description ?? "", category: c.category ?? "lifestyle", difficulty: c.difficulty ?? "medium", carbonSavingKg: c.carbonSavingKg ?? 5, pointsReward: c.pointsReward ?? 100, weekNumber, year: now.getFullYear(), aiProvider: response.provider, trendingTopic: c.trendingTopic ?? trending });
+        const rawCat = (c.category ?? "lifestyle").toLowerCase();
+        const category = validCategories.find(v => rawCat.includes(v)) ?? "lifestyle";
+        const rawDiff = (c.difficulty ?? "medium").toLowerCase();
+        const difficulty = validDifficulties.find(v => rawDiff.includes(v)) ?? "medium";
+        await createChallenge({ userId: ctx.user.id, title: c.title ?? "Weekly Challenge", description: c.description ?? "", category: category as any, difficulty: difficulty as any, carbonSavingKg: typeof c.carbonSavingKg === 'number' ? c.carbonSavingKg : 5, pointsReward: typeof c.pointsReward === 'number' ? c.pointsReward : 100, weekNumber, year: now.getFullYear(), aiProvider: response.provider, trendingTopic: c.trendingTopic ?? trending });
       }
       return getUserChallenges(ctx.user.id, weekNumber, now.getFullYear());
     }),
@@ -165,7 +183,7 @@ export const appRouter = router({
       const equivalents = calculateEquivalents(carbonSaved);
       const response = await routeAI({ task: "story_generate", messages: [{ role: "system", content: "You are ReBon AI. Generate an emotionally compelling, shareable carbon impact story. Be specific and inspiring." }, { role: "user", content: `User: ${user.name ?? "Climate Hero"}. Archetype: ${user.archetypeLabel ?? "Eco Warrior"}. Period: ${input.period}. Carbon: ${carbonSaved.toFixed(1)} kg CO₂. Equivalents: ${equivalents.trees} trees, ${equivalents.km_not_driven} km not driven. Return JSON: { headline: string, narrative: string }` }], maxTokens: 512 });
       let storyData = { headline: `You tracked ${carbonSaved.toFixed(1)} kg CO₂`, narrative: "Your actions are making a real difference." };
-      try { storyData = JSON.parse(response.content); } catch {}
+      storyData = parseAIJson(response.content, storyData);
       await saveStory({ userId: ctx.user.id, narrative: storyData.narrative, headline: storyData.headline, carbonSavedKg: carbonSaved, equivalents: equivalents as any, period: input.period, aiProvider: response.provider });
       return { ...storyData, carbonSavedKg: carbonSaved, equivalents };
     }),
@@ -194,7 +212,7 @@ export const appRouter = router({
       await savePeerSnapshot(snapshot);
       const insightResponse = await routeAI({ task: "fast_inference", messages: [{ role: "system", content: "You are ReBon AI. Generate 2 brief actionable insights based on peer comparison." }, { role: "user", content: `User: ${userCarbon.toFixed(1)} kg/week. Peer avg: ${peerAvg.toFixed(1)} kg/week. Percentile: ${percentileRank}th. Archetype: ${user.archetypeLabel}. Return JSON: { insights: [string, string] }` }], maxTokens: 256 });
       let insights = ["You're making progress!", "Keep tracking daily activities."];
-      try { insights = JSON.parse(insightResponse.content).insights ?? insights; } catch {}
+      insights = parseAIJson<{ insights: string[] }>(insightResponse.content, { insights }).insights ?? insights;
       return { ...snapshot, insights, peerCount: peers.length };
     }),
     latest: protectedProcedure.query(async ({ ctx }) => getLatestPeerSnapshot(ctx.user.id)),
@@ -220,7 +238,7 @@ export const appRouter = router({
       if (!collective) throw new TRPCError({ code: "NOT_FOUND" });
       const response = await routeAI({ task: "deep_analysis", messages: [{ role: "system", content: "You are ReBon AI. Calculate collective carbon impact of a what-if scenario." }, { role: "user", content: `Collective: ${collective.name}. Members: ${collective.memberCount}. Scenario: ${input.scenario}. Return JSON: { perMemberWeeklyKg: number, totalWeeklyKg: number, equivalent: string, insight: string }` }], maxTokens: 512 });
       let result = { perMemberWeeklyKg: 0, totalWeeklyKg: 0, equivalent: "", insight: "" };
-      try { result = JSON.parse(response.content); } catch {}
+      result = parseAIJson(response.content, result);
       return { ...result, collective };
     }),
   }),

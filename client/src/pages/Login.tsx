@@ -96,13 +96,13 @@ export default function Login() {
                   className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${identifierType === "phone" ? "bg-violet-600 text-white shadow-sm" : "text-zinc-400 hover:text-zinc-200"}`}
                   aria-pressed={identifierType === "phone"}
                 >
-                  <IconPhone className="w-4 h-4" aria-hidden="true" /> IconPhone
+                  <IconPhone className="w-4 h-4" aria-hidden="true" /> Phone
                 </button>
               </div>
 
               <div className="mb-4">
                 <label htmlFor="identifier" className="block text-sm font-medium text-zinc-300 mb-1.5">
-                  {identifierType === "email" ? "Email address" : "IconPhone number"}
+                  {identifierType === "email" ? "Email address" : "Phone number"}
                 </label>
                 <input
                   id="identifier"
@@ -129,7 +129,7 @@ export default function Login() {
                 {sendOtpMutation.isPending ? (
                   <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" aria-hidden="true" />
                 ) : (
-                  <>IconArrowForward code <IconArrowForward className="w-4 h-4" aria-hidden="true" /></>
+                  <>Send code <IconArrowForward className="w-4 h-4" aria-hidden="true" /></>
                 )}
               </button>
             </form>
