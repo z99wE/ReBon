@@ -14,6 +14,7 @@ import Collective from "./pages/Collective";
 import Mirror from "./pages/Mirror";
 import Stories from "./pages/Stories";
 import Assistant from "./pages/Assistant";
+import AgentArena from "./pages/AgentArena";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 
@@ -31,6 +32,7 @@ function Router() {
       <Route path="/mirror">{() => <RebonLayout><Mirror /></RebonLayout>}</Route>
       <Route path="/stories">{() => <RebonLayout><Stories /></RebonLayout>}</Route>
       <Route path="/assistant">{() => <RebonLayout><Assistant /></RebonLayout>}</Route>
+      <Route path="/arena">{() => <RebonLayout><AgentArena /></RebonLayout>}</Route>
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

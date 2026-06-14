@@ -1,174 +1,171 @@
-import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
-import { getLoginUrl } from "@/const";
-import { Activity, Award, Flame, Leaf, Sparkles, TrendingDown, TrendingUp, Zap } from "lucide-react";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { Link } from "wouter";
-import { ARCHETYPES } from "../../../shared/carbonData";
+import { ARCHETYPES } from "@shared/carbonData";
 
-const STAT_STYLES: Record<string, { wrap: string; iconWrap: string; iconColor: string }> = {
-  primary:      { wrap: "border-violet-500/25 hover:border-violet-500/50",  iconWrap: "bg-violet-500/10 border-violet-500/20",  iconColor: "text-violet-400" },
-  "green-400":  { wrap: "border-emerald-500/25 hover:border-emerald-500/50", iconWrap: "bg-emerald-500/10 border-emerald-500/20", iconColor: "text-emerald-400" },
-  "orange-400": { wrap: "border-amber-500/25 hover:border-amber-500/50",    iconWrap: "bg-amber-500/10 border-amber-500/20",    iconColor: "text-amber-400" },
-  "yellow-400": { wrap: "border-yellow-500/25 hover:border-yellow-500/50",  iconWrap: "bg-yellow-500/10 border-yellow-500/20",  iconColor: "text-yellow-400" },
-};
-function StatCard({ label, value, unit, icon: Icon, color, trend }: { label: string; value: string | number; unit?: string; icon: any; color: string; trend?: "up" | "down" | "neutral" }) {
-  const s = STAT_STYLES[color] ?? STAT_STYLES.primary;
-  return (
-    <div className={`card-glass p-5 rounded-xl border ${s.wrap} transition-all hover-lift`}>
-      <div className="flex items-start justify-between mb-3">
-        <div className={`w-10 h-10 rounded-xl ${s.iconWrap} border flex items-center justify-center`}>
-          <Icon className={`w-5 h-5 ${s.iconColor}`} aria-hidden="true" />
-        </div>
-        {trend && (
-          <div className={`flex items-center gap-1 text-xs font-semibold ${trend === "down" ? "text-emerald-400" : trend === "up" ? "text-rose-400" : "text-zinc-500"}`} aria-label={trend === "down" ? "trending down" : "trending up"}>
-            {trend === "down" ? <TrendingDown className="w-3 h-3" aria-hidden="true" /> : trend === "up" ? <TrendingUp className="w-3 h-3" aria-hidden="true" /> : null}
-          </div>
-        )}
-      </div>
-      <div className="text-2xl font-black text-white">{value}<span className="text-sm font-medium text-zinc-400 ml-1">{unit}</span></div>
-      <div className="text-xs text-zinc-500 mt-1">{label}</div>
-    </div>
-  );
-}
+const QUICK_ACTIONS = [
+  { href: "/log",        label: "Log Activity",   tag: "INPUT",   desc: "Voice or tap to log" },
+  { href: "/assistant",  label: "Ask ReBon AI",   tag: "AI",      desc: "Get coaching now" },
+  { href: "/leaderboard",label: "Leaderboard",    tag: "COMPETE", desc: "See your rank" },
+  { href: "/agents",     label: "Agent Arena",    tag: "A2A NEW", desc: "AI-to-AI negotiation" },
+];
 
 export default function Dashboard() {
-  const { user, isAuthenticated } = useAuth();
-  const summaryQuery = trpc.activities.summary.useQuery(undefined, { enabled: isAuthenticated });
-  const challengesQuery = trpc.challenges.list.useQuery(undefined, { enabled: isAuthenticated });
-  const profileQuery = trpc.user.profile.useQuery(undefined, { enabled: isAuthenticated });
+  const { user } = useAuth();
+  const { data: profile } = trpc.user.profile.useQuery();
+  const { data: activities } = trpc.activities.list.useQuery({ limit: 5 });
+  const { data: challenges } = trpc.challenges.list.useQuery();
 
-  if (!isAuthenticated) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6">
-        <div className="w-20 h-20 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center mx-auto pulse-glow">
-          <Leaf className="w-10 h-10 text-primary" />
-        </div>
-        <div>
-          <h2 className="text-2xl font-black text-foreground mb-2">Sign in to view your dashboard</h2>
-          <p className="text-muted-foreground">Track your carbon footprint and compete with peers</p>
-        </div>
-        <a href="/login" className="btn-primary px-8 py-3 rounded-xl font-semibold flex items-center gap-2">
-          <Sparkles className="w-4 h-4" aria-hidden="true" /> Get Started
-        </a>
-      </div>
-    );
-  }
-
-  const summary = summaryQuery.data;
-  const profile = profileQuery.data;
   const archetype = profile?.archetype ? ARCHETYPES[profile.archetype as keyof typeof ARCHETYPES] : null;
-  const pendingChallenges = challengesQuery.data?.filter(c => !c.completedAt).length ?? 0;
+  const totalKg = activities?.reduce((s, a) => s + Number(a.carbonKg), 0) ?? 0;
+  const weeklyBudget = archetype?.weeklyAvgKg ?? 70;
+  const budgetUsed = Math.min((totalKg / weeklyBudget) * 100, 100);
+  const budgetColor = budgetUsed > 80 ? '#f87171' : budgetUsed > 50 ? '#fbbf24' : '#4ade80';
+
+  const STATS = [
+    { label: "Elo Score",        value: profile?.eloScore ?? 1000,          unit: "pts",  accent: "stat-accent-violet", color: "#a78bfa" },
+    { label: "Weekly CO₂",       value: totalKg.toFixed(1),                  unit: "kg",   accent: "stat-accent-green",  color: "#4ade80" },
+    { label: "Active Challenges", value: challenges?.filter(c => !c.completedAt).length ?? 0, unit: "",  accent: "stat-accent-cyan",   color: "#67e8f9" },
+    { label: "Influence Score",   value: profile?.influenceScore?.toFixed(0) ?? "0", unit: "pts", accent: "stat-accent-amber", color: "#fbbf24" },
+  ];
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-black text-white">
-            Welcome back, <span className="text-gradient">{user?.name?.split(" ")[0] ?? "Hero"}</span>
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            {archetype ? `${archetype.icon} ${archetype.label}` : "Complete onboarding to get your Carbon DNA"}
-          </p>
-        </div>
-        {!profile?.onboardingCompleted && (
-          <Link href="/onboarding">
-            <button className="btn-primary px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2">
-              <Sparkles className="w-4 h-4" /> Get Carbon DNA
-            </button>
-          </Link>
-        )}
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="This Week" value={summary?.weeklyKg?.toFixed(1) ?? "0"} unit="kg CO₂" icon={Activity} color="primary" trend="down" />
-        <StatCard label="This Month" value={summary?.monthlyKg?.toFixed(1) ?? "0"} unit="kg CO₂" icon={Leaf} color="green-400" />
-        <StatCard label="Current Streak" value={profile?.currentStreak ?? 0} unit="days" icon={Flame} color="orange-400" trend="up" />
-        <StatCard label="Elo Score" value={profile?.eloScore ?? 1000} icon={Award} color="yellow-400" />
-      </div>
-
-      {/* Carbon Meter */}
-      <div className="card-glass rounded-xl border border-border p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-bold text-foreground flex items-center gap-2"><Zap className="w-4 h-4 text-primary" /> Weekly Carbon Budget</h3>
-          <span className="text-xs text-muted-foreground">Target: 70 kg/week</span>
-        </div>
-        <div className="relative h-4 bg-muted rounded-full overflow-hidden">
-          <div
-            className="absolute left-0 top-0 h-full rounded-full transition-all duration-1000"
-            style={{
-              width: `${Math.min(((summary?.weeklyKg ?? 0) / 70) * 100, 100)}%`,
-              background: (summary?.weeklyKg ?? 0) > 70
-                ? "linear-gradient(90deg, oklch(0.65 0.20 30), oklch(0.55 0.22 15))"
-                : "linear-gradient(90deg, oklch(0.55 0.18 145), oklch(0.65 0.20 160))"
-            }}
-          />
-        </div>
-        <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-          <span>{summary?.weeklyKg?.toFixed(1) ?? 0} kg used</span>
-          <span>{Math.max(0, 70 - (summary?.weeklyKg ?? 0)).toFixed(1)} kg remaining</span>
-        </div>
-      </div>
-
-      {/* Category Breakdown */}
-      {summary?.weeklyByCategory && Object.keys(summary.weeklyByCategory).length > 0 && (
-        <div className="card-glass rounded-xl border border-border p-6">
-          <h3 className="font-bold text-foreground mb-4 flex items-center gap-2"><Activity className="w-4 h-4 text-primary" /> By Category</h3>
-          <div className="space-y-3">
-            {Object.entries(summary.weeklyByCategory as Record<string, number>).map(([cat, kg]) => {
-              const total = Object.values(summary.weeklyByCategory as Record<string, number>).reduce((a, b) => a + b, 0);
-              const pct = total > 0 ? (kg / total) * 100 : 0;
-              const colors: Record<string, string> = { transport: "oklch(0.65 0.20 30)", meals: "oklch(0.65 0.18 145)", energy: "oklch(0.70 0.18 60)", shopping: "oklch(0.65 0.18 280)", other: "oklch(0.60 0.10 240)" };
-              return (
-                <div key={cat}>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="capitalize text-foreground font-medium">{cat}</span>
-                    <span className="text-muted-foreground">{kg.toFixed(1)} kg</span>
-                  </div>
-                  <div className="h-2 bg-muted rounded-full overflow-hidden">
-                    <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: colors[cat] ?? "oklch(0.60 0.15 240)" }} />
-                  </div>
-                </div>
-              );
-            })}
+    <div className="min-h-screen bg-[#050505] p-6 md:p-8">
+      {/* ── Header ── */}
+      <div className="border-b border-white/8 pb-6 mb-8">
+        <div className="flex items-end justify-between">
+          <div>
+            <p className="label-tech mb-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block mr-2 animate-pulse-dot" />
+              Dashboard — {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+            </p>
+            <h1 className="text-3xl font-black text-white uppercase tracking-tight">
+              Welcome back, {user?.name?.split(' ')[0] ?? 'Warrior'}.
+            </h1>
+            {archetype && (
+              <p className="text-white/40 text-sm mt-1">
+                Archetype: <span className="text-white/70 font-600">{archetype.label}</span>
+                {" "}— {archetype.description}
+              </p>
+            )}
           </div>
-        </div>
-      )}
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {[
-          { href: "/log", icon: Activity, label: "Log Activity", color: "text-green-400", bg: "bg-green-400/10 border-green-400/20" },
-          { href: "/assistant", icon: Sparkles, label: "Ask ReBon AI", color: "text-primary", bg: "bg-primary/10 border-primary/20" },
-          { href: "/leaderboard", icon: Award, label: "Leaderboard", color: "text-yellow-400", bg: "bg-yellow-400/10 border-yellow-400/20" },
-          { href: "/mirror", icon: Zap, label: "CarbonMirror", color: "text-blue-400", bg: "bg-blue-400/10 border-blue-400/20" },
-        ].map(item => (
-          <Link key={item.href} href={item.href}>
-            <div className={`card-glass rounded-xl border ${item.bg} p-4 flex flex-col items-center gap-2 cursor-pointer hover:scale-105 transition-transform`}>
-              <item.icon className={`w-6 h-6 ${item.color}`} />
-              <span className="text-xs font-semibold text-center text-foreground">{item.label}</span>
-            </div>
+          <Link href="/log">
+            <button className="btn-primary hidden md:flex">Log Activity →</button>
           </Link>
+        </div>
+      </div>
+
+      {/* ── Stat Cards ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 border-l border-t border-white/8 mb-8">
+        {STATS.map((s, i) => (
+          <div key={i} className={`glass-card border-r border-b border-white/8 p-6 ${s.accent}`}>
+            <p className="label-tech mb-3">{s.label}</p>
+            <div className="flex items-end gap-1">
+              <span className="text-4xl font-black" style={{color: s.color}}>{s.value}</span>
+              {s.unit && <span className="text-white/40 text-sm mb-1">{s.unit}</span>}
+            </div>
+          </div>
         ))}
       </div>
 
-      {/* Active Challenges */}
-      {pendingChallenges > 0 && (
-        <div className="card-glass rounded-xl border border-primary/20 p-5">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-bold text-foreground flex items-center gap-2"><Flame className="w-4 h-4 text-orange-400" /> Active Challenges</h3>
-            <Link href="/log"><span className="text-xs text-primary hover:underline cursor-pointer">{pendingChallenges} pending →</span></Link>
+      {/* ── Weekly Budget Bar ── */}
+      <div className="glass-card border border-white/8 p-6 mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <p className="label-tech mb-1">Weekly Carbon Budget</p>
+            <p className="text-white/40 text-xs">Based on your {archetype?.label ?? 'lifestyle'} archetype target</p>
           </div>
-          <div className="space-y-2">
-            {challengesQuery.data?.filter(c => !c.completedAt).slice(0, 2).map(c => (
-              <div key={c.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                <div className="w-2 h-2 rounded-full bg-orange-400 flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium truncate">{c.title}</div>
-                  <div className="text-xs text-muted-foreground">{c.carbonSavingKg} kg CO₂ · +{c.pointsReward} pts</div>
+          <div className="text-right">
+            <span className="text-2xl font-black" style={{color: budgetColor}}>{budgetUsed.toFixed(0)}%</span>
+            <p className="text-white/30 text-xs">{totalKg.toFixed(1)} / {weeklyBudget} kg CO₂</p>
+          </div>
+        </div>
+        <div className="h-2 bg-white/8 rounded-full overflow-hidden" role="progressbar" aria-valuenow={budgetUsed} aria-valuemin={0} aria-valuemax={100} aria-label="Weekly carbon budget used">
+          <div
+            className="h-full rounded-full transition-all duration-700"
+            style={{ width: `${budgetUsed}%`, background: budgetColor, boxShadow: `0 0 12px ${budgetColor}40` }}
+          />
+        </div>
+        {budgetUsed > 80 && (
+          <p className="text-rose-400/80 text-xs mt-3 flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse-dot" />
+            High emissions week — ask ReBon AI for quick wins
+          </p>
+        )}
+      </div>
+
+      {/* ── Quick Actions + Recent Activity ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Quick Actions */}
+        <div className="glass-card border border-white/8">
+          <div className="px-6 py-4 border-b border-white/8 flex items-center justify-between">
+            <p className="label-tech-bright">Quick Actions</p>
+            <span className="text-[9px] text-white/20 font-black tracking-widest">SYS-Q1</span>
+          </div>
+          <div className="divide-y divide-white/8">
+            {QUICK_ACTIONS.map((a) => (
+              <Link key={a.href} href={a.href} className="flex items-center justify-between px-6 py-4 hover:bg-white/4 transition-colors no-underline group">
+                <div className="flex items-center gap-4">
+                  <span className="label-tech text-white/20 group-hover:text-white/40 transition-colors">{a.tag}</span>
+                  <div>
+                    <p className="text-sm font-700 text-white/80 group-hover:text-white transition-colors">{a.label}</p>
+                    <p className="text-xs text-white/30">{a.desc}</p>
+                  </div>
                 </div>
-                <span className={`text-xs px-2 py-0.5 rounded-full border ${c.difficulty === "easy" ? "text-green-400 border-green-400/30 bg-green-400/10" : c.difficulty === "hard" ? "text-red-400 border-red-400/30 bg-red-400/10" : "text-yellow-400 border-yellow-400/30 bg-yellow-400/10"}`}>{c.difficulty}</span>
+                <span className="text-white/20 group-hover:text-white/60 transition-colors text-lg">→</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* Recent Activity */}
+        <div className="glass-card border border-white/8">
+          <div className="px-6 py-4 border-b border-white/8 flex items-center justify-between">
+            <p className="label-tech-bright">Recent Activity</p>
+            <Link href="/log" className="text-[9px] font-black tracking-widest text-white/30 hover:text-white/60 transition-colors no-underline uppercase">View All →</Link>
+          </div>
+          {!activities || activities.length === 0 ? (
+            <div className="px-6 py-12 text-center">
+              <p className="text-white/20 text-sm mb-4">No activities logged yet.</p>
+              <Link href="/log">
+                <button className="btn-ghost text-xs py-2 px-4">Log your first activity →</button>
+              </Link>
+            </div>
+          ) : (
+            <div className="divide-y divide-white/8">
+              {activities.slice(0, 5).map((a) => (
+                <div key={a.id} className="flex items-center justify-between px-6 py-3">
+                  <div>
+                    <p className="text-sm text-white/70 font-500">{a.label || a.subcategory}</p>
+                    <p className="text-[10px] text-white/30 uppercase tracking-widest">{a.category} · {new Date(a.loggedAt).toLocaleDateString()}</p>
+                  </div>
+                  <span className="text-sm font-black" style={{color: Number(a.carbonKg) > 5 ? '#f87171' : '#4ade80'}}>
+                    {Number(a.carbonKg).toFixed(1)} kg
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Active Challenges ── */}
+      {challenges && challenges.filter(c => !c.completedAt).length > 0 && (
+        <div className="glass-card border border-white/8">
+          <div className="px-6 py-4 border-b border-white/8 flex items-center justify-between">
+            <p className="label-tech-bright">Active Challenges</p>
+            <Link href="/assistant" className="text-[9px] font-black tracking-widest text-white/30 hover:text-white/60 transition-colors no-underline uppercase">Get New →</Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/8">
+            {challenges.filter(c => !c.completedAt).slice(0, 3).map((c) => (
+              <div key={c.id} className="p-6">
+                <p className="label-tech mb-2">{c.category}</p>
+                <p className="text-sm font-700 text-white/80 mb-2">{c.title}</p>
+                <p className="text-xs text-white/40 mb-3">{c.description}</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black text-cyan-400/70 bg-cyan-400/10 px-2 py-0.5 uppercase tracking-widest">{c.difficulty}</span>
+                  <span className="text-[10px] text-white/30">{c.carbonSavingKg} kg CO₂ saved</span>
+                </div>
               </div>
             ))}
           </div>

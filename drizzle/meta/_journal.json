@@ -22,6 +22,13 @@
       "when": 1781446662885,
       "tag": "0002_adorable_blink",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1781449012678,
+      "tag": "0003_fast_magma",
+      "breakpoints": true
     }
   ]
 }

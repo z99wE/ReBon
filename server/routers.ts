@@ -16,6 +16,7 @@ import {
 } from "./db";
 import { upsertUser } from "./db";
 import { routeAI, transcribeWithDeepgram } from "./services/aiRouter";
+import { agentsRouter } from "./routers/agents";
 import { createOtpSession, sendEmailOtp, sendPhoneOtp, verifyOtpSession } from "./services/otpAuth";
 import { SignJWT } from "jose";
 import { ENV } from "./_core/env";
@@ -233,6 +234,7 @@ export const appRouter = router({
     }),
   }),
 
+  agents: agentsRouter,
   assistant: router({
     chat: protectedProcedure
       .input(z.object({ message: z.string().min(1).max(2000), history: z.array(z.object({ role: z.enum(["user", "assistant"]), content: z.string() })).default([]), language: z.string().optional() }))

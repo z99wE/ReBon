@@ -185,6 +185,19 @@ export const otpSessions = mysqlTable("otp_sessions", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
+// ─── Agent-to-Agent Negotiations ────────────────────────────────────────────
+export const agentNegotiations = mysqlTable("agent_negotiations", {
+  id: int("id").autoincrement().primaryKey(),
+  initiatorId: int("initiatorId").notNull(),
+  targetId: int("targetId").notNull(),
+  category: varchar("category", { length: 64 }).notNull(),
+  proposedKg: varchar("proposedKg", { length: 16 }).notNull(),
+  agreedKg: varchar("agreedKg", { length: 16 }),
+  status: mysqlEnum("status", ["pending", "agreed", "rejected"]).default("pending").notNull(),
+  turns: text("turns").notNull(), // JSON array of NegotiationTurn
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 export type Activity = typeof activities.$inferSelect;

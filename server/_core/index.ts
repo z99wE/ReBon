@@ -32,6 +32,7 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 
 async function startServer() {
   const app = express();
+  app.set("trust proxy", 1); // Trust first proxy (Cloud Run / Manus gateway)
   const server = createServer(app);
 
   // ── Security headers (Helmet) ───────────────────────────────────────────────
