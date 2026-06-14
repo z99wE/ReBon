@@ -47,12 +47,12 @@ export default function Assistant() {
   if (!isAuthenticated) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6">
-        <div className="w-20 h-20 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center mx-auto pulse-glow">
+        <div className="w-20 h-20 rounded-full bg-indigo-600/10 border border-primary/30 flex items-center justify-center mx-auto pulse-glow">
           <Bot className="w-10 h-10 text-primary" />
         </div>
         <div>
-          <h2 className="text-2xl font-black text-foreground mb-2">Meet ReBon AI</h2>
-          <p className="text-muted-foreground max-w-sm">Your intelligent carbon coach powered by Groq, NVIDIA NIM, and Sarvam AI</p>
+          <h2 className="text-2xl font-black text-white mb-2">Meet ReBon AI</h2>
+          <p className="text-white/50 max-w-sm">Your intelligent carbon coach powered by Groq, NVIDIA NIM, and Sarvam AI</p>
         </div>
         <a href={getLoginUrl()} className="btn-primary px-8 py-3 rounded-xl font-semibold flex items-center gap-2">
           <Sparkles className="w-4 h-4" /> Sign In to Chat
@@ -64,13 +64,13 @@ export default function Assistant() {
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)] lg:h-[calc(100vh-4rem)]">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-4 pb-4 border-b border-border">
-        <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center pulse-glow">
+      <div className="flex items-center gap-3 mb-4 pb-4 border-b border-white/10">
+        <div className="w-10 h-10 rounded-full bg-indigo-600/10 border border-primary/30 flex items-center justify-center pulse-glow">
           <Bot className="w-5 h-5 text-primary" />
         </div>
         <div>
-          <h1 className="font-black text-foreground">ReBon AI</h1>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <h1 className="font-black text-white">ReBon AI</h1>
+          <div className="flex items-center gap-2 text-xs text-white/50">
             <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
             Multi-model routing: Groq · NVIDIA NIM · Sarvam AI
           </div>
@@ -83,12 +83,12 @@ export default function Assistant() {
           <div className="space-y-6 py-4">
             <div className="text-center">
               <div className="text-4xl mb-3">🌱</div>
-              <h3 className="font-bold text-foreground mb-1">Hi! I'm ReBon AI</h3>
-              <p className="text-sm text-muted-foreground">Ask me anything about your carbon footprint, climate science, or how to reduce your impact.</p>
+              <h3 className="font-bold text-white mb-1">Hi! I'm ReBon AI</h3>
+              <p className="text-sm text-white/50">Ask me anything about your carbon footprint, climate science, or how to reduce your impact.</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {SUGGESTED_PROMPTS.map(prompt => (
-                <button key={prompt} onClick={() => sendMessage(prompt)} className="text-left p-3 rounded-xl border border-border hover:border-primary/40 hover:bg-primary/5 text-sm text-muted-foreground hover:text-foreground transition-all">
+                <button key={prompt} onClick={() => sendMessage(prompt)} className="text-left p-3 rounded-xl border border-white/10 hover:border-primary/40 hover:bg-indigo-600/5 text-sm text-white/50 hover:text-white transition-all">
                   {prompt}
                 </button>
               ))}
@@ -99,23 +99,23 @@ export default function Assistant() {
         {messages.map((msg, idx) => (
           <div key={idx} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
             {msg.role === "assistant" && (
-              <div className="w-7 h-7 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center flex-shrink-0 mr-2 mt-1">
+              <div className="w-7 h-7 rounded-full bg-indigo-600/10 border border-primary/30 flex items-center justify-center flex-shrink-0 mr-2 mt-1">
                 <Bot className="w-3.5 h-3.5 text-primary" />
               </div>
             )}
-            <div className={`max-w-[85%] ${msg.role === "user" ? "bg-primary/15 border border-primary/30 rounded-2xl rounded-tr-sm" : "bg-muted/50 border border-border rounded-2xl rounded-tl-sm"} px-4 py-3`}>
+            <div className={`max-w-[85%] ${msg.role === "user" ? "bg-indigo-600/15 border border-primary/30 rounded-2xl rounded-tr-sm" : "bg-white/5/50 border border-white/10 rounded-2xl rounded-tl-sm"} px-4 py-3`}>
               {msg.role === "assistant" ? (
-                <div className="text-sm text-foreground prose-sm">
+                <div className="text-sm text-white prose-sm">
                   <Streamdown>{msg.content}</Streamdown>
                 </div>
               ) : (
-                <p className="text-sm text-foreground">{msg.content}</p>
+                <p className="text-sm text-white">{msg.content}</p>
               )}
               {msg.provider && (
-                <div className={`flex items-center gap-1 mt-2 text-[10px] ${providerColors[msg.provider] ?? "text-muted-foreground"}`}>
+                <div className={`flex items-center gap-1 mt-2 text-[10px] ${providerColors[msg.provider] ?? "text-white/50"}`}>
                   <Cpu className="w-2.5 h-2.5" />
                   {providerLabels[msg.provider] ?? msg.provider}
-                  {msg.latencyMs && <span className="text-muted-foreground ml-1">{msg.latencyMs}ms</span>}
+                  {msg.latencyMs && <span className="text-white/50 ml-1">{msg.latencyMs}ms</span>}
                 </div>
               )}
             </div>
@@ -124,17 +124,17 @@ export default function Assistant() {
 
         {chatMutation.isPending && (
           <div className="flex justify-start">
-            <div className="w-7 h-7 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center flex-shrink-0 mr-2 mt-1">
+            <div className="w-7 h-7 rounded-full bg-indigo-600/10 border border-primary/30 flex items-center justify-center flex-shrink-0 mr-2 mt-1">
               <Bot className="w-3.5 h-3.5 text-primary" />
             </div>
-            <div className="bg-muted/50 border border-border rounded-2xl rounded-tl-sm px-4 py-3">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="bg-white/5/50 border border-white/10 rounded-2xl rounded-tl-sm px-4 py-3">
+              <div className="flex items-center gap-2 text-sm text-white/50">
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 <span>Thinking</span>
                 <span className="flex gap-0.5">
-                  <span className="w-1 h-1 rounded-full bg-primary animate-bounce" style={{ animationDelay: "0ms" }} />
-                  <span className="w-1 h-1 rounded-full bg-primary animate-bounce" style={{ animationDelay: "150ms" }} />
-                  <span className="w-1 h-1 rounded-full bg-primary animate-bounce" style={{ animationDelay: "300ms" }} />
+                  <span className="w-1 h-1 rounded-full bg-indigo-600 animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <span className="w-1 h-1 rounded-full bg-indigo-600 animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <span className="w-1 h-1 rounded-full bg-indigo-600 animate-bounce" style={{ animationDelay: "300ms" }} />
                 </span>
               </div>
             </div>
@@ -144,7 +144,7 @@ export default function Assistant() {
       </div>
 
       {/* Input */}
-      <div className="mt-4 pt-4 border-t border-border">
+      <div className="mt-4 pt-4 border-t border-white/10">
         <div className="flex gap-2">
           <input
             value={input}
@@ -152,7 +152,7 @@ export default function Assistant() {
             onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(input); } }}
             placeholder="Ask ReBon AI anything about carbon..."
             disabled={chatMutation.isPending}
-            className="flex-1 px-4 py-3 rounded-xl bg-muted border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
+            className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/50 focus:outline-none focus:border-primary/50 transition-colors"
           />
           <button
             onClick={() => sendMessage(input)}
@@ -162,7 +162,7 @@ export default function Assistant() {
             {chatMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
           </button>
         </div>
-        <div className="flex items-center gap-2 mt-2 text-[10px] text-muted-foreground">
+        <div className="flex items-center gap-2 mt-2 text-[10px] text-white/50">
           <Zap className="w-2.5 h-2.5" />
           Powered by multi-model routing: Groq (fast) · NVIDIA NIM (deep) · Sarvam AI (multilingual)
         </div>

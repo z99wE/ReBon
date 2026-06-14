@@ -21,7 +21,7 @@ export default function Onboarding() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">
         <div className="text-center space-y-4">
           <Leaf className="w-12 h-12 text-primary mx-auto" />
           <h2 className="text-xl font-bold">Sign in to get your Carbon DNA</h2>
@@ -50,28 +50,28 @@ export default function Onboarding() {
   if (result) {
     const arch = ARCHETYPES[result.archetype.id as keyof typeof ARCHETYPES];
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">
         <div className="max-w-lg w-full text-center space-y-8">
           <div className="relative">
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-40 h-40 rounded-full bg-primary/5 animate-ping opacity-20" />
+              <div className="w-40 h-40 rounded-full bg-indigo-600/5 animate-ping opacity-20" />
             </div>
-            <div className="relative w-32 h-32 rounded-full bg-primary/10 border-2 border-primary/40 flex items-center justify-center mx-auto text-6xl">
+            <div className="relative w-32 h-32 rounded-full bg-indigo-600/10 border-2 border-primary/40 flex items-center justify-center mx-auto text-6xl">
               {arch?.icon ?? "🌱"}
             </div>
           </div>
           <div>
             <div className="text-xs font-bold tracking-widest text-primary uppercase mb-2">Your Carbon DNA</div>
-            <h1 className="text-3xl font-black text-foreground mb-2">{arch?.label ?? result.archetype.label}</h1>
-            <p className="text-muted-foreground">{arch?.description ?? "You're on your carbon reduction journey."}</p>
+            <h1 className="text-3xl font-black text-white mb-2">{arch?.label ?? result.archetype.label}</h1>
+            <p className="text-white/50">{arch?.description ?? "You're on your carbon reduction journey."}</p>
           </div>
           <div className="card-glass rounded-xl border border-primary/20 p-5 text-left">
-            <div className="text-sm font-bold text-foreground mb-3 flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-400" /> Your 90-Day Roadmap</div>
+            <div className="text-sm font-bold text-white mb-3 flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-400" /> Your 90-Day Roadmap</div>
             {result.roadmap?.phases?.slice(0, 3).map((phase: any) => (
               <div key={phase.phase} className="mb-3">
                 <div className="text-xs font-bold text-primary mb-1">Phase {phase.phase}: {phase.title}</div>
                 {phase.actions?.slice(0, 2).map((a: any, i: number) => (
-                  <div key={i} className="text-xs text-muted-foreground flex items-start gap-2 mb-1">
+                  <div key={i} className="text-xs text-white/50 flex items-start gap-2 mb-1">
                     <span className="text-primary mt-0.5">→</span> {a.action} <span className="text-green-400 ml-auto flex-shrink-0">-{a.carbonSavingKg}kg</span>
                   </div>
                 ))}
@@ -87,34 +87,34 @@ export default function Onboarding() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">
       <div className="max-w-lg w-full space-y-8">
         {/* Header */}
         <div className="text-center">
-          <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 rounded-full bg-indigo-600/10 border border-primary/30 flex items-center justify-center mx-auto mb-4">
             <Leaf className="w-8 h-8 text-primary" />
           </div>
           <h1 className="text-2xl font-black text-gradient-primary">Discover Your Carbon DNA</h1>
-          <p className="text-muted-foreground text-sm mt-2">Answer {ONBOARDING_QUESTIONS.length} quick questions to get your personalized profile</p>
+          <p className="text-white/50 text-sm mt-2">Answer {ONBOARDING_QUESTIONS.length} quick questions to get your personalized profile</p>
         </div>
 
         {/* Progress */}
         <div className="space-y-2">
-          <div className="flex justify-between text-xs text-muted-foreground">
+          <div className="flex justify-between text-xs text-white/50">
             <span>Question {step + 1} of {ONBOARDING_QUESTIONS.length}</span>
             <span>{Math.round(progress)}%</span>
           </div>
-          <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-            <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
+          <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+            <div className="h-full bg-indigo-600 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
           </div>
         </div>
 
         {/* Question */}
         {q && (
-          <div className="card-glass rounded-2xl border border-border p-8 space-y-6">
+          <div className="card-glass rounded-2xl border border-white/10 p-8 space-y-6">
             <div>
               <div className="text-xs font-bold tracking-widest text-primary uppercase mb-3">{q.category}</div>
-              <h2 className="text-xl font-bold text-foreground">{q.question}</h2>
+              <h2 className="text-xl font-bold text-white">{q.question}</h2>
             </div>
             <div className="space-y-3">
               {q.options.map((opt) => (
@@ -122,20 +122,20 @@ export default function Onboarding() {
                   key={opt.value}
                   onClick={() => handleAnswer(opt.value)}
                   disabled={completeMutation.isPending}
-                  className={`w-full text-left p-4 rounded-xl border transition-all duration-200 group ${answers[q.id] === opt.value ? "border-primary bg-primary/10 text-foreground" : "border-border bg-muted/30 hover:border-primary/50 hover:bg-primary/5 text-foreground"}`}
+                  className={`w-full text-left p-4 rounded-xl border transition-all duration-200 group ${answers[q.id] === opt.value ? "border-primary bg-indigo-600/10 text-white" : "border-white/10 bg-white/5/30 hover:border-primary/50 hover:bg-indigo-600/5 text-white"}`}
                 >
                   <div className="font-medium">{opt.label}</div>
-                  {(opt as any).carbonHint && <div className="text-xs text-muted-foreground mt-0.5">{(opt as any).carbonHint}</div>}
+                  {(opt as any).carbonHint && <div className="text-xs text-white/50 mt-0.5">{(opt as any).carbonHint}</div>}
                 </button>
               ))}
             </div>
             <div className="flex justify-between">
               {step > 0 && (
-                <button onClick={() => setStep(s => s - 1)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <button onClick={() => setStep(s => s - 1)} className="flex items-center gap-2 text-sm text-white/50 hover:text-white transition-colors">
                   <ArrowLeft className="w-4 h-4" /> Back
                 </button>
               )}
-              <div className="ml-auto text-xs text-muted-foreground flex items-center gap-1">
+              <div className="ml-auto text-xs text-white/50 flex items-center gap-1">
                 {isLast ? "Last question" : <><ArrowRight className="w-3 h-3" /> Select to continue</>}
               </div>
             </div>

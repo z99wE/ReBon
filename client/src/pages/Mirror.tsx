@@ -17,14 +17,14 @@ export default function Mirror() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-black text-foreground flex items-center gap-2"><GitCompare className="w-6 h-6 text-blue-400" /> CarbonMirror</h1>
-        <p className="text-muted-foreground text-sm mt-1">See how you compare to anonymous peers with the same lifestyle</p>
+        <h1 className="text-2xl font-black text-white flex items-center gap-2"><GitCompare className="w-6 h-6 text-blue-400" /> CarbonMirror</h1>
+        <p className="text-white/50 text-sm mt-1">See how you compare to anonymous peers with the same lifestyle</p>
       </div>
 
       {!isAuthenticated ? (
-        <div className="card-glass rounded-xl border border-border p-8 text-center">
-          <GitCompare className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-          <p className="text-muted-foreground">Sign in to compare with peers</p>
+        <div className="card-glass rounded-xl border border-white/10 p-8 text-center">
+          <GitCompare className="w-10 h-10 text-white/50 mx-auto mb-3" />
+          <p className="text-white/50">Sign in to compare with peers</p>
         </div>
       ) : (
         <>
@@ -40,36 +40,36 @@ export default function Mirror() {
                   <div className="text-4xl">{arch.icon}</div>
                   <div>
                     <div className="text-xs font-bold tracking-widest text-blue-400 uppercase mb-1">Your Archetype</div>
-                    <div className="font-bold text-foreground">{arch.label}</div>
-                    <div className="text-xs text-muted-foreground">{arch.description}</div>
+                    <div className="font-bold text-white">{arch.label}</div>
+                    <div className="text-xs text-white/50">{arch.description}</div>
                   </div>
                 </div>
               )}
 
               {/* Comparison Cards */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="card-glass rounded-xl border border-border p-5 text-center">
-                  <div className="text-xs text-muted-foreground mb-2">Your Weekly Carbon</div>
-                  <div className="text-3xl font-black text-foreground">{data.userCarbonKg.toFixed(1)}</div>
-                  <div className="text-xs text-muted-foreground">kg CO₂</div>
+                <div className="card-glass rounded-xl border border-white/10 p-5 text-center">
+                  <div className="text-xs text-white/50 mb-2">Your Weekly Carbon</div>
+                  <div className="text-3xl font-black text-white">{data.userCarbonKg.toFixed(1)}</div>
+                  <div className="text-xs text-white/50">kg CO₂</div>
                 </div>
-                <div className="card-glass rounded-xl border border-border p-5 text-center">
-                  <div className="text-xs text-muted-foreground mb-2 flex items-center justify-center gap-1"><Users className="w-3 h-3" /> Peer Average</div>
-                  <div className="text-3xl font-black text-foreground">{data.peerAvgKg.toFixed(1)}</div>
-                  <div className="text-xs text-muted-foreground">kg CO₂ ({(data as any).peerCount ?? 0} peers)</div>
+                <div className="card-glass rounded-xl border border-white/10 p-5 text-center">
+                  <div className="text-xs text-white/50 mb-2 flex items-center justify-center gap-1"><Users className="w-3 h-3" /> Peer Average</div>
+                  <div className="text-3xl font-black text-white">{data.peerAvgKg.toFixed(1)}</div>
+                  <div className="text-xs text-white/50">kg CO₂ ({(data as any).peerCount ?? 0} peers)</div>
                 </div>
               </div>
 
               {/* Percentile Ring */}
-              <div className="card-glass rounded-xl border border-border p-6 flex flex-col items-center gap-4">
+              <div className="card-glass rounded-xl border border-white/10 p-6 flex flex-col items-center gap-4">
                 <div className="relative w-32 h-32">
                   <svg className="w-32 h-32 -rotate-90" viewBox="0 0 120 120">
                     <circle cx="60" cy="60" r="50" fill="none" stroke="oklch(0.22 0.012 240)" strokeWidth="10" />
                     <circle cx="60" cy="60" r="50" fill="none" stroke={better ? "oklch(0.55 0.18 145)" : "oklch(0.65 0.20 30)"} strokeWidth="10" strokeLinecap="round" strokeDasharray={`${(data.percentileRank / 100) * 314} 314`} className="transition-all duration-1000" />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <div className="text-2xl font-black text-foreground">{data.percentileRank}th</div>
-                    <div className="text-xs text-muted-foreground">percentile</div>
+                    <div className="text-2xl font-black text-white">{data.percentileRank}th</div>
+                    <div className="text-xs text-white/50">percentile</div>
                   </div>
                 </div>
                 <div className={`flex items-center gap-2 text-sm font-semibold ${better ? "text-green-400" : "text-red-400"}`}>
@@ -81,9 +81,9 @@ export default function Mirror() {
               {/* AI Insights */}
               {(data as any).insights && (
                 <div className="card-glass rounded-xl border border-primary/20 p-5 space-y-3">
-                  <div className="text-sm font-bold text-foreground">🤖 ReBon AI Insights</div>
+                  <div className="text-sm font-bold text-white">🤖 ReBon AI Insights</div>
                   {((data as any).insights as string[]).map((insight, i) => (
-                    <div key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                    <div key={i} className="flex items-start gap-2 text-sm text-white/50">
                       <span className="text-primary mt-0.5 flex-shrink-0">→</span>
                       {insight}
                     </div>

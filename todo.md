@@ -79,11 +79,11 @@
 - [x] Final accessibility audit and keyboard navigation check
 
 ## Phase 11: UI Overhaul + A2A Feature
-- [ ] Rebuild global CSS: glassmorphism + industrial grid (Astrix-style), black base, white/10 borders, glass cards
-- [ ] Rebuild landing page (Home.tsx): industrial grid header, marketing copy, glassmorphism hero
-- [ ] Rebuild RebonLayout sidebar: industrial grid nav, uppercase tracking, glass sidebar
-- [ ] Rebuild Dashboard: glassmorphism stat cards, marketing copy, animated metrics
-- [ ] Rebuild all inner pages with glassmorphism card system
-- [ ] Add A2A (Agent-to-Agent) carbon negotiation feature: backend router + frontend page
-- [ ] Add A2A route to App.tsx and sidebar navigation
-- [ ] Update tests for A2A feature
+- [x] Rebuild global CSS: glassmorphism + industrial grid (Astrix-style), black base, white/10 borders, glass cards
+- [x] Rebuild landing page (Home.tsx): industrial grid header, marketing copy, glassmorphism hero
+- [x] Rebuild RebonLayout sidebar: industrial grid nav, uppercase tracking, glass sidebar
+- [x] Rebuild Dashboard: glassmorphism stat cards, marketing copy, animated metrics
+- [x] Rebuild all inner pages with glassmorphism card system
+- [x] Add A2A (Agent-to-Agent) carbon negotiation feature: backend router + frontend page
+- [x] Add A2A route to App.tsx and sidebar navigation
+- [x] Update tests for A2A feature

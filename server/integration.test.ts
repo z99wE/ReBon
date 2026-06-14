@@ -229,3 +229,54 @@ describe("Leaderboard — public access", () => {
     expect(Array.isArray(result.entries)).toBe(true);
   });
 });
+// ── Agent Arena (A2A) Tests ──────────────────────────────────────────────────
+describe("Agent Arena (A2A)", () => {
+  it("requires authentication to initiate a negotiation", async () => {
+    const ctx = makePublicCtx();
+    const caller = appRouter.createCaller(ctx);
+    await expect(
+      caller.agents.initiate({
+        targetUserId: 99,
+        category: "transport",
+        proposedKg: 20,
+      })
+    ).rejects.toThrow();
+  });
+
+  it("requires authentication to list negotiations", async () => {
+    const ctx = makePublicCtx();
+    const caller = appRouter.createCaller(ctx);
+    await expect(caller.agents.list()).rejects.toThrow();
+  });
+
+  it("validates proposedKg must be positive and ≤ 200", async () => {
+    const ctx = makeAuthCtx();
+    const caller = appRouter.createCaller(ctx);
+    await expect(
+      caller.agents.initiate({
+        targetUserId: 2,
+        category: "transport",
+        proposedKg: -5, // invalid: must be positive
+      })
+    ).rejects.toThrow();
+    await expect(
+      caller.agents.initiate({
+        targetUserId: 2,
+        category: "transport",
+        proposedKg: 999, // invalid: must be <= 200
+      })
+    ).rejects.toThrow();
+  });
+
+  it("validates category must be a non-empty string", async () => {
+    const ctx = makeAuthCtx();
+    const caller = appRouter.createCaller(ctx);
+    await expect(
+      caller.agents.initiate({
+        targetUserId: 2,
+        category: "", // invalid: min length 1
+        proposedKg: 20,
+      })
+    ).rejects.toThrow();
+  });
+});
