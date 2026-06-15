@@ -81,8 +81,10 @@ async function startServer() {
   app.use("/api/trpc", generalLimiter);
 
   // ── Body parser ──────────────────────────────────────────────────────────────
-  app.use(express.json({ limit: "50mb" }));
-  app.use(express.urlencoded({ limit: "50mb", extended: true }));
+  // JSON: 2MB limit (prevents DoS via large JSON payloads)
+  // urlencoded: 15MB limit (supports voice audio uploads encoded as base64)
+  app.use(express.json({ limit: "2mb" }));
+  app.use(express.urlencoded({ limit: "15mb", extended: true }));
 
   registerStorageProxy(app);
   registerOAuthRoutes(app);

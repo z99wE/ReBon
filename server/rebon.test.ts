@@ -463,27 +463,13 @@ describe("Peer Comparison Logic", () => {
 // ─── 12. AI Provider Configuration ──────────────────────────────────────────
 
 describe("AI Provider Configuration", () => {
-  // These tests verify API keys are configured in production/runtime.
-  // Skipped in test environment as API keys are injected at runtime, not test time.
-  it.skip("GROQ_API_KEY should be configured", () => {
-    expect(process.env.GROQ_API_KEY).toBeTruthy();
-    expect(process.env.GROQ_API_KEY!.startsWith("gsk_")).toBe(true);
-  });
-
-  it.skip("NVIDIA_NIM_API_KEY should be configured", () => {
-    expect(process.env.NVIDIA_NIM_API_KEY).toBeTruthy();
-    expect(process.env.NVIDIA_NIM_API_KEY!.startsWith("nvapi-")).toBe(true);
-  });
-
-  it.skip("DEEPGRAM_API_KEY should be configured", () => {
-    expect(process.env.DEEPGRAM_API_KEY).toBeTruthy();
-    expect(process.env.DEEPGRAM_API_KEY!.length).toBeGreaterThan(20);
-  });
-
-  it.skip("SARVAM_API_KEY should be configured", () => {
-    expect(process.env.SARVAM_API_KEY).toBeTruthy();
-    expect(process.env.SARVAM_API_KEY!.startsWith("sk_")).toBe(true);
-  });
+  // NOTE: These tests validate runtime API key presence.
+  // They are marked as todo because API keys are injected at deploy-time (not in CI).
+  // To verify manually: set GROQ_API_KEY, NVIDIA_NIM_API_KEY, etc. in .env.local and run pnpm test.
+  it.todo("GROQ_API_KEY should be configured — set GROQ_API_KEY in env and remove this todo to verify");
+  it.todo("NVIDIA_NIM_API_KEY should be configured — set NVIDIA_NIM_API_KEY in env and remove this todo to verify");
+  it.todo("DEEPGRAM_API_KEY should be configured — set DEEPGRAM_API_KEY in env and remove this todo to verify");
+  it.todo("SARVAM_API_KEY should be configured — set SARVAM_API_KEY in env and remove this todo to verify");
 
   it("AI routing task-to-provider mapping should be consistent", () => {
     const taskMap: Record<string, string> = {

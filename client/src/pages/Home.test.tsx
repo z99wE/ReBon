@@ -1,7 +1,10 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
+import { axe, toHaveNoViolations } from "jest-axe";
 import Home from "./Home";
+
+expect.extend(toHaveNoViolations);
 
 let authState = { isAuthenticated: false };
 
@@ -36,5 +39,18 @@ describe("Home", () => {
     render(<Home />);
 
     expect(screen.getByRole("link", { name: /open app/i })).toBeInTheDocument();
+  });
+
+  it("has no accessibility violations on the marketing landing page", async () => {
+    const { container } = render(<Home />);
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+
+  it("has no accessibility violations when signed in", async () => {
+    authState = { isAuthenticated: true };
+    const { container } = render(<Home />);
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
   });
 });

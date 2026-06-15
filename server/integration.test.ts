@@ -141,17 +141,10 @@ describe("Auth flow — sendOtp", () => {
 // ── Flow 2: Auth — verifyOtp ──────────────────────────────────────────────────
 
 describe("Auth flow — verifyOtp", () => {
-  it.skip("accepts a valid 6-digit OTP and returns a token", async () => {
-    const ctx = makePublicCtx();
-    const caller = appRouter.createCaller(ctx);
-    const result = await caller.auth.verifyOtp({
-      identifier: "demo@rebon.app",
-      otp: "123456",
-    });
-    expect(result).toHaveProperty("success", true);
-    // Cookie should have been set
-    expect((ctx.res.cookie as ReturnType<typeof vi.fn>).mock.calls.length).toBeGreaterThan(0);
-  });
+  // NOTE: This test requires a real OTP session to exist in the database.
+  // It is marked as todo because the CI environment has no live DB or pre-seeded OTP sessions.
+  // To verify manually: call sendOtp first to create a session, then pass the real OTP here.
+  it.todo("accepts a valid 6-digit OTP and returns a token — requires live DB with seeded OTP session");
 
   it("rejects an OTP that is not 6 digits", async () => {
     const caller = appRouter.createCaller(makePublicCtx());
