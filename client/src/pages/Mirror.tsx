@@ -17,7 +17,7 @@ export default function Mirror() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-black text-white flex items-center gap-2"><IconGitCompare className="w-6 h-6 text-blue-400" /> CarbonMirror</h1>
+        <h1 className="text-2xl font-black text-white flex items-center gap-2"><IconGitCompare className="w-6 h-6 text-white/70" /> CarbonMirror</h1>
         <p className="text-white/50 text-sm mt-1">You can't improve what you don't understand. Benchmark against peers who live exactly like you.</p>
       </div>
 
@@ -39,7 +39,7 @@ export default function Mirror() {
                 <div className="card-glass rounded-xl border border-blue-400/20 p-4 flex items-center gap-4">
                   <div className="text-4xl">{arch.icon}</div>
                   <div>
-                    <div className="text-xs font-bold tracking-widest text-blue-400 uppercase mb-1">Your Archetype</div>
+                    <div className="text-xs font-bold tracking-widest text-white/70 uppercase mb-1">Your Archetype</div>
                     <div className="font-bold text-white">{arch.label}</div>
                     <div className="text-xs text-white/50">{arch.description}</div>
                   </div>
@@ -72,7 +72,7 @@ export default function Mirror() {
                     <div className="text-xs text-white/50">percentile</div>
                   </div>
                 </div>
-                <div className={`flex items-center gap-2 text-sm font-semibold ${better ? "text-green-400" : "text-red-400"}`}>
+                <div className={`flex items-center gap-2 text-sm font-semibold ${better ? "text-white/70" : "text-white/70"}`}>
                   {better ? <IconTrendingDown className="w-4 h-4" /> : <IconTrendingUp className="w-4 h-4" />}
                   {better ? `${Math.abs(diff).toFixed(1)} kg below peer average` : `${diff.toFixed(1)} kg above peer average`}
                 </div>

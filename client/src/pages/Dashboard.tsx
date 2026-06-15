@@ -163,7 +163,7 @@ export default function Dashboard() {
                 <p className="text-sm font-700 text-white/80 mb-2">{c.title}</p>
                 <p className="text-xs text-white/40 mb-3">{c.description}</p>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-black text-cyan-400/70 bg-cyan-400/10 px-2 py-0.5 uppercase tracking-widest">{c.difficulty}</span>
+                  <span className="text-[10px] font-black text-white/70/70 bg-cyan-400/10 px-2 py-0.5 uppercase tracking-widest">{c.difficulty}</span>
                   <span className="text-[10px] text-white/30">{c.carbonSavingKg} kg CO₂ saved</span>
                 </div>
               </div>

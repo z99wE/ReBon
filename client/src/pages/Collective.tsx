@@ -24,7 +24,7 @@ export default function Collective() {
     <div className="space-y-6">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-black text-white flex items-center gap-2"><IconPeople className="w-6 h-6 text-purple-400" /> CarbonCollective</h1>
+          <h1 className="text-2xl font-black text-white flex items-center gap-2"><IconPeople className="w-6 h-6 text-white/70" /> CarbonCollective</h1>
           <p className="text-white/50 text-sm mt-1">One person going vegan saves 0.8 tonnes. A tribe of 50 saves 40 tonnes. Start your movement.</p>
         </div>
         {isAuthenticated && (
@@ -76,7 +76,7 @@ export default function Collective() {
                   <p className="text-xs text-white/50 mt-0.5">{c.description}</p>
                 </div>
                 <div className="text-right">
-                  <div className="text-sm font-bold text-purple-400">{c.memberCount} members</div>
+                  <div className="text-sm font-bold text-white/70">{c.memberCount} members</div>
                   <div className="text-xs text-white/50">{c.totalCarbonKg?.toFixed(1) ?? 0} kg CO₂</div>
                 </div>
               </div>
@@ -95,7 +95,7 @@ export default function Collective() {
                 </div>
                 {whatIfMutation.data && selectedCollective === c.id && (
                   <div className="p-3 rounded-lg bg-indigo-600/5 border border-primary/20 text-xs space-y-1">
-                    <div className="text-green-400 font-bold"> {whatIfMutation.data.totalWeeklyKg?.toFixed(1)} kg CO₂ saved/week collectively</div>
+                    <div className="text-white/70 font-bold"> {whatIfMutation.data.totalWeeklyKg?.toFixed(1)} kg CO₂ saved/week collectively</div>
                     <div className="text-white/50">{whatIfMutation.data.equivalent}</div>
                     <div className="text-white">{whatIfMutation.data.insight}</div>
                   </div>
@@ -121,7 +121,7 @@ export default function Collective() {
                 <div className="font-semibold text-sm">{c.name}</div>
                 <div className="text-xs text-white/50">{c.memberCount} members · {c.totalCarbonKg?.toFixed(1) ?? 0} kg CO₂ tracked</div>
               </div>
-              <div className="text-xs text-purple-400 font-mono">{c.inviteCode}</div>
+              <div className="text-xs text-white/70 font-mono">{c.inviteCode}</div>
             </div>
           ))
         )}

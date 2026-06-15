@@ -74,7 +74,7 @@ export default function LogActivity() {
             aria-label={recording ? "Stop recording" : "Start voice recording"}
             className={`w-20 h-20 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${recording ? "bg-red-500/20 border-red-500 animate-pulse" : "bg-indigo-600/10 border-primary/40 hover:bg-indigo-600/20"}`}
           >
-            {voiceMutation.isPending ? <IconPulse className="w-8 h-8 animate-spin text-primary" /> : recording ? <IconMicOff className="w-8 h-8 text-red-400" /> : <IconMic className="w-8 h-8 text-primary" />}
+            {voiceMutation.isPending ? <IconPulse className="w-8 h-8 animate-spin text-primary" /> : recording ? <IconMicOff className="w-8 h-8 text-white/70" /> : <IconMic className="w-8 h-8 text-primary" />}
           </button>
           <p className="text-sm text-white/50 text-center">
             {recording ? "Recording… tap to stop" : voiceMutation.isPending ? "Processing your voice…" : 'Say something like "I drove 10 miles to work"'}
@@ -196,7 +196,7 @@ export default function LogActivity() {
                   onClick={() => completeMutation.mutate({ challengeId: c.id })}
                   disabled={completeMutation.isPending}
                   aria-label={`Complete challenge: ${c.title}`}
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-green-400/10 border border-green-400/30 text-green-400 hover:bg-green-400/20 transition-colors"
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-green-400/10 border border-green-400/30 text-white/70 hover:bg-green-400/20 transition-colors"
                 >
                   Done
                 </button>

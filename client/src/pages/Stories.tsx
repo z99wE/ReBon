@@ -24,7 +24,7 @@ export default function Stories() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-black text-white flex items-center gap-2"><IconBookOpen className="w-6 h-6 text-pink-400" /> CarbonStory</h1>
+        <h1 className="text-2xl font-black text-white flex items-center gap-2"><IconBookOpen className="w-6 h-6 text-white/70" /> CarbonStory</h1>
         <p className="text-white/50 text-sm mt-1">Numbers don't move people. Stories do. Turn your data into narratives worth sharing.</p>
       </div>
 
@@ -37,10 +37,10 @@ export default function Stories() {
         <>
           {/* Generate */}
           <div className="card-glass rounded-xl border border-pink-400/20 p-5 space-y-4">
-            <h3 className="font-bold text-white flex items-center gap-2"><IconStar className="w-4 h-4 text-pink-400" /> Generate New Story</h3>
+            <h3 className="font-bold text-white flex items-center gap-2"><IconStar className="w-4 h-4 text-white/70" /> Generate New Story</h3>
             <div className="flex gap-2">
               {(["week", "month", "alltime"] as const).map(p => (
-                <button key={p} onClick={() => setPeriod(p)} className={`flex-1 py-2 rounded-lg text-xs font-semibold border transition-all capitalize ${period === p ? "border-pink-400/50 bg-pink-400/10 text-pink-400" : "border-white/10 text-white/50 hover:bg-white/5"}`}>
+                <button key={p} onClick={() => setPeriod(p)} className={`flex-1 py-2 rounded-lg text-xs font-semibold border transition-all capitalize ${period === p ? "border-pink-400/50 bg-pink-400/10 text-white/70" : "border-white/10 text-white/50 hover:bg-white/5"}`}>
                   {p === "alltime" ? "All Time" : p}
                 </button>
               ))}
@@ -55,15 +55,15 @@ export default function Stories() {
             <div className="card-glass rounded-2xl border border-pink-400/30 p-6 space-y-4 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-pink-400/5 rounded-full -translate-y-1/2 translate-x-1/2" />
               <div className="relative">
-                <div className="text-xs font-bold tracking-widest text-pink-400 uppercase mb-2">Your Impact Story</div>
+                <div className="text-xs font-bold tracking-widest text-white/70 uppercase mb-2">Your Impact Story</div>
                 <h2 className="text-xl font-black text-white mb-3">{generateMutation.data.headline}</h2>
                 <p className="text-white/50 leading-relaxed">{generateMutation.data.narrative}</p>
               </div>
               <div className="grid grid-cols-3 gap-3 pt-2">
                 {[
-                  { icon: IconTree, label: "Trees equiv.", value: generateMutation.data.equivalents?.trees ?? 0, color: "text-green-400" },
-                  { icon: IconCar, label: "km not driven", value: generateMutation.data.equivalents?.km_not_driven ?? 0, color: "text-blue-400" },
-                  { icon: IconZap, label: "kg CO₂", value: generateMutation.data.carbonSavedKg?.toFixed(1) ?? 0, color: "text-yellow-400" },
+                  { icon: IconTree, label: "Trees equiv.", value: generateMutation.data.equivalents?.trees ?? 0, color: "text-white/70" },
+                  { icon: IconCar, label: "km not driven", value: generateMutation.data.equivalents?.km_not_driven ?? 0, color: "text-white/70" },
+                  { icon: IconZap, label: "kg CO₂", value: generateMutation.data.carbonSavedKg?.toFixed(1) ?? 0, color: "text-white/70" },
                 ].map(stat => (
                   <div key={stat.label} className="text-center p-3 rounded-xl bg-white/5/50 border border-white/10">
                     <stat.icon className={`w-5 h-5 mx-auto mb-1 ${stat.color}`} />
@@ -93,7 +93,7 @@ export default function Stories() {
                     </button>
                   </div>
                   <div className="flex items-center gap-4 text-xs text-white/50">
-                    <span className="text-green-400 font-medium">{story.carbonSavedKg?.toFixed(1)} kg CO₂</span>
+                    <span className="text-white/70 font-medium">{story.carbonSavedKg?.toFixed(1)} kg CO₂</span>
                     <span>{story.shareCount ?? 0} shares</span>
                     <span className="ml-auto">via {story.aiProvider}</span>
                   </div>

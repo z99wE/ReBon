@@ -16,7 +16,7 @@ const SUGGESTED_PROMPTS = [
   "How do I compare to the average person?",
 ];
 
-const providerColors: Record<string, string> = { groq: "text-orange-400", nvidia_nim: "text-green-400", sarvam: "text-blue-400" };
+const providerColors: Record<string, string> = { groq: "text-white/70", nvidia_nim: "text-white/70", sarvam: "text-white/70" };
 const providerLabels: Record<string, string> = { groq: "Fast", nvidia_nim: "Deep Analysis", sarvam: "Multilingual" };
 
 export default function Assistant() {

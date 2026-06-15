@@ -66,13 +66,13 @@ export default function Onboarding() {
             <p className="text-white/50">{arch?.description ?? "You're on your carbon reduction journey."}</p>
           </div>
           <div className="card-glass rounded-xl border border-primary/20 p-5 text-left">
-            <div className="text-sm font-bold text-white mb-3 flex items-center gap-2"><IconCheckmark className="w-4 h-4 text-green-400" /> Your 90-Day Roadmap</div>
+            <div className="text-sm font-bold text-white mb-3 flex items-center gap-2"><IconCheckmark className="w-4 h-4 text-white/70" /> Your 90-Day Roadmap</div>
             {result.roadmap?.phases?.slice(0, 3).map((phase: any) => (
               <div key={phase.phase} className="mb-3">
                 <div className="text-xs font-bold text-primary mb-1">Phase {phase.phase}: {phase.title}</div>
                 {phase.actions?.slice(0, 2).map((a: any, i: number) => (
                   <div key={i} className="text-xs text-white/50 flex items-start gap-2 mb-1">
-                    <span className="text-primary mt-0.5">→</span> {a.action} <span className="text-green-400 ml-auto flex-shrink-0">-{a.carbonSavingKg}kg</span>
+                    <span className="text-primary mt-0.5">→</span> {a.action} <span className="text-white/70 ml-auto flex-shrink-0">-{a.carbonSavingKg}kg</span>
                   </div>
                 ))}
               </div>
