@@ -29,6 +29,13 @@
       "when": 1781449012678,
       "tag": "0003_fast_magma",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1781510188303,
+      "tag": "0004_flimsy_nemesis",
+      "breakpoints": true
     }
   ]
 }

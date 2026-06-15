@@ -1,12 +1,14 @@
 import {
   boolean,
   float,
+  index,
   int,
   json,
   mysqlEnum,
   mysqlTable,
   text,
   timestamp,
+  unique,
   varchar,
 } from "drizzle-orm/mysql-core";
 
@@ -36,40 +38,56 @@ export const users = mysqlTable("users", {
 });
 
 // ─── Carbon Activities ────────────────────────────────────────────────────────
-export const activities = mysqlTable("activities", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
-  category: mysqlEnum("category", ["transport","meals","energy","shopping","other"]).notNull(),
-  subcategory: varchar("subcategory", { length: 64 }).notNull(),
-  label: varchar("label", { length: 128 }).notNull(),
-  carbonKg: float("carbonKg").notNull(),
-  quantity: float("quantity").default(1),
-  unit: varchar("unit", { length: 32 }),
-  inputMethod: mysqlEnum("inputMethod", ["tap","voice","manual"]).default("tap").notNull(),
-  voiceTranscript: text("voiceTranscript"),
-  notes: text("notes"),
-  loggedAt: timestamp("loggedAt").defaultNow().notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
+export const activities = mysqlTable(
+  "activities",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("userId").notNull(),
+    category: mysqlEnum("category", ["transport", "meals", "energy", "shopping", "other"]).notNull(),
+    subcategory: varchar("subcategory", { length: 64 }).notNull(),
+    label: varchar("label", { length: 128 }).notNull(),
+    carbonKg: float("carbonKg").notNull(),
+    quantity: float("quantity").default(1),
+    unit: varchar("unit", { length: 32 }),
+    inputMethod: mysqlEnum("inputMethod", ["tap", "voice", "manual"]).default("tap").notNull(),
+    voiceTranscript: text("voiceTranscript"),
+    notes: text("notes"),
+    loggedAt: timestamp("loggedAt").defaultNow().notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    idxUserId: index("idx_activity_user_id").on(table.userId),
+    idxCreatedAt: index("idx_activity_created_at").on(table.createdAt),
+    idxUserCreated: index("idx_user_created").on(table.userId, table.createdAt),
+  })
+);
 
 // ─── AI Challenges ────────────────────────────────────────────────────────────
-export const challenges = mysqlTable("challenges", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
-  title: varchar("title", { length: 256 }).notNull(),
-  description: text("description").notNull(),
-  category: mysqlEnum("category", ["transport","meals","energy","shopping","lifestyle"]).notNull(),
-  difficulty: mysqlEnum("difficulty", ["easy","medium","hard"]).default("medium").notNull(),
-  carbonSavingKg: float("carbonSavingKg").notNull(),
-  pointsReward: int("pointsReward").default(100).notNull(),
-  weekNumber: int("weekNumber").notNull(),
-  year: int("year").notNull(),
-  status: mysqlEnum("status", ["active","completed","skipped","expired"]).default("active").notNull(),
-  completedAt: timestamp("completedAt"),
-  aiProvider: varchar("aiProvider", { length: 32 }),
-  trendingTopic: varchar("trendingTopic", { length: 128 }),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
+export const challenges = mysqlTable(
+  "challenges",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("userId").notNull(),
+    title: varchar("title", { length: 256 }).notNull(),
+    description: text("description").notNull(),
+    category: mysqlEnum("category", ["transport", "meals", "energy", "shopping", "lifestyle"]).notNull(),
+    difficulty: mysqlEnum("difficulty", ["easy", "medium", "hard"]).default("medium").notNull(),
+    carbonSavingKg: float("carbonSavingKg").notNull(),
+    pointsReward: int("pointsReward").default(100).notNull(),
+    weekNumber: int("weekNumber").notNull(),
+    year: int("year").notNull(),
+    status: mysqlEnum("status", ["active", "completed", "skipped", "expired"]).default("active").notNull(),
+    completedAt: timestamp("completedAt"),
+    aiProvider: varchar("aiProvider", { length: 32 }),
+    trendingTopic: varchar("trendingTopic", { length: 128 }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    idxUserId: index("idx_challenge_user_id").on(table.userId),
+    idxWeekYear: index("idx_week_year").on(table.weekNumber, table.year),
+    idxStatus: index("idx_status").on(table.status),
+  })
+);
 
 // ─── Carbon Stories (NLG) ─────────────────────────────────────────────────────
 export const stories = mysqlTable("stories", {
@@ -100,14 +118,22 @@ export const collectives = mysqlTable("collectives", {
 });
 
 // ─── Collective Members ───────────────────────────────────────────────────────
-export const collectiveMembers = mysqlTable("collective_members", {
-  id: int("id").autoincrement().primaryKey(),
-  collectiveId: int("collectiveId").notNull(),
-  userId: int("userId").notNull(),
-  contributionKg: float("contributionKg").default(0).notNull(),
-  role: mysqlEnum("role", ["admin","member"]).default("member").notNull(),
-  joinedAt: timestamp("joinedAt").defaultNow().notNull(),
-});
+export const collectiveMembers = mysqlTable(
+  "collective_members",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    collectiveId: int("collectiveId").notNull(),
+    userId: int("userId").notNull(),
+    contributionKg: float("contributionKg").default(0).notNull(),
+    role: mysqlEnum("role", ["admin", "member"]).default("member").notNull(),
+    joinedAt: timestamp("joinedAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    uniqueCollectiveMember: unique().on(table.collectiveId, table.userId),
+    idxCollectiveId: index("idx_collective_id").on(table.collectiveId),
+    idxUserId: index("idx_user_id").on(table.userId),
+  })
+);
 
 // ─── Leaderboard Seasons ──────────────────────────────────────────────────────
 export const leaderboardSeasons = mysqlTable("leaderboard_seasons", {
@@ -122,19 +148,27 @@ export const leaderboardSeasons = mysqlTable("leaderboard_seasons", {
 });
 
 // ─── Leaderboard Entries ──────────────────────────────────────────────────────
-export const leaderboardEntries = mysqlTable("leaderboard_entries", {
-  id: int("id").autoincrement().primaryKey(),
-  seasonId: int("seasonId").notNull(),
-  userId: int("userId").notNull(),
-  rank: int("rank"),
-  eloScore: int("eloScore").default(1000).notNull(),
-  carbonSavedKg: float("carbonSavedKg").default(0).notNull(),
-  activitiesLogged: int("activitiesLogged").default(0).notNull(),
-  challengesCompleted: int("challengesCompleted").default(0).notNull(),
-  influenceScore: float("influenceScore").default(0).notNull(),
-  rivalUserId: int("rivalUserId"),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
+export const leaderboardEntries = mysqlTable(
+  "leaderboard_entries",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    seasonId: int("seasonId").notNull(),
+    userId: int("userId").notNull(),
+    rank: int("rank"),
+    eloScore: int("eloScore").default(1000).notNull(),
+    carbonSavedKg: float("carbonSavedKg").default(0).notNull(),
+    activitiesLogged: int("activitiesLogged").default(0).notNull(),
+    challengesCompleted: int("challengesCompleted").default(0).notNull(),
+    influenceScore: float("influenceScore").default(0).notNull(),
+    rivalUserId: int("rivalUserId"),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  (table) => ({
+    uniqueSeasonUser: unique().on(table.seasonId, table.userId),
+    idxSeasonId: index("idx_season_id").on(table.seasonId),
+    idxRank: index("idx_rank").on(table.rank),
+  })
+);
 
 // ─── Influence Edges ──────────────────────────────────────────────────────────
 export const influenceEdges = mysqlTable("influence_edges", {
@@ -146,32 +180,46 @@ export const influenceEdges = mysqlTable("influence_edges", {
 });
 
 // ─── Community Feed ───────────────────────────────────────────────────────────
-export const feedItems = mysqlTable("feed_items", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
-  type: mysqlEnum("type", ["activity","challenge_complete","story","milestone","collective_join"]).notNull(),
-  title: varchar("title", { length: 256 }).notNull(),
-  body: text("body"),
-  carbonKg: float("carbonKg"),
-  isInfluencer: boolean("isInfluencer").default(false).notNull(),
-  amplified: boolean("amplified").default(false).notNull(),
-  likeCount: int("likeCount").default(0).notNull(),
-  metadata: json("metadata"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
+export const feedItems = mysqlTable(
+  "feed_items",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("userId").notNull(),
+    type: mysqlEnum("type", ["activity", "challenge_complete", "story", "milestone", "collective_join"]).notNull(),
+    title: varchar("title", { length: 256 }).notNull(),
+    body: text("body"),
+    carbonKg: float("carbonKg"),
+    isInfluencer: boolean("isInfluencer").default(false).notNull(),
+    amplified: boolean("amplified").default(false).notNull(),
+    likeCount: int("likeCount").default(0).notNull(),
+    metadata: json("metadata"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => ({
+    idxCreatedAt: index("idx_feed_created_at").on(table.createdAt),
+    idxUserId: index("idx_feed_user_id").on(table.userId),
+  })
+);
 
 // ─── Peer Comparison Snapshots ────────────────────────────────────────────────
-export const peerSnapshots = mysqlTable("peer_snapshots", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
-  archetype: varchar("archetype", { length: 64 }).notNull(),
-  userCarbonKg: float("userCarbonKg").notNull(),
-  peerAvgKg: float("peerAvgKg").notNull(),
-  percentileRank: float("percentileRank").notNull(),
-  categoryBreakdown: json("categoryBreakdown"),
-  peerCategoryBreakdown: json("peerCategoryBreakdown"),
-  snapshotDate: timestamp("snapshotDate").defaultNow().notNull(),
-});
+export const peerSnapshots = mysqlTable(
+  "peer_snapshots",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("userId").notNull(),
+    archetype: varchar("archetype", { length: 64 }).notNull(),
+    userCarbonKg: float("userCarbonKg").notNull(),
+    peerAvgKg: float("peerAvgKg").notNull(),
+    percentileRank: float("percentileRank").notNull(),
+    categoryBreakdown: json("categoryBreakdown"),
+    peerCategoryBreakdown: json("peerCategoryBreakdown"),
+    snapshotDate: timestamp("snapshotDate").defaultNow().notNull(),
+  },
+  (table) => ({
+    idxUserId: index("idx_snapshot_user_id").on(table.userId),
+    idxSnapshotDate: index("idx_snapshot_date").on(table.snapshotDate),
+  })
+);
 
 // ─── OTP Auth Sessions ────────────────────────────────────────────────────────
 export const otpSessions = mysqlTable("otp_sessions", {

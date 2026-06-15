@@ -74,9 +74,9 @@ export async function sendEmailOtp(email: string, otp: string): Promise<{ previe
   `;
 
   if (!transporter) {
-    // Dev mode: print to console so developer can see the OTP
-    console.log(`\n[ReBon OTP] Email: ${email} | OTP: ${otp}\n`);
-    return { preview: `DEV_MODE:${otp}` };
+    // Dev mode: no email sent, but OTP is still valid
+    // Do not log OTP to console for security
+    return { preview: `DEV_MODE` };
   }
 
   const info = await transporter.sendMail({
@@ -109,9 +109,9 @@ export async function sendPhoneOtp(phone: string, otp: string): Promise<{ previe
     });
     return {};
   }
-  // Dev fallback
-  console.log(`\n[ReBon OTP] Phone: ${phone} | OTP: ${otp}\n`);
-  return { preview: `DEV_MODE:${otp}` };
+  // Dev fallback: no SMS sent, but OTP is still valid
+  // Do not log OTP to console for security
+  return { preview: `DEV_MODE` };
 }
 
 // ─── Session Management ───────────────────────────────────────────────────────

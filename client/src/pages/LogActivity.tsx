@@ -66,7 +66,7 @@ export default function LogActivity() {
 
       {/* Voice Input */}
       <div className="card-glass rounded-xl border border-white/10 p-6">
-        <h3 className="font-bold text-white mb-4 flex items-center gap-2"><IconMic className="w-4 h-4 text-primary" /> Speak to Log</h3>
+        <h3 className="font-bold text-white mb-4 flex items-center gap-2"><IconMic className="w-4 h-4 text-white/70" /> Speak to Log</h3>
         <div className="flex flex-col items-center gap-4">
           <button
             onClick={recording ? stopRecording : startRecording}
@@ -74,7 +74,7 @@ export default function LogActivity() {
             aria-label={recording ? "Stop recording" : "Start voice recording"}
             className={`w-20 h-20 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${recording ? "bg-red-500/20 border-red-500 animate-pulse" : "bg-indigo-600/10 border-primary/40 hover:bg-indigo-600/20"}`}
           >
-            {voiceMutation.isPending ? <IconPulse className="w-8 h-8 animate-spin text-primary" /> : recording ? <IconMicOff className="w-8 h-8 text-white/70" /> : <IconMic className="w-8 h-8 text-primary" />}
+            {voiceMutation.isPending ? <IconPulse className="w-8 h-8 animate-spin text-white/70" /> : recording ? <IconMicOff className="w-8 h-8 text-white/70" /> : <IconMic className="w-8 h-8 text-white/70" />}
           </button>
           <p className="text-sm text-white/50 text-center">
             {recording ? "Recording… tap to stop" : voiceMutation.isPending ? "Processing your voice…" : 'Say something like "I drove 10 miles to work"'}
@@ -108,11 +108,11 @@ export default function LogActivity() {
       {categories.map(cat => (
         <div key={cat} className="card-glass rounded-xl border border-white/10 p-5">
           <h3 className="font-bold text-white mb-3 capitalize flex items-center gap-2">
-            {cat === "transport" && <IconCar className="w-4 h-4 text-primary" />}
-            {cat === "meals" && <IconRestaurant className="w-4 h-4 text-primary" />}
-            {cat === "energy" && <IconFlash className="w-4 h-4 text-primary" />}
-            {cat === "shopping" && <IconCart className="w-4 h-4 text-primary" />}
-            {!["transport","meals","energy","shopping"].includes(cat) && <IconAdd className="w-4 h-4 text-primary" />}
+            {cat === "transport" && <IconCar className="w-4 h-4 text-white/70" />}
+            {cat === "meals" && <IconRestaurant className="w-4 h-4 text-white/70" />}
+            {cat === "energy" && <IconFlash className="w-4 h-4 text-white/70" />}
+            {cat === "shopping" && <IconCart className="w-4 h-4 text-white/70" />}
+            {!["transport","meals","energy","shopping"].includes(cat) && <IconAdd className="w-4 h-4 text-white/70" />}
             {cat}
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -175,7 +175,7 @@ export default function LogActivity() {
               disabled={logMutation.isPending}
               className="flex-1 btn-primary py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-1"
             >
-              {logMutation.isPending ? <IconPulse className="w-4 h-4 animate-spin" /> : <><IconCheckmark className="w-4 h-4" /> Log</>}
+              {logMutation.isPending ? <IconPulse className="w-4 h-4 animate-spin text-white/70" /> : <><IconCheckmark className="w-4 h-4 text-white/70" /> Log</>}
             </button>
           </div>
         </div>

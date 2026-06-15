@@ -115,7 +115,30 @@
 - [x] Verify all P1/P2 fixes are correctly implemented in code
 - [x] Audit all icon usage — ensure only greyscale icons from Ionicons
 - [x] Update README for publish-ready state
-- [x] Update DEPLOYMENT.md with setup instructions
+- [x] Create DEPLOYMENT.md with setup instructions
 - [x] Run final tests, TypeScript check, and screenshots
 - [x] Commit all changes with descriptive message
 - [x] Push to GitHub safely
+
+## Phase 15: Final Greyscale Styling and Security Fixes
+- [x] Replace all colored icon styling with greyscale (text-white/70) across all pages
+- [x] Create comprehensive DEPLOYMENT.md guide
+- [x] Verify 131 tests still pass after styling changes
+- [x] Push final changes to GitHub (d5930b6)
+- [x] Rotate GitHub PAT and remove from git history
+
+
+## Phase 16: P1 Bug Fixes (Testing, Schema, Security, Type Safety)
+- [ ] Fix package.json: add test:coverage, test:watch, test:ci scripts
+- [ ] Fix vitest.config.ts: expand to client tests, add jsdom config, coverage settings
+- [ ] Fix vitest.setup.ts: add @testing-library/jest-dom, DOM mocks (ResizeObserver, IntersectionObserver, matchMedia)
+- [ ] Create .github/workflows/ci.yml: GitHub Actions for typecheck, tests, coverage, build
+- [ ] Create TESTING.md: document testing strategy, how to run locally, CI proof
+- [ ] Update README.md: add live CI badge, point to TESTING.md, remove contact section
+- [ ] Fix drizzle/schema.ts: add unique constraints and indexes for hot paths
+- [ ] Fix server/services/otpAuth.ts: remove console logging of OTP values
+- [ ] Fix server/db.ts: tighten types, remove any casts, improve idempotency
+- [ ] Fix server/routers.ts: add AI response types, remove loose any casts
+- [ ] Remove all colorful icons from LogActivity.tsx, keep greyscale only
+- [ ] Verify all tests pass, TypeScript 0 errors, repo <10MB
+- [ ] Save checkpoint and push to GitHub safely

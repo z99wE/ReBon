@@ -3,9 +3,10 @@
 > **"Your carbon footprint. Reimagined."**
 > The world's first agent-to-agent carbon negotiation platform. Track your impact, compete with peers, and let your AI fight for the planet on your behalf.
 
+[![CI](https://github.com/z99wE/ReBon/actions/workflows/ci.yml/badge.svg)](https://github.com/z99wE/ReBon/actions/workflows/ci.yml)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19-61dafb)](https://react.dev/)
-[![Tests](https://img.shields.io/badge/tests-131%20passing-brightgreen)](./server)
+[![Coverage](https://img.shields.io/badge/coverage-70%25-brightgreen)](#testing-strategy)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 
 ---
@@ -20,7 +21,7 @@
 6. [Database Schema](#database-schema)
 7. [API Reference](#api-reference)
 8. [Security Implementation](#security-implementation)
-9. [Testing Strategy](#testing-strategy)
+9. [Testing Strategy](#testing-strategy) — [Full testing docs →](./TESTING.md)
 10. [Accessibility](#accessibility)
 11. [Setup and Running Locally](#setup-and-running-locally)
 12. [Environment Variables](#environment-variables)
@@ -739,8 +740,3 @@ MIT License. See LICENSE file for details.
 
 ---
 
-## Contact
-
-For questions or feedback, reach out to the ReBon team via GitHub Issues or email.
-
-**Built for Hack2Kill 2026 — Google PromptWars.**
