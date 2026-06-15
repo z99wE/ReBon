@@ -25,7 +25,7 @@ describe("otpAuth", () => {
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
     const result = await sendEmailOtp("demo@example.com", "123456");
 
-    expect(result.preview).toBe("DEV_MODE:123456");
+    expect(result.preview).toBe("DEV_MODE");
     expect(logSpy).not.toHaveBeenCalled();
     logSpy.mockRestore();
   });
