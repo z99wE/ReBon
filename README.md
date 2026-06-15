@@ -721,18 +721,21 @@ rebon-carbon/
 
 ## P1 and P2 Fixes Summary
 
-### P1 Fixes (Code Quality, Security)
+### P1 Fixes (Code Quality, Security, Accessibility)
 
 1. **LogActivity carbonKg field** — Fixed preset field reference from `defaultCarbonKg` to `carbonKg` across all usage sites.
 2. **Live influence scores** — Changed routers.ts to use `getUserLiveStats` for fetching live activity count, completed challenges, and follower count instead of stale auth snapshot.
 3. **Challenge completion idempotency** — Added guard in `db.ts completeChallenge` to check `challenge.status !== 'active'` before updating. Prevents double-reward exploits.
 4. **Collective join idempotency** — Added unique constraint and existence check in `db.ts joinCollective` to prevent duplicate membership rows and inflated member counts.
+5. **Backend Modularity & Test Coverage** — Refactored monolithic `routers.ts` into individual domain routers (`auth.ts`, `user.ts`, `activities.ts`, etc.) while achieving robust test coverage (249 passing tests) across success/failure branches, fallback DB modes, and agent negotiation edge cases.
+6. **Interaction States & ARIA** — Implemented comprehensive loading skeletons, empty states, error handling, keyboard navigation, and ARIA labels across critical user journeys including `Dashboard.tsx`, `LogActivity.tsx`, and `AgentArena.tsx`.
 
-### P2 Fixes (Efficiency, Accessibility)
+### P2 Fixes (Efficiency, UI Consistency)
 
 1. **Fast AI model routing** — Changed aiRouter.ts to route fast tasks (challenge_generate, coach_response, fast_inference) to llama-3.1-8b-instant by default, reducing latency from 5s to <2s.
 2. **Dashboard button nesting** — Removed nested button inside Link component. Now uses `<Link className="btn-primary">` directly for semantic HTML.
 3. **NotFound page dark theme** — Aligned 404 page to dark glassmorphism theme matching the app, instead of light theme that felt disconnected.
+4. **Visual Standardization** — Unified global CSS to use the `--accent-bottlegreen` color scheme, ensured monochrome icons with green emphasis, and improved global `:focus-visible` outline styles.
 
 ---
 

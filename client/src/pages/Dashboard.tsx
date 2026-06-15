@@ -13,9 +13,23 @@ const QUICK_ACTIONS = [
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { data: profile } = trpc.user.profile.useQuery();
-  const { data: activities } = trpc.activities.list.useQuery({ limit: 5 });
-  const { data: challenges } = trpc.challenges.list.useQuery();
+  const { data: profile, isLoading: isProfileLoading, error: profileError } = trpc.user.profile.useQuery();
+  const { data: activities, isLoading: isActivitiesLoading } = trpc.activities.list.useQuery({ limit: 5 });
+  const { data: challenges, isLoading: isChallengesLoading } = trpc.challenges.list.useQuery();
+
+  const isLoading = isProfileLoading || isActivitiesLoading || isChallengesLoading;
+
+  if (profileError) {
+    return (
+      <div className="min-h-screen bg-[#050505] p-6 md:p-8 flex items-center justify-center">
+        <div className="glass-card p-8 text-center max-w-md w-full border-rose-500/20">
+          <p className="text-rose-400 mb-4 font-500">Unable to load dashboard</p>
+          <p className="text-white/50 text-sm mb-6">{profileError.message || "Please try refreshing the page."}</p>
+          <button onClick={() => window.location.reload()} className="btn-primary w-full justify-center">Retry</button>
+        </div>
+      </div>
+    );
+  }
 
   const archetype = profile?.archetype ? ARCHETYPES[profile.archetype as keyof typeof ARCHETYPES] : null;
   const totalKg = activities?.reduce((s, a) => s + Number(a.carbonKg), 0) ?? 0;
@@ -30,15 +44,31 @@ export default function Dashboard() {
     { label: "Influence Score",   value: profile?.influenceScore?.toFixed(0) ?? "0", unit: "pts", accent: "stat-accent-amber", color: "#fbbf24" },
   ];
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#050505] p-6 md:p-8 animate-pulse">
+        <div className="h-24 bg-white/5 rounded mb-8" aria-hidden="true" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          {[1,2,3,4].map(i => <div key={i} className="h-32 bg-white/5 rounded" aria-hidden="true" />)}
+        </div>
+        <div className="h-32 bg-white/5 rounded mb-8" aria-hidden="true" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div className="h-64 bg-white/5 rounded" aria-hidden="true" />
+          <div className="h-64 bg-white/5 rounded" aria-hidden="true" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#050505] p-6 md:p-8">
       {/* ── Header ── */}
-      <div className="border-b border-white/8 pb-6 mb-8">
+      <header className="border-b border-white/8 pb-6 mb-8">
         <div className="flex items-end justify-between">
           <div>
-            <p className="label-tech mb-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block mr-2 animate-pulse-dot" />
-              Dashboard — {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+            <p className="label-tech mb-2" aria-live="polite">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block mr-2 animate-pulse-dot" aria-hidden="true" />
+              Dashboard — <time dateTime={new Date().toISOString()}>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</time>
             </p>
             <h1 className="text-3xl font-black text-white uppercase tracking-tight">
               Welcome back, {user?.name?.split(' ')[0] ?? 'Warrior'}.
@@ -50,30 +80,30 @@ export default function Dashboard() {
               </p>
             )}
           </div>
-          <Link href="/log" className="btn-primary hidden md:flex">
+          <Link href="/log" className="btn-primary hidden md:flex" aria-label="Log a new activity">
             Log Activity →
           </Link>
         </div>
-      </div>
+      </header>
 
       {/* ── Stat Cards ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 border-l border-t border-white/8 mb-8">
+      <section aria-label="Quick statistics" className="grid grid-cols-2 lg:grid-cols-4 border-l border-t border-white/8 mb-8">
         {STATS.map((s, i) => (
           <div key={i} className={`glass-card border-r border-b border-white/8 p-6 ${s.accent}`}>
-            <p className="label-tech mb-3">{s.label}</p>
+            <h2 className="label-tech mb-3">{s.label}</h2>
             <div className="flex items-end gap-1">
-              <span className="text-4xl font-black" style={{color: s.color}}>{s.value}</span>
-              {s.unit && <span className="text-white/40 text-sm mb-1">{s.unit}</span>}
+              <span className="text-4xl font-black" style={{color: s.color}} aria-label={`${s.value} ${s.unit}`}>{s.value}</span>
+              {s.unit && <span className="text-white/40 text-sm mb-1" aria-hidden="true">{s.unit}</span>}
             </div>
           </div>
         ))}
-      </div>
+      </section>
 
       {/* ── Weekly Budget Bar ── */}
-      <div className="glass-card border border-white/8 p-6 mb-8">
+      <section aria-labelledby="budget-heading" className="glass-card border border-white/8 p-6 mb-8">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <p className="label-tech mb-1">Weekly Carbon Budget</p>
+            <h2 id="budget-heading" className="label-tech mb-1">Weekly Carbon Budget</h2>
             <p className="text-white/40 text-xs">Based on your {archetype?.label ?? 'lifestyle'} archetype target</p>
           </div>
           <div className="text-right">
@@ -93,37 +123,37 @@ export default function Dashboard() {
             High emissions week — ask ReBon AI for quick wins
           </p>
         )}
-      </div>
+      </section>
 
       {/* ── Quick Actions + Recent Activity ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Quick Actions */}
-        <div className="glass-card border border-white/8">
+        <section aria-label="Quick Actions" className="glass-card border border-white/8">
           <div className="px-6 py-4 border-b border-white/8 flex items-center justify-between">
-            <p className="label-tech-bright">Quick Actions</p>
-            <span className="text-[9px] text-white/20 font-black tracking-widest">SYS-Q1</span>
+            <h2 className="label-tech-bright">Quick Actions</h2>
+            <span className="text-[9px] text-white/20 font-black tracking-widest" aria-hidden="true">SYS-Q1</span>
           </div>
-          <div className="divide-y divide-white/8">
+          <nav aria-label="Quick action links" className="divide-y divide-white/8">
             {QUICK_ACTIONS.map((a) => (
               <Link key={a.href} href={a.href} className="flex items-center justify-between px-6 py-4 hover:bg-white/4 transition-colors no-underline group">
                 <div className="flex items-center gap-4">
-                  <span className="label-tech text-white/20 group-hover:text-white/40 transition-colors">{a.tag}</span>
+                  <span className="label-tech text-white/20 group-hover:text-white/40 transition-colors" aria-hidden="true">{a.tag}</span>
                   <div>
                     <p className="text-sm font-700 text-white/80 group-hover:text-white transition-colors">{a.label}</p>
                     <p className="text-xs text-white/30">{a.desc}</p>
                   </div>
                 </div>
-                <span className="text-white/20 group-hover:text-white/60 transition-colors text-lg">→</span>
+                <span className="text-white/20 group-hover:text-white/60 transition-colors text-lg" aria-hidden="true">→</span>
               </Link>
             ))}
-          </div>
-        </div>
+          </nav>
+        </section>
 
         {/* Recent Activity */}
-        <div className="glass-card border border-white/8">
+        <section aria-label="Recent Activity" className="glass-card border border-white/8">
           <div className="px-6 py-4 border-b border-white/8 flex items-center justify-between">
-            <p className="label-tech-bright">Recent Activity</p>
-            <Link href="/log" className="text-[9px] font-black tracking-widest text-white/30 hover:text-white/60 transition-colors no-underline uppercase">View All →</Link>
+            <h2 className="label-tech-bright">Recent Activity</h2>
+            <Link href="/log" className="text-[9px] font-black tracking-widest text-white/30 hover:text-white/60 transition-colors no-underline uppercase" aria-label="View all activities">View All →</Link>
           </div>
           {!activities || activities.length === 0 ? (
             <div className="px-6 py-12 text-center">
@@ -147,7 +177,7 @@ export default function Dashboard() {
               ))}
             </div>
           )}
-        </div>
+        </section>
       </div>
 
       {/* ── Active Challenges ── */}

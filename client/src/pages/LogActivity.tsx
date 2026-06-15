@@ -69,23 +69,24 @@ export default function LogActivity() {
       </div>
 
       {/* Voice Input */}
-      <div className="card-glass rounded-xl border border-white/10 p-6">
-        <h3 className="font-bold text-white mb-4 flex items-center gap-2"><IconMic className={`w-4 h-4 ${iconTone}`} /> Speak to Log</h3>
+      <section aria-label="Voice Input" className="card-glass rounded-xl border border-white/10 p-6">
+        <h2 className="font-bold text-white mb-4 flex items-center gap-2"><IconMic className={`w-4 h-4 ${iconTone}`} aria-hidden="true" /> Speak to Log</h2>
         <div className="flex flex-col items-center gap-4">
           <button
             onClick={recording ? stopRecording : startRecording}
             disabled={voiceMutation.isPending}
             aria-label={recording ? "Stop recording" : "Start voice recording"}
+            aria-pressed={recording}
             className={`w-20 h-20 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${recording ? "bg-primary/12 border-primary/60 animate-pulse hover:bg-primary/16" : "bg-white/5 border-white/10 hover:bg-primary/10 hover:border-primary/40"}`}
           >
             {voiceMutation.isPending ? <IconPulse className={`w-8 h-8 animate-spin ${iconTone}`} /> : recording ? <IconMicOff className={`w-8 h-8 ${iconTone}`} /> : <IconMic className={`w-8 h-8 ${iconTone}`} />}
           </button>
-          <p className="text-sm text-white/50 text-center">
+          <p className="text-sm text-white/50 text-center" aria-live="polite">
             {recording ? "Recording… tap to stop" : voiceMutation.isPending ? "Processing your voice…" : 'Say something like "I drove 10 miles to work"'}
           </p>
         </div>
         {voiceResult && (
-          <div className="mt-4 space-y-3">
+          <div className="mt-4 space-y-3" aria-live="polite">
             <div className="p-3 rounded-lg bg-white/5 text-sm text-white/50 italic">"{voiceResult.transcript}"</div>
             {voiceResult.activities.length > 0 ? (
               <div className="space-y-2">
@@ -95,7 +96,7 @@ export default function LogActivity() {
                       <div className="text-sm font-medium text-white">{a.label}</div>
                       <div className="text-xs text-white/50">{a.carbonKg?.toFixed(2)} kg CO₂</div>
                     </div>
-                    <button onClick={() => logMutation.mutate({ category: a.category, subcategory: a.subcategory, label: a.label, carbonKg: a.carbonKg, quantity: a.quantity, unit: a.unit, inputMethod: "voice", voiceTranscript: voiceResult.transcript })} disabled={logMutation.isPending} className="btn-primary px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1">
+                    <button onClick={() => logMutation.mutate({ category: a.category, subcategory: a.subcategory, label: a.label, carbonKg: a.carbonKg, quantity: a.quantity, unit: a.unit, inputMethod: "voice", voiceTranscript: voiceResult.transcript })} disabled={logMutation.isPending} className="btn-primary px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1" aria-label={`Log ${a.label}`}>
                       <IconAdd className={`w-3 h-3 ${iconToneSoft}`} /> Log
                     </button>
                   </div>
@@ -106,35 +107,40 @@ export default function LogActivity() {
             )}
           </div>
         )}
-      </div>
+      </section>
 
       {/* Quick-Tap Presets */}
+      <section aria-label="Quick-Tap Presets" className="space-y-4 mt-8">
       {categories.map(cat => (
         <div key={cat} className="card-glass rounded-xl border border-white/10 p-5">
           <h3 className="font-bold text-white mb-3 capitalize flex items-center gap-2">
-            {cat === "transport" && <IconCar className={`w-4 h-4 ${iconTone}`} />}
-            {cat === "meals" && <IconRestaurant className={`w-4 h-4 ${iconTone}`} />}
-            {cat === "energy" && <IconFlash className={`w-4 h-4 ${iconTone}`} />}
-            {cat === "shopping" && <IconCart className={`w-4 h-4 ${iconTone}`} />}
-            {!["transport","meals","energy","shopping"].includes(cat) && <IconAdd className={`w-4 h-4 ${iconTone}`} />}
+            {cat === "transport" && <IconCar className={`w-4 h-4 ${iconTone}`} aria-hidden="true" />}
+            {cat === "meals" && <IconRestaurant className={`w-4 h-4 ${iconTone}`} aria-hidden="true" />}
+            {cat === "energy" && <IconFlash className={`w-4 h-4 ${iconTone}`} aria-hidden="true" />}
+            {cat === "shopping" && <IconCart className={`w-4 h-4 ${iconTone}`} aria-hidden="true" />}
+            {!["transport","meals","energy","shopping"].includes(cat) && <IconAdd className={`w-4 h-4 ${iconTone}`} aria-hidden="true" />}
             {cat}
           </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2" role="group" aria-label={`${cat} presets`}>
             {ACTIVITY_PRESETS[cat].map((preset) => (
               <button
                 key={preset.id}
                 onClick={() => setSelectedPreset({ ...preset, category: cat })}
                 aria-pressed={selectedPreset?.id === preset.id}
-                className={`p-3 rounded-lg border text-left transition-all ${selectedPreset?.id === preset.id ? "border-primary bg-primary/10" : "border-white/10 hover:border-primary/40 hover:bg-primary/5"}`}
+                aria-label={`${preset.label}, ${preset.carbonKg} kg CO₂`}
+                className={`p-3 rounded-lg border text-left transition-all flex items-start gap-2 ${selectedPreset?.id === preset.id ? "border-primary bg-primary/10" : "border-white/10 hover:border-primary/40 hover:bg-primary/5"}`}
               >
                 <div className="text-lg mb-1" aria-hidden="true">{preset.icon}</div>
-                <div className="text-xs font-medium text-white leading-tight">{preset.label}</div>
-                <div className="text-xs text-white/50">{preset.carbonKg} kg CO₂</div>
+                <div>
+                  <div className="text-xs font-medium text-white leading-tight">{preset.label}</div>
+                  <div className="text-xs text-white/50">{preset.carbonKg} kg CO₂</div>
+                </div>
               </button>
             ))}
           </div>
         </div>
       ))}
+      </section>
 
       {/* Log Selected Preset — bottom sheet */}
       {selectedPreset && (
@@ -186,9 +192,19 @@ export default function LogActivity() {
       )}
 
       {/* Active Challenges */}
+      {challengesQuery.isLoading && (
+        <section aria-label="Active Challenges Loading" className="card-glass rounded-xl border border-orange-400/20 p-5 mt-8 animate-pulse">
+          <div className="h-6 w-40 bg-white/10 rounded mb-4" />
+          <div className="space-y-2">
+            <div className="h-16 bg-white/5 rounded" />
+            <div className="h-16 bg-white/5 rounded" />
+          </div>
+        </section>
+      )}
+      
       {challengesQuery.data && challengesQuery.data.filter(c => !c.completedAt).length > 0 && (
-        <div className="card-glass rounded-xl border border-orange-400/20 p-5">
-          <h3 className="font-bold text-white mb-3">Active Challenges</h3>
+        <section aria-label="Active Challenges" className="card-glass rounded-xl border border-orange-400/20 p-5 mt-8">
+          <h2 className="font-bold text-white mb-3">Active Challenges</h2>
           <div className="space-y-2">
             {challengesQuery.data.filter(c => !c.completedAt).map(c => (
               <div key={c.id} className="flex items-center gap-3 p-3 rounded-lg bg-white/5">
@@ -207,7 +223,7 @@ export default function LogActivity() {
               </div>
             ))}
           </div>
-        </div>
+        </section>
       )}
     </div>
   );

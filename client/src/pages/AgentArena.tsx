@@ -103,28 +103,32 @@ export default function AgentArena() {
 
           <div className="space-y-6">
             {/* Peer selector */}
-            <div>
-              <p id="peer-label" className="label-tech text-white/30 text-[10px] tracking-widest block mb-3">
+            <div role="group" aria-labelledby="peer-label">
+              <h3 id="peer-label" className="label-tech text-white/30 text-[10px] tracking-widest block mb-3">
                 SELECT PEER TO CHALLENGE
-              </p>
+              </h3>
               {peersQuery.isLoading ? (
-                <div className="text-white/30 text-sm py-4 text-center">Loading peers...</div>
+                <div className="space-y-2 animate-pulse" aria-label="Loading peers">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="w-full h-12 rounded-lg bg-white/5 border border-white/10" aria-hidden="true" />
+                  ))}
+                </div>
               ) : peers.length === 0 ? (
-                <div className="glass-card p-4 text-center border-white/[0.04]">
-                  <IconPeople className="w-6 h-6 text-white/20 mx-auto mb-2" />
+                <div className="glass-card p-4 text-center border-white/[0.04]" aria-live="polite">
+                  <IconPeople className="w-6 h-6 text-white/20 mx-auto mb-2" aria-hidden="true" />
                   <p className="text-white/30 text-xs">No peers available yet.</p>
                   <p className="text-white/20 text-xs mt-1">Invite others to join ReBon to unlock negotiations.</p>
                 </div>
               ) : (
-                <div className="space-y-2 max-h-40 overflow-y-auto" role="group" aria-labelledby="peer-label">
+                <div className="space-y-2 max-h-40 overflow-y-auto">
                   {peers.map((peer) => (
                     <button
                       key={peer.id}
                       onClick={() => setSelectedPeer(peer.id)}
                       className={`w-full flex items-center justify-between p-3 rounded-lg border text-sm transition-all ${
                         selectedPeer === peer.id
-                          ? "border-white/30 bg-white/10 text-white"
-                          : "border-white/[0.06] bg-white/[0.02] text-white/50 hover:border-white/15 hover:text-white/70"
+                          ? "border-accent-bottlegreen bg-white/10 text-white"
+                          : "border-white/[0.06] bg-white/[0.02] text-white/50 hover:border-accent-bottlegreen/40 hover:text-white/70 hover:bg-white/5"
                       }`}
                       aria-label={`Select ${peer.name ?? "Anonymous"} as negotiation peer`}
                       aria-pressed={selectedPeer === peer.id}
@@ -140,8 +144,8 @@ export default function AgentArena() {
             </div>
 
             {/* Category */}
-            <div>
-              <p id="category-label" className="label-tech text-white/30 text-[10px] tracking-widest block mb-3">CATEGORY</p>
+            <fieldset>
+              <legend id="category-label" className="label-tech text-white/30 text-[10px] tracking-widest block mb-3">CATEGORY</legend>
               <div className="grid grid-cols-3 gap-2" role="group" aria-labelledby="category-label">
                 {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
                   <button
@@ -149,17 +153,17 @@ export default function AgentArena() {
                     onClick={() => setCategory(key)}
                     className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border text-xs font-semibold transition-all ${
                       category === key
-                        ? "border-white/30 bg-white/10 text-white"
-                        : "border-white/[0.06] bg-white/[0.02] text-white/40 hover:border-white/15 hover:text-white/60"
+                        ? "border-accent-bottlegreen bg-white/10 text-white"
+                        : "border-white/[0.06] bg-white/[0.02] text-white/40 hover:border-accent-bottlegreen/40 hover:bg-white/5 hover:text-white/60"
                     }`}
                     aria-pressed={category === key}
                   >
-                    <span className="text-white/50">{CATEGORY_ICONS[key]}</span>
+                    <span className="text-white/50" aria-hidden="true">{CATEGORY_ICONS[key]}</span>
                     {label}
                   </button>
                 ))}
               </div>
-            </div>
+            </fieldset>
 
             {/* Reduction target */}
             <div>
