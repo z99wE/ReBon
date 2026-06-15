@@ -19,6 +19,7 @@ import { routeAI, transcribeWithDeepgram } from "./services/aiRouter";
 import { agentsRouter } from "./routers/agents";
 import { createOtpSession, sendEmailOtp, sendPhoneOtp, verifyOtpSession } from "./services/otpAuth";
 import { SignJWT } from "jose";
+import { Buffer } from "buffer";
 import { ENV } from "./_core/env";
 import { nanoid } from "nanoid";
 
@@ -83,7 +84,7 @@ export const appRouter = router({
         const openId = `otp:${input.identifier.toLowerCase()}`;
         const isEmail = input.identifier.includes("@");
         await upsertUser({ openId, name: input.name || (isEmail ? input.identifier.split("@")[0] : input.identifier), email: isEmail ? input.identifier.toLowerCase() : undefined, loginMethod: isEmail ? "email_otp" : "phone_otp", lastSignedIn: new Date() });
-        const secret = new TextEncoder().encode(ENV.cookieSecret);
+        const secret = Buffer.from(ENV.cookieSecret, 'utf-8');
         const displayName = input.name || (isEmail ? input.identifier.split("@")[0] : input.identifier);
         const token = await new SignJWT({ openId, appId: ENV.appId, name: displayName }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("30d").sign(secret);
         const cookieOptions = getSessionCookieOptions(ctx.req);

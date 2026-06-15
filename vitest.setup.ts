@@ -7,6 +7,15 @@ afterEach(() => {
   cleanup();
 });
 
+// Set required environment variables for tests
+if (!process.env.JWT_SECRET) process.env.JWT_SECRET = "test-secret-key-for-jwt-signing-in-tests";
+if (!process.env.VITE_APP_ID) process.env.VITE_APP_ID = "test-app-id";
+if (!process.env.DATABASE_URL) process.env.DATABASE_URL = "mysql://test:test@localhost/test";
+if (!process.env.OAUTH_SERVER_URL) process.env.OAUTH_SERVER_URL = "https://api.manus.im";
+if (!process.env.OWNER_OPEN_ID) process.env.OWNER_OPEN_ID = "test-owner-id";
+if (!process.env.BUILT_IN_FORGE_API_URL) process.env.BUILT_IN_FORGE_API_URL = "https://api.manus.im";
+if (!process.env.BUILT_IN_FORGE_API_KEY) process.env.BUILT_IN_FORGE_API_KEY = "test-key";
+
 // Mock ResizeObserver
 beforeAll(() => {
   global.ResizeObserver = vi.fn().mockImplementation(() => ({

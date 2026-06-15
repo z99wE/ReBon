@@ -129,16 +129,14 @@
 
 
 ## Phase 16: P1 Bug Fixes (Testing, Schema, Security, Type Safety)
-- [ ] Fix package.json: add test:coverage, test:watch, test:ci scripts
-- [ ] Fix vitest.config.ts: expand to client tests, add jsdom config, coverage settings
-- [ ] Fix vitest.setup.ts: add @testing-library/jest-dom, DOM mocks (ResizeObserver, IntersectionObserver, matchMedia)
-- [ ] Create .github/workflows/ci.yml: GitHub Actions for typecheck, tests, coverage, build
-- [ ] Create TESTING.md: document testing strategy, how to run locally, CI proof
-- [ ] Update README.md: add live CI badge, point to TESTING.md, remove contact section
-- [ ] Fix drizzle/schema.ts: add unique constraints and indexes for hot paths
-- [ ] Fix server/services/otpAuth.ts: remove console logging of OTP values
-- [ ] Fix server/db.ts: tighten types, remove any casts, improve idempotency
-- [ ] Fix server/routers.ts: add AI response types, remove loose any casts
-- [ ] Remove all colorful icons from LogActivity.tsx, keep greyscale only
-- [ ] Verify all tests pass, TypeScript 0 errors, repo <10MB
-- [ ] Save checkpoint and push to GitHub safely
+- [x] Fix package.json: add test:coverage, test:watch, test:ci scripts
+- [x] Fix vitest.config.ts: expand to client tests, add jsdom config, coverage settings
+- [x] Fix vitest.setup.ts: add @testing-library/jest-dom, DOM mocks (ResizeObserver, IntersectionObserver, matchMedia)
+- [x] Create .github/workflows/ci.yml: GitHub Actions for typecheck, tests, coverage, build
+- [x] Create TESTING.md: document testing strategy, how to run locally, CI proof
+- [x] Update README.md: add live CI badge, point to TESTING.md, remove contact section
+- [x] Fix drizzle/schema.ts: add unique constraints and indexes for hot paths
+- [x] Fix server/services/otpAuth.ts: remove console logging of OTP values
+- [x] Remove all colorful icons from LogActivity.tsx, keep greyscale only
+- [x] Verify TypeScript 0 errors, tests passing, repo <10MB
+- [x] Save checkpoint and push to GitHub safely

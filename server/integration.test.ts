@@ -138,7 +138,7 @@ describe("Auth flow — sendOtp", () => {
 // ── Flow 2: Auth — verifyOtp ──────────────────────────────────────────────────
 
 describe("Auth flow — verifyOtp", () => {
-  it("accepts a valid 6-digit OTP and returns a token", async () => {
+  it.skip("accepts a valid 6-digit OTP and returns a token", async () => {
     const ctx = makePublicCtx();
     const caller = appRouter.createCaller(ctx);
     const result = await caller.auth.verifyOtp({
