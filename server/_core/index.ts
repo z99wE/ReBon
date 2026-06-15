@@ -5,8 +5,7 @@ import net from "net";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
-import { registerOAuthRoutes } from "./oauth";
-import { registerStorageProxy } from "./storageProxy";
+import { registerSimpleAuthRoutes } from "./simpleLogin";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
@@ -32,7 +31,7 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 
 async function startServer() {
   const app = express();
-  app.set("trust proxy", 1); // Trust first proxy (Cloud Run / Manus gateway)
+  app.set("trust proxy", 1); // Trust first proxy (Cloud Run / GCP gateway)
   const server = createServer(app);
 
   // ── Security headers (Helmet) ───────────────────────────────────────────────
@@ -72,8 +71,7 @@ async function startServer() {
   });
 
   // Apply specific limiters before the general one
-  app.use("/api/trpc/auth.sendOtp", authLimiter);
-  app.use("/api/trpc/auth.verifyOtp", authLimiter);
+  app.use("/api/simple-auth", authLimiter);
   app.use("/api/trpc/assistant", aiLimiter);
   app.use("/api/trpc/challenges.generate", aiLimiter);
   app.use("/api/trpc/stories.generate", aiLimiter);
@@ -86,8 +84,7 @@ async function startServer() {
   app.use(express.json({ limit: "2mb" }));
   app.use(express.urlencoded({ limit: "15mb", extended: true }));
 
-  registerStorageProxy(app);
-  registerOAuthRoutes(app);
+  registerSimpleAuthRoutes(app);
 
   // ── tRPC API ─────────────────────────────────────────────────────────────────
   app.use(

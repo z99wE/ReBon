@@ -7,7 +7,6 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: production
 
     env:
       PROJECT_ID: buildwithai-499306
@@ -18,39 +17,45 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
         with:
-          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
-          service_account: ${{ secrets.SA_EMAIL }}
+          project_id: ${{ env.PROJECT_ID }}
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          export_default_credentials: true
 
-      - name: Configure Google Cloud
-        run: |
-          gcloud config set project ${{ env.PROJECT_ID }}
-          gcloud config set run/region ${{ env.REGION }}
+      - name: Configure Docker
+        run: gcloud auth configure-docker
 
-      - name: Build and push Docker image
+      - name: Build Docker image
         run: |
-          docker build -t ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.PROJECT_ID }}/rebon:${{ github.sha }} .
-          docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.PROJECT_ID }}/rebon:${{ github.sha }}
+          docker build -t gcr.io/${{ env.PROJECT_ID }}/rebon:${{ github.sha }} .
+
+      - name: Push Docker image
+        run: |
+          docker push gcr.io/${{ env.PROJECT_ID }}/rebon:${{ github.sha }}
 
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy ${{ env.SERVICE_NAME }} \
-            --image ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.PROJECT_ID }}/rebon:${{ github.sha }} \
+            --image gcr.io/${{ env.PROJECT_ID }}/rebon:${{ github.sha }} \
             --platform managed \
             --region ${{ env.REGION }} \
             --allow-unauthenticated \
-            --set-env-vars DATABASE_URL=${{ secrets.DATABASE_URL }}, \
-            JWT_SECRET=${{ secrets.JWT_SECRET }}, \
-            GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}, \
-            NVIDIA_NIM_API_KEY=${{ secrets.NVIDIA_NIM_API_KEY }}, \
-            DEEPGRAM_API_KEY=${{ secrets.DEEPGRAM_API_KEY }}, \
-            SARVAM_API_KEY=${{ secrets.SARVAM_API_KEY }}, \
-            VITE_APP_ID=${{ secrets.VITE_APP_ID }}, \
-            OAUTH_SERVER_URL=${{ secrets.OAUTH_SERVER_URL }}, \
-            VITE_OAUTH_PORTAL_URL=${{ secrets.VITE_OAUTH_PORTAL_URL }}, \
-            BUILT_IN_FORGE_API_URL=${{ secrets.BUILT_IN_FORGE_API_URL }}, \
-            BUILT_IN_FORGE_API_KEY=${{ secrets.BUILT_IN_FORGE_API_KEY }}, \
-            OWNER_OPEN_ID=${{ secrets.OWNER_OPEN_ID }}, \
-            OWNER_NAME=${{ secrets.OWNER_NAME }}
+            --memory 1Gi \
+            --cpu 1 \
+            --timeout 300s \
+            --set-env-vars DATABASE_URL="${{ secrets.DATABASE_URL }}" \
+            --set-env-vars JWT_SECRET="${{ secrets.JWT_SECRET }}" \
+            --set-env-vars GROQ_API_KEY="gsk_XmqGPMqkGzr1YftrYH6zWGdyb3FYZJLUQhKo5bgdyhTV3GqAGGfzXD" \
+            --set-env-vars NVIDIA_NIM_API_KEY="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" \
+            --set-env-vars DEEPGRAM_API_KEY="857350ae54cb167bfa5093f2b968c3366a527135" \
+            --set-env-vars SARVAM_API_KEY="sk_hrvqm*****OQ"
+
+      - name: Get service URL
+        run: |
+          SERVICE_URL=$(gcloud run services describe ${{ env.SERVICE_NAME }} \
+            --platform managed \
+            --region ${{ env.REGION }} \
+            --format="value(status.url)")
+          echo "🚀 App deployed to: $SERVICE_URL"
