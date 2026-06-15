@@ -1,3 +1,4 @@
+import React from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { IconTrophy, IconMedal, IconZap, IconPulse, IconStar } from "@/components/Icons";

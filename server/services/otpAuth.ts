@@ -74,9 +74,9 @@ export async function sendEmailOtp(email: string, otp: string): Promise<{ previe
   `;
 
   if (!transporter) {
-    // Dev mode: no email sent, but OTP is still valid
-    // Do not log OTP to console for security
-    return { preview: `DEV_MODE` };
+    // Dev mode: no email sent, but the caller can surface the OTP for local demos.
+    // Keep it out of logs so we do not create accidental secret leakage.
+    return { preview: `DEV_MODE:${otp}` };
   }
 
   const info = await transporter.sendMail({
@@ -109,9 +109,9 @@ export async function sendPhoneOtp(phone: string, otp: string): Promise<{ previe
     });
     return {};
   }
-  // Dev fallback: no SMS sent, but OTP is still valid
-  // Do not log OTP to console for security
-  return { preview: `DEV_MODE` };
+  // Dev fallback: no SMS sent, but the caller can surface the OTP for local demos.
+  // Keep it out of logs so we do not create accidental secret leakage.
+  return { preview: `DEV_MODE:${otp}` };
 }
 
 // ─── Session Management ───────────────────────────────────────────────────────

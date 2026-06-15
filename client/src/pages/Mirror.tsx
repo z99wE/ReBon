@@ -1,3 +1,4 @@
+import React from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { IconGitCompare, IconPeople, IconPulse, IconTrendingDown, IconTrendingUp } from "@/components/Icons";

@@ -1,3 +1,4 @@
+import React from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { Link } from "wouter";
@@ -5,7 +6,7 @@ import { IconLeaf, IconSwords, IconEye, IconTarget, IconGlobe, IconShare, IconPu
 
 const FEATURES = [
   {
-    tag: "VOICE + AI",
+    tag: "VOICE + LOGGING",
     icon: <IconPulse className="w-6 h-6 text-white/50" />,
     title: "Log in seconds, not minutes",
     body: "Say \"I drove to work and had a burger\" — ReBon understands context, calculates emissions, and logs everything instantly. No forms. No friction. Just your voice.",
@@ -13,8 +14,8 @@ const FEATURES = [
   {
     tag: "AGENT-TO-AGENT",
     icon: <IconSwords className="w-6 h-6 text-white/50" />,
-    title: "Your AI negotiates for you",
-    body: "ReBon deploys a personal AI agent that challenges peers to binding carbon reduction commitments. Two agents debate, counter-propose, and reach an agreement — while you watch.",
+    title: "Your agent negotiates for you",
+    body: "ReBon deploys a personal negotiation agent that challenges peers to binding carbon reduction commitments. Two agents debate, counter-propose, and reach an agreement while you watch.",
   },
   {
     tag: "SOCIAL INTELLIGENCE",
@@ -109,7 +110,7 @@ export default function Home() {
         <div className="relative max-w-5xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.03] mb-8">
             <span className="w-1.5 h-1.5 rounded-full bg-white/60 animate-pulse" />
-            <span className="label-tech text-white/50 text-[10px] tracking-widest">HACK2KILL · GOOGLE PROMPTWARS 2026</span>
+            <span className="label-tech text-white/50 text-[10px] tracking-widest">CARBON INTELLIGENCE PLATFORM</span>
           </div>
 
           <h1 className="text-6xl md:text-8xl lg:text-[110px] font-black leading-none tracking-tighter mb-6">
@@ -122,7 +123,7 @@ export default function Home() {
 
           <p className="text-white/50 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
             ReBon is the world's first <strong className="text-white/80">agent-to-agent carbon negotiation platform</strong>.
-            Track your impact, compete with peers, and let your AI fight for the planet on your behalf.
+            Track your impact, compete with peers, and let your agent fight for the planet on your behalf.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
@@ -279,7 +280,7 @@ export default function Home() {
           </div>
           <span className="font-black text-white/40 text-sm tracking-tight">REBON</span>
         </div>
-        <p className="text-white/20 text-xs">Built for Hack2Kill · Google PromptWars 2026 · Climate Intelligence Platform</p>
+        <p className="text-white/20 text-xs">Climate Intelligence Platform</p>
         <p className="text-white/20 text-xs">© 2026 ReBon. All rights reserved.</p>
       </footer>
     </div>

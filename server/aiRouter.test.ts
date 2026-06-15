@@ -1,77 +1,164 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import axios from "axios";
+import { routeAI, transcribeWithDeepgram } from "./services/aiRouter";
 
-/**
- * API Key Configuration Tests
- * Validates that all required AI provider keys are present in the environment.
- * These are smoke tests — they do not make live API calls to avoid credit usage.
- */
-describe("AI Router — API Key Configuration", () => {
-  it.skip("GROQ_API_KEY is set and non-empty", () => {
-    const key = process.env.GROQ_API_KEY;
-    expect(key).toBeDefined();
-    expect(key?.length).toBeGreaterThan(10);
-  });
+vi.mock("axios", () => ({
+  default: {
+    post: vi.fn(),
+  },
+}));
 
-  it.skip("NVIDIA_NIM_API_KEY is set and non-empty", () => {
-    const key = process.env.NVIDIA_NIM_API_KEY;
-    expect(key).toBeDefined();
-    expect(key?.length).toBeGreaterThan(10);
-  });
+const postMock = vi.mocked(axios.post);
 
-  it.skip("DEEPGRAM_API_KEY is set and non-empty", () => {
-    const key = process.env.DEEPGRAM_API_KEY;
-    expect(key).toBeDefined();
-    expect(key?.length).toBeGreaterThan(10);
-  });
-
-  it.skip("SARVAM_API_KEY is set and non-empty", () => {
-    const key = process.env.SARVAM_API_KEY;
-    expect(key).toBeDefined();
-    expect(key?.length).toBeGreaterThan(10);
-  });
+beforeEach(() => {
+  vi.resetAllMocks();
+  process.env.GROQ_API_KEY = "groq-test-key";
+  process.env.NVIDIA_NIM_API_KEY = "nvidia-test-key";
+  process.env.SARVAM_API_KEY = "sarvam-test-key";
+  process.env.DEEPGRAM_API_KEY = "deepgram-test-key";
 });
 
-describe("AI Router — Task Routing Logic", () => {
-  it("routes deep_analysis tasks to NVIDIA NIM provider", async () => {
-    // Mock the routing decision without making live API calls
-    const task = "deep_analysis";
-    const nonEnglishLangs = ["hi", "ta", "te", "kn", "ml", "bn", "mr", "gu", "pa", "ur"];
-    const language = "en";
+describe("aiRouter", () => {
+  it("routes deep analysis requests to NVIDIA NIM", async () => {
+    postMock.mockResolvedValueOnce({
+      data: {
+        choices: [{ message: { content: "deep answer" } }],
+        model: "meta/llama-3.3-70b-instruct",
+      },
+    });
 
-    const isMultilingual = language && nonEnglishLangs.includes(language);
-    const expectedProvider = isMultilingual ? "sarvam" : 
-      (task === "deep_analysis" || task === "story_generate") ? "nvidia_nim" : "groq";
+    const result = await routeAI({
+      task: "deep_analysis",
+      messages: [{ role: "user", content: "Analyze" }],
+      maxTokens: 256,
+    });
 
-    expect(expectedProvider).toBe("nvidia_nim");
+    expect(result.provider).toBe("nvidia_nim");
+    expect(result.content).toBe("deep answer");
+    expect(postMock).toHaveBeenCalledWith(
+      "https://integrate.api.nvidia.com/v1/chat/completions",
+      expect.objectContaining({
+        model: "meta/llama-3.3-70b-instruct",
+        max_tokens: 256,
+      }),
+      expect.objectContaining({
+        timeout: 30000,
+      })
+    );
   });
 
-  it("routes fast_inference tasks to Groq provider", () => {
-    const task = "fast_inference";
-    const language = "en";
-    const nonEnglishLangs = ["hi", "ta", "te", "kn", "ml", "bn", "mr", "gu", "pa", "ur"];
-    const isMultilingual = language && nonEnglishLangs.includes(language);
-    const expectedProvider = isMultilingual ? "sarvam" :
-      (task === "deep_analysis" || task === "story_generate") ? "nvidia_nim" : "groq";
+  it("routes fast inference requests to Groq", async () => {
+    postMock.mockResolvedValueOnce({
+      data: {
+        choices: [{ message: { content: "fast answer" } }],
+        model: "llama-3.1-8b-instant",
+      },
+    });
 
-    expect(expectedProvider).toBe("groq");
+    const result = await routeAI({
+      task: "fast_inference",
+      messages: [{ role: "user", content: "Quick summary" }],
+      maxTokens: 128,
+      temperature: 0.2,
+    });
+
+    expect(result.provider).toBe("groq");
+    expect(result.content).toBe("fast answer");
+    expect(postMock).toHaveBeenCalledWith(
+      "https://api.groq.com/openai/v1/chat/completions",
+      expect.objectContaining({
+        model: "llama-3.1-8b-instant",
+        max_tokens: 128,
+        temperature: 0.2,
+      }),
+      expect.objectContaining({
+        timeout: 15000,
+      })
+    );
   });
 
-  it("routes Hindi language requests to Sarvam AI", () => {
-    const language = "hi";
-    const nonEnglishLangs = ["hi", "ta", "te", "kn", "ml", "bn", "mr", "gu", "pa", "ur"];
-    const expectedProvider = nonEnglishLangs.includes(language) ? "sarvam" : "groq";
-    expect(expectedProvider).toBe("sarvam");
+  it("routes multilingual requests to Sarvam", async () => {
+    postMock.mockResolvedValueOnce({
+      data: {
+        choices: [{ message: { content: "sarvam answer" } }],
+      },
+    });
+
+    const result = await routeAI({
+      task: "coach_response",
+      language: "hi",
+      messages: [{ role: "user", content: "हैलो" }],
+    });
+
+    expect(result.provider).toBe("sarvam");
+    expect(result.content).toBe("sarvam answer");
+    expect(postMock).toHaveBeenCalledWith(
+      "https://api.sarvam.ai/v1/chat/completions",
+      expect.objectContaining({
+        model: "sarvam-m",
+      }),
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          "api-subscription-key": "sarvam-test-key",
+        }),
+        timeout: 20000,
+      })
+    );
   });
 
-  it("routes story_generate tasks to NVIDIA NIM", () => {
-    const task = "story_generate";
-    const expectedProvider = (task === "deep_analysis" || task === "story_generate") ? "nvidia_nim" : "groq";
-    expect(expectedProvider).toBe("nvidia_nim");
+  it("falls back to Groq when Sarvam fails", async () => {
+    postMock
+      .mockRejectedValueOnce(new Error("Sarvam down"))
+      .mockResolvedValueOnce({
+        data: {
+          choices: [{ message: { content: "fallback answer" } }],
+          model: "llama-3.1-8b-instant",
+        },
+      });
+
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const result = await routeAI({
+      task: "coach_response",
+      language: "hi",
+      messages: [{ role: "user", content: "help" }],
+    });
+
+    expect(result.provider).toBe("groq");
+    expect(result.content).toBe("fallback answer");
+    expect(warnSpy).toHaveBeenCalled();
+    warnSpy.mockRestore();
   });
 
-  it("routes challenge_generate tasks to Groq", () => {
-    const task = "challenge_generate";
-    const expectedProvider = (task === "deep_analysis" || task === "story_generate") ? "nvidia_nim" : "groq";
-    expect(expectedProvider).toBe("groq");
+  it("transcribes audio with Deepgram", async () => {
+    postMock.mockResolvedValueOnce({
+      data: {
+        results: {
+          channels: [
+            {
+              alternatives: [
+                {
+                  transcript: "hello world",
+                },
+              ],
+            },
+          ],
+        },
+      },
+    });
+
+    const transcript = await transcribeWithDeepgram(Buffer.from("audio"), "audio/webm");
+
+    expect(transcript).toBe("hello world");
+    expect(postMock).toHaveBeenCalledWith(
+      expect.stringContaining("api.deepgram.com"),
+      expect.any(Buffer),
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: "Token deepgram-test-key",
+          "Content-Type": "audio/webm",
+        }),
+        timeout: 30000,
+      })
+    );
   });
 });

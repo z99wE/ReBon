@@ -10,6 +10,21 @@ import "./index.css";
 
 const queryClient = new QueryClient();
 
+function injectAnalytics() {
+  const { VITE_ANALYTICS_ENDPOINT, VITE_ANALYTICS_WEBSITE_ID } =
+    import.meta.env as Record<string, string | undefined>;
+
+  if (!VITE_ANALYTICS_ENDPOINT || !VITE_ANALYTICS_WEBSITE_ID) return;
+  if (document.querySelector('script[data-rebon-analytics="true"]')) return;
+
+  const script = document.createElement("script");
+  script.defer = true;
+  script.src = `${VITE_ANALYTICS_ENDPOINT.replace(/\/$/, "")}/umami`;
+  script.dataset.websiteId = VITE_ANALYTICS_WEBSITE_ID;
+  script.dataset.rebonAnalytics = "true";
+  document.head.appendChild(script);
+}
+
 const redirectToLoginIfUnauthorized = (error: unknown) => {
   if (!(error instanceof TRPCClientError)) return;
   if (typeof window === "undefined") return;
@@ -36,6 +51,8 @@ queryClient.getMutationCache().subscribe(event => {
     console.error("[API Mutation Error]", error);
   }
 });
+
+injectAnalytics();
 
 const trpcClient = trpc.createClient({
   links: [
