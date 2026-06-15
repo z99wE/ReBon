@@ -1,0 +1,56 @@
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+
+    env:
+      PROJECT_ID: buildwithai-499306
+      REGION: us-central1
+      SERVICE_NAME: rebon-carbon
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.SA_EMAIL }}
+
+      - name: Configure Google Cloud
+        run: |
+          gcloud config set project ${{ env.PROJECT_ID }}
+          gcloud config set run/region ${{ env.REGION }}
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.PROJECT_ID }}/rebon:${{ github.sha }} .
+          docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.PROJECT_ID }}/rebon:${{ github.sha }}
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ env.SERVICE_NAME }} \
+            --image ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.PROJECT_ID }}/rebon:${{ github.sha }} \
+            --platform managed \
+            --region ${{ env.REGION }} \
+            --allow-unauthenticated \
+            --set-env-vars DATABASE_URL=${{ secrets.DATABASE_URL }}, \
+            JWT_SECRET=${{ secrets.JWT_SECRET }}, \
+            GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}, \
+            NVIDIA_NIM_API_KEY=${{ secrets.NVIDIA_NIM_API_KEY }}, \
+            DEEPGRAM_API_KEY=${{ secrets.DEEPGRAM_API_KEY }}, \
+            SARVAM_API_KEY=${{ secrets.SARVAM_API_KEY }}, \
+            VITE_APP_ID=${{ secrets.VITE_APP_ID }}, \
+            OAUTH_SERVER_URL=${{ secrets.OAUTH_SERVER_URL }}, \
+            VITE_OAUTH_PORTAL_URL=${{ secrets.VITE_OAUTH_PORTAL_URL }}, \
+            BUILT_IN_FORGE_API_URL=${{ secrets.BUILT_IN_FORGE_API_URL }}, \
+            BUILT_IN_FORGE_API_KEY=${{ secrets.BUILT_IN_FORGE_API_KEY }}, \
+            OWNER_OPEN_ID=${{ secrets.OWNER_OPEN_ID }}, \
+            OWNER_NAME=${{ secrets.OWNER_NAME }}

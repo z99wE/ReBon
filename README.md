@@ -28,6 +28,7 @@
 13. [Assumptions Made](#assumptions-made)
 14. [Evaluation Criteria Compliance](#evaluation-criteria-compliance)
 15. [Repository Structure](#repository-structure)
+16. [Deployment](#deployment)
 
 ---
 
@@ -736,6 +737,75 @@ rebon-carbon/
 2. **Dashboard button nesting** — Removed nested button inside Link component. Now uses `<Link className="btn-primary">` directly for semantic HTML.
 3. **NotFound page dark theme** — Aligned 404 page to dark glassmorphism theme matching the app, instead of light theme that felt disconnected.
 4. **Visual Standardization** — Unified global CSS to use the `--accent-bottlegreen` color scheme, ensured monochrome icons with green emphasis, and improved global `:focus-visible` outline styles.
+
+---
+
+## License
+
+MIT License. See LICENSE file for details.
+
+---
+
+## Deployment
+
+### 🚀 Deploy to Google Cloud Run (Free)
+
+ReBon is configured for free deployment to Google Cloud Run with auto-scaling and zero-cost when idle.
+
+#### Prerequisites
+- Google Cloud project: `buildwithai-499306`
+- GitHub repository: `https://github.com/z99wE/ReBon`
+- API keys (configured via GitHub Secrets)
+
+#### GitHub Actions Auto-Deploy
+
+Push to `main` branch for automatic deployment:
+
+```bash
+git push origin main
+```
+
+**Required GitHub Secrets** (Settings → Secrets and variables → Actions):
+
+| Secret | Description |
+|---|---|
+| `WIF_PROVIDER` | Workload Identity Provider |
+| `SA_EMAIL` | Service Account Email |
+| `DATABASE_URL` | MySQL/TiDB connection string |
+| `JWT_SECRET` | Random 32-char string (generate with `openssl rand -hex 32`) |
+| `GROQ_API_KEY` | Groq API key for AI |
+| `NVIDIA_NIM_API_KEY` | NVIDIA NIM API key |
+| `DEEPGRAM_API_KEY` | `857350ae54cb167bfa5093f2b968c3366a527135` |
+| `SARVAM_API_KEY` | Sarvam AI key |
+| `VITE_APP_ID` | Manus app ID |
+| `BUILT_IN_FORGE_API_KEY` | Manus Forge API key |
+| `OWNER_OPEN_ID` | Owner Open ID |
+
+#### What Gets Deployed
+- Frontend: React + Vite (optimized production build)
+- Backend: Express + tRPC (type-safe RPC)
+- Database: MySQL/TiDB with Drizzle ORM
+
+#### Free Tier Limits
+| Resource | Free Tier |
+|---|---|
+| Requests | 2M/month |
+| CPU | 180K seconds/month |
+| Memory | 40GB-seconds/month |
+| Storage | 5GB |
+
+**Estimated cost: $0/month**
+
+#### Live URL
+After deployment, your app will be available at:
+```
+https://rebon-carbon-xxxxxx-uc.a.run.app
+```
+
+#### Documentation
+- [Cloud Run Deployment Guide](./CLOUD_RUN_DEPLOY.md) - Detailed setup
+- [Deployment Checklist](./DEPLOYMENT_CHECKLIST.md) - Pre-deployment checklist
+- [AI API Key Setup](./SETUP_AI_API_KEYS.md) - Configure AI providers
 
 ---
 
