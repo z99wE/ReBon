@@ -2,17 +2,21 @@
  * ReBon Multi-Model AI Router
  * Routes requests to Groq (speed), NVIDIA NIM (depth), or Sarvam AI (multilingual)
  * based on task type and user context.
+ *
+ * Groq model tiers:
+ *   llama-3.1-8b-instant     → fast/cheap: challenge generation, coaching, quick parsing
+ *   llama-3.3-70b-versatile  → high-quality fallback for complex reasoning
  */
 
 import axios from "axios";
 
 export type AIRouteTask =
-  | "fast_inference"      // Groq: leaderboard, quick calculations, challenge scoring
+  | "fast_inference"      // Groq 8b: leaderboard, quick calculations, challenge scoring
   | "deep_analysis"       // NVIDIA NIM: impact modeling, causal analysis, complex insights
   | "multilingual"        // Sarvam AI: non-English queries, regional language support
-  | "challenge_generate"  // Groq: fast challenge generation
+  | "challenge_generate"  // Groq 8b: fast challenge generation
   | "story_generate"      // NVIDIA NIM: deep narrative generation
-  | "coach_response";     // Groq default, NIM for complex queries
+  | "coach_response";     // Groq 8b: coaching responses
 
 export interface AIRouterRequest {
   task: AIRouteTask;
@@ -29,11 +33,16 @@ export interface AIRouterResponse {
   latencyMs: number;
 }
 
+// ─── Groq model constants ─────────────────────────────────────────────────────
+const GROQ_FAST_MODEL = "llama-3.1-8b-instant";   // low-latency, low-cost
+const GROQ_HEAVY_MODEL = "llama-3.3-70b-versatile"; // high-quality fallback
+
 // ─── Groq (Fast Inference) ────────────────────────────────────────────────────
 async function callGroq(
   messages: AIRouterRequest["messages"],
   maxTokens = 1024,
-  temperature = 0.7
+  temperature = 0.7,
+  model = GROQ_FAST_MODEL
 ): Promise<AIRouterResponse> {
   const start = Date.now();
   const apiKey = process.env.GROQ_API_KEY;
@@ -42,7 +51,7 @@ async function callGroq(
   const response = await axios.post(
     "https://api.groq.com/openai/v1/chat/completions",
     {
-      model: "llama-3.3-70b-versatile",
+      model,
       messages,
       max_tokens: maxTokens,
       temperature,
@@ -109,7 +118,6 @@ async function callSarvam(
   const apiKey = process.env.SARVAM_API_KEY;
   if (!apiKey) throw new Error("SARVAM_API_KEY not configured");
 
-  // Sarvam AI chat completions endpoint
   const response = await axios.post(
     "https://api.sarvam.ai/v1/chat/completions",
     {
@@ -145,18 +153,19 @@ export async function routeAI(req: AIRouterRequest): Promise<AIRouterResponse> {
       return await callSarvam(messages, language, maxTokens);
     } catch (err) {
       console.warn("[AIRouter] Sarvam AI failed, falling back to Groq:", err);
-      return await callGroq(messages, maxTokens, temperature);
+      return await callGroq(messages, maxTokens, temperature, GROQ_FAST_MODEL);
     }
   }
 
   switch (task) {
     case "deep_analysis":
     case "story_generate": {
+      // High-value tasks → NVIDIA NIM (70B depth), fallback to Groq 70B
       try {
         return await callNvidiaNIM(messages, maxTokens, temperature);
       } catch (err) {
-        console.warn("[AIRouter] NVIDIA NIM failed, falling back to Groq:", err);
-        return await callGroq(messages, maxTokens, temperature);
+        console.warn("[AIRouter] NVIDIA NIM failed, falling back to Groq 70B:", err);
+        return await callGroq(messages, maxTokens, temperature, GROQ_HEAVY_MODEL);
       }
     }
 
@@ -165,18 +174,19 @@ export async function routeAI(req: AIRouterRequest): Promise<AIRouterResponse> {
         return await callSarvam(messages, language ?? "en-IN", maxTokens);
       } catch (err) {
         console.warn("[AIRouter] Sarvam AI failed, falling back to Groq:", err);
-        return await callGroq(messages, maxTokens, temperature);
+        return await callGroq(messages, maxTokens, temperature, GROQ_FAST_MODEL);
       }
     }
 
+    // Fast/cheap tasks → Groq 8B instant; fallback to NVIDIA NIM only on hard failure
     case "fast_inference":
     case "challenge_generate":
     case "coach_response":
     default: {
       try {
-        return await callGroq(messages, maxTokens, temperature);
+        return await callGroq(messages, maxTokens, temperature, GROQ_FAST_MODEL);
       } catch (err) {
-        console.warn("[AIRouter] Groq failed, falling back to NVIDIA NIM:", err);
+        console.warn("[AIRouter] Groq 8B failed, falling back to NVIDIA NIM:", err);
         return await callNvidiaNIM(messages, maxTokens, temperature);
       }
     }

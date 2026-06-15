@@ -99,3 +99,13 @@
 - [x] Verified: story generation works (NVIDIA NIM narrative + equivalents)
 - [x] Verified: activity logging works
 - [x] Verified: leaderboard loads
+
+## Phase 13: P1 + P2 Bug Fixes (Evaluation Quality Pass)
+- [ ] P1: Fix LogActivity.tsx — replace defaultCarbonKg with carbonKg everywhere
+- [ ] P1: Fix routers.ts logActivity — recompute influence from live DB counts not stale auth snapshot
+- [ ] P1: Fix db.ts completeChallenge — guard against double-completion (idempotency)
+- [ ] P1: Fix db.ts joinCollective — guard against duplicate membership rows
+- [ ] P2: Fix aiRouter.ts — route fast_inference/challenge_generate/coach_response to llama-3.1-8b-instant
+- [ ] P2: Fix Dashboard.tsx — remove button nested inside Link
+- [ ] P2: Fix NotFound.tsx — align with dark theme
+- [ ] Tests: Add tests for all 4 P1 fixes

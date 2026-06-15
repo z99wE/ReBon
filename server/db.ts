@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, lt, sql } from "drizzle-orm";
+import { and, count, desc, eq, gte, lt, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   activities, challenges, collectiveMembers, collectives,
@@ -108,7 +108,9 @@ export async function completeChallenge(challengeId: number, userId: number) {
   const db = await getDb(); if (!db) throw new Error("Database not available");
   const [challenge] = await db.select().from(challenges).where(and(eq(challenges.id, challengeId), eq(challenges.userId, userId))).limit(1);
   if (!challenge) throw new Error("Challenge not found");
-  await db.update(challenges).set({ status: "completed", completedAt: new Date() }).where(eq(challenges.id, challengeId));
+  // Idempotency guard: only award points once
+  if (challenge.status !== "active") throw new Error("Challenge already completed");
+  await db.update(challenges).set({ status: "completed", completedAt: new Date() }).where(and(eq(challenges.id, challengeId), eq(challenges.status, "active")));
   await db.update(users).set({ eloScore: sql`eloScore + ${challenge.pointsReward}`, currentStreak: sql`currentStreak + 1` }).where(eq(users.id, userId));
   return challenge;
 }
@@ -167,6 +169,11 @@ export async function getCollectiveMembers(collectiveId: number) {
 
 export async function joinCollective(collectiveId: number, userId: number) {
   const db = await getDb(); if (!db) throw new Error("Database not available");
+  // Idempotency guard: skip if already a member to prevent duplicate rows and inflated counts
+  const existing = await db.select({ id: collectiveMembers.id }).from(collectiveMembers)
+    .where(and(eq(collectiveMembers.collectiveId, collectiveId), eq(collectiveMembers.userId, userId)))
+    .limit(1);
+  if (existing.length > 0) return; // already a member — no-op
   await db.insert(collectiveMembers).values({ collectiveId, userId, role: "member" });
   await db.update(collectives).set({ memberCount: sql`memberCount + 1` }).where(eq(collectives.id, collectiveId));
 }
@@ -224,6 +231,22 @@ export async function getTopInfluencers(limit = 10) {
 export async function updateUserInfluenceScore(userId: number, score: number) {
   const db = await getDb(); if (!db) return;
   await db.update(users).set({ influenceScore: score }).where(eq(users.id, userId));
+}
+
+/** Returns live counters needed for influence score calculation. */
+export async function getUserLiveStats(userId: number) {
+  const db = await getDb();
+  if (!db) return { activityCount: 0, completedChallenges: 0, followersCount: 0 };
+  const [[actRow], [chalRow], [follRow]] = await Promise.all([
+    db.select({ n: count() }).from(activities).where(eq(activities.userId, userId)),
+    db.select({ n: count() }).from(challenges).where(and(eq(challenges.userId, userId), eq(challenges.status, "completed"))),
+    db.select({ n: count() }).from(influenceEdges).where(eq(influenceEdges.targetUserId, userId)),
+  ]);
+  return {
+    activityCount: actRow?.n ?? 0,
+    completedChallenges: chalRow?.n ?? 0,
+    followersCount: follRow?.n ?? 0,
+  };
 }
 
 export async function savePeerSnapshot(data: typeof peerSnapshots.$inferInsert) {

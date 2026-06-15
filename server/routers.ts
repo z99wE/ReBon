@@ -10,7 +10,7 @@ import {
   getCommunityFeed, getLatestPeerSnapshot, getLeaderboard, getOrCreateActiveSeason,
   getPublicCollectives, getTopInfluencers, getUserActivities, getUserCarbonSummary,
   getUserById, getUserChallenges, getUserCollectives, getUserStories,
-  getArchetypePeers, incrementStoryShares, joinCollective, likeFeedItem,
+  getArchetypePeers, getUserLiveStats, incrementStoryShares, joinCollective, likeFeedItem,
   logActivity, savePeerSnapshot, saveStory, updateUserInfluenceScore,
   updateUserProfile, upsertLeaderboardEntry,
 } from "./db";
@@ -124,9 +124,20 @@ export const appRouter = router({
       .mutation(async ({ ctx, input }) => {
         await logActivity({ ...input, userId: ctx.user.id });
         await createFeedItem({ userId: ctx.user.id, type: "activity", title: `Logged: ${input.label}`, body: `${input.carbonKg.toFixed(2)} kg CO₂`, carbonKg: input.carbonKg, isInfluencer: (ctx.user.influenceScore ?? 0) > 100 });
-        const season = await getOrCreateActiveSeason();
-        if (season) await upsertLeaderboardEntry(season.id, ctx.user.id, { activitiesLogged: 1, eloScore: (ctx.user.eloScore ?? 1000) + Math.round(input.carbonKg * 2) });
-        const newInfluence = calculateInfluenceScore({ carbonSavedKg: ctx.user.totalCarbonKg ?? 0, activitiesLogged: 1, challengesCompleted: 0, streakDays: ctx.user.currentStreak ?? 0, followersCount: 0 });
+        // Use live DB counts so influence score reflects the user's full history, not the stale auth snapshot
+        const [season, summary, liveStats] = await Promise.all([
+          getOrCreateActiveSeason(),
+          getUserCarbonSummary(ctx.user.id),
+          getUserLiveStats(ctx.user.id),
+        ]);
+        if (season) await upsertLeaderboardEntry(season.id, ctx.user.id, { activitiesLogged: liveStats.activityCount, eloScore: (ctx.user.eloScore ?? 1000) + Math.round(input.carbonKg * 2) });
+        const newInfluence = calculateInfluenceScore({
+          carbonSavedKg: summary?.totalKg ?? 0,
+          activitiesLogged: liveStats.activityCount,
+          challengesCompleted: liveStats.completedChallenges,
+          streakDays: ctx.user.currentStreak ?? 0,
+          followersCount: liveStats.followersCount,
+        });
         await updateUserInfluenceScore(ctx.user.id, newInfluence);
         return { success: true };
       }),

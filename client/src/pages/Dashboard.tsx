@@ -49,8 +49,8 @@ export default function Dashboard() {
               </p>
             )}
           </div>
-          <Link href="/log">
-            <button className="btn-primary hidden md:flex">Log Activity →</button>
+          <Link href="/log" className="btn-primary hidden md:flex">
+            Log Activity →
           </Link>
         </div>
       </div>
@@ -127,8 +127,8 @@ export default function Dashboard() {
           {!activities || activities.length === 0 ? (
             <div className="px-6 py-12 text-center">
               <p className="text-white/20 text-sm mb-4">No activities logged yet.</p>
-              <Link href="/log">
-                <button className="btn-ghost text-xs py-2 px-4">Log your first activity →</button>
+              <Link href="/log" className="btn-ghost text-xs py-2 px-4 inline-flex">
+                Log your first activity →
               </Link>
             </div>
           ) : (
