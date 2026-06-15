@@ -99,4 +99,38 @@ describe("otpAuth", () => {
     expect(result).toEqual({ success: true });
     expect(fakeDb.__mocks.updateWhere).toHaveBeenCalledTimes(2);
   });
+
+  it("fails verification for incorrect OTP", async () => {
+    const session = {
+      id: 3,
+      identifier: "tester@example.com",
+      otpHash: hashOtp("123456"),
+      expiresAt: new Date(Date.now() + 10000),
+      attempts: 1,
+      verified: false,
+    };
+    const fakeDb = makeFakeDb([session]);
+    vi.mocked(getDb).mockResolvedValue(fakeDb as never);
+
+    const res = await verifyOtpSession("tester@example.com", "999999");
+    expect(res.success).toBe(false);
+    expect(res.error).toMatch(/Incorrect code/);
+  });
+
+  it("fails verification if max attempts reached", async () => {
+    const session = {
+      id: 4,
+      identifier: "locked@example.com",
+      otpHash: hashOtp("123456"),
+      expiresAt: new Date(Date.now() + 10000),
+      attempts: 3,
+      verified: false,
+    };
+    const fakeDb = makeFakeDb([session]);
+    vi.mocked(getDb).mockResolvedValue(fakeDb as never);
+
+    const res = await verifyOtpSession("locked@example.com", "123456");
+    expect(res.success).toBe(false);
+    expect(res.error).toBe("Too many attempts. Request a new code.");
+  });
 });

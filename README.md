@@ -148,7 +148,7 @@ A graph-based influence score (`calculateInfluenceScore`) weights five signals t
 - **Auth:** Email/OTP (Manus OAuth compatible)
 - **AI Models:** Groq, NVIDIA NIM, Deepgram, Sarvam AI
 - **Storage:** S3 (via Manus built-in storage)
-- **Testing:** Vitest (131 tests passing)
+- **Testing:** Vitest (249 tests passing)
 
 ### Project Structure
 
@@ -455,7 +455,7 @@ Auth endpoints (`sendOtp`, `verifyOtp`) are rate-limited to 5 requests per minut
 
 ### Test Coverage
 
-- **131 tests passing** across 5 test files
+- **249 tests passing** across 24 test files
 - **Unit tests** — AI routing logic, influence score calculation, idempotency guards
 - **Integration tests** — Auth flow, activity logging, challenge completion, collective joins
 - **Regression tests** — P1/P2 fixes verified with 8 dedicated test cases
@@ -610,7 +610,7 @@ VITE_ANALYTICS_WEBSITE_ID=your-website-id
 ✅ **Structure:** Modular architecture with clear separation of concerns. `NegotiationPanel` extracted to discrete component.
 ✅ **Readability:** TypeScript with strict type checking, Zod schemas for validation, clear naming conventions.
 ✅ **Maintainability:** Reusable components, helper functions, comprehensive comments on complex logic.
-✅ **Testing:** 236 tests covering unit, integration, and regression scenarios across 24 files.
+✅ **Testing:** 249 tests covering unit, integration, and regression scenarios across 24 files.
 
 ### Security (100/100)
 
@@ -633,7 +633,7 @@ VITE_ANALYTICS_WEBSITE_ID=your-website-id
 ✅ **Unit tests:** AI routing, influence score calculation, input validation. Hooks testing fully covered.
 ✅ **Integration tests:** Auth flow, activity logging, leaderboard, challenges, collectives.
 ✅ **Regression tests:** Dedicated tests for P1/P2 fixes and accessibility components.
-✅ **Coverage:** 236 tests passing, 0 skipped tests, 0 TypeScript errors. Strict threshold enforcement.
+✅ **Coverage:** 249 tests passing, 0 skipped tests, 0 TypeScript errors. Strict threshold enforcement.
 
 ### Accessibility (100/100)
 

@@ -431,4 +431,49 @@ describe("server/db", () => {
     await expect(db.getArchetypePeers("eco_pioneer", 9)).resolves.toEqual(peerRows);
     await expect(db.getPublicCollectives(10)).resolves.toEqual([{ id: 1, totalCarbonKg: 42, isPublic: true }]);
   });
+
+  it("covers fallback paths when DB is not available", async () => {
+    const db = await loadDbModule({ databaseUrl: undefined });
+    await expect(db.upsertUser({ openId: "x" } as any)).resolves.toBeUndefined();
+    await expect(db.getUserByOpenId("x")).resolves.toBeUndefined();
+    await expect(db.getUserById(1)).resolves.toBeUndefined();
+    await expect(db.updateUserProfile(1, {})).resolves.toBeUndefined();
+    await expect(db.getAllUsersForLeaderboard()).resolves.toEqual([]);
+    await expect(db.logActivity({} as any).catch(e => e.message)).resolves.toBe("Database not available");
+    await expect(db.getUserActivities(1)).resolves.toEqual([]);
+    await expect(db.getUserActivitiesByDateRange(1, new Date(), new Date())).resolves.toEqual([]);
+    await expect(db.completeChallenge(1, 1).catch(e => e.message)).resolves.toBe("Database not available");
+    await expect(db.createCollective("A", "local", 1, "code").catch(e => e.message)).resolves.toBe("Database not available");
+    await expect(db.getCollectiveById(1)).resolves.toBeNull();
+    await expect(db.getCollectiveByInviteCode("code")).resolves.toBeNull();
+    await expect(db.getUserCollectives(1)).resolves.toEqual([]);
+    await expect(db.getCollectiveMembers(1)).resolves.toEqual([]);
+    await expect(db.joinCollective(1, 1).catch(e => e.message)).resolves.toBe("Database not available");
+    await expect(db.getOrCreateActiveSeason()).resolves.toBeNull();
+    await expect(db.getLeaderboard(1)).resolves.toEqual([]);
+    await expect(db.upsertLeaderboardEntry(1, 1, {})).resolves.toBeUndefined();
+    await expect(db.createFeedItem({} as any)).resolves.toBeUndefined();
+    await expect(db.getCommunityFeed()).resolves.toEqual([]);
+    await expect(db.likeFeedItem(1)).resolves.toBeUndefined();
+    await expect(db.getTopInfluencers()).resolves.toEqual([]);
+    await expect(db.updateUserInfluenceScore(1, 1)).resolves.toBeUndefined();
+    await expect(db.getUserLiveStats(1)).resolves.toEqual({ activityCount: 0, completedChallenges: 0, followersCount: 0 });
+    await expect(db.savePeerSnapshot({} as any)).resolves.toBeUndefined();
+    await expect(db.getLatestPeerSnapshot(1)).resolves.toBeNull();
+    await expect(db.getArchetypePeers("a", 1)).resolves.toEqual([]);
+    await expect(db.getPublicCollectives()).resolves.toEqual([]);
+  });
+
+  it("covers joinCollective when not already a member", async () => {
+    const harness = createDbHarness();
+    // Simulate existing.length === 0
+    harness.queueSelect([]);
+    harness.queueInsert([{ insertId: 1 }]);
+    harness.queueUpdate(undefined);
+    mocks.drizzle.mockReturnValue(harness.db);
+
+    const db = await loadDbModule();
+    await db.joinCollective(1, 1);
+    expect(mocks.eq).toHaveBeenCalled();
+  });
 });

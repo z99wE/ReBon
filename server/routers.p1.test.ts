@@ -3,6 +3,7 @@ import { appRouter } from "./routers";
 import type { TrpcContext } from "./_core/context";
 
 const dbMocks = vi.hoisted(() => ({
+  getDb: vi.fn(),
   completeChallenge: vi.fn(),
   createChallenge: vi.fn(),
   createCollective: vi.fn(),
@@ -32,6 +33,7 @@ const dbMocks = vi.hoisted(() => ({
   updateUserInfluenceScore: vi.fn(),
   updateUserProfile: vi.fn(),
   upsertLeaderboardEntry: vi.fn(),
+  upsertUser: vi.fn(),
 }));
 
 const aiMocks = vi.hoisted(() => ({
@@ -39,10 +41,26 @@ const aiMocks = vi.hoisted(() => ({
   transcribeWithDeepgram: vi.fn(),
 }));
 
+const otpMocks = vi.hoisted(() => ({
+  createOtpSession: vi.fn(),
+  verifyOtpSession: vi.fn(),
+  sendEmailOtp: vi.fn(),
+  sendPhoneOtp: vi.fn(),
+}));
+
 vi.mock("./db", () => dbMocks);
 vi.mock("./services/aiRouter", () => ({
   routeAI: aiMocks.routeAI,
   transcribeWithDeepgram: aiMocks.transcribeWithDeepgram,
+}));
+vi.mock("./services/otpAuth", () => otpMocks);
+vi.mock("jose", () => ({
+  SignJWT: class {
+    setProtectedHeader() { return this; }
+    setIssuedAt() { return this; }
+    setExpirationTime() { return this; }
+    async sign() { return "mock-jwt-token"; }
+  }
 }));
 
 function makeCtx(overrides?: Partial<TrpcContext["user"]>): TrpcContext {
@@ -102,6 +120,37 @@ describe("server/routers", () => {
         }),
       })
     );
+  });
+
+  describe("auth routes", () => {
+    it("handles logout", async () => {
+      const caller = appRouter.createCaller(makeCtx());
+      const res = await caller.auth.logout();
+      expect(res.success).toBe(true);
+    });
+
+    it("sends OTP via email and phone", async () => {
+      otpMocks.createOtpSession.mockResolvedValue({ otp: "123456", rateLimited: false });
+      otpMocks.sendEmailOtp.mockResolvedValue({ preview: "email-preview" });
+      otpMocks.sendPhoneOtp.mockResolvedValue({ preview: "phone-preview" });
+
+      const caller = appRouter.createCaller(makeCtx());
+      const emailRes = await caller.auth.sendOtp({ identifier: "test@example.com", identifierType: "email" });
+      expect(emailRes.sent).toBe(true);
+      
+      const phoneRes = await caller.auth.sendOtp({ identifier: "+1234567890", identifierType: "phone" });
+      expect(phoneRes.sent).toBe(true);
+    });
+
+    it("verifies OTP and sets cookie", async () => {
+      otpMocks.verifyOtpSession.mockResolvedValue({ success: true });
+      dbMocks.upsertUser.mockResolvedValue(undefined);
+
+      const caller = appRouter.createCaller(makeCtx());
+      const res = await caller.auth.verifyOtp({ identifier: "test@example.com", otp: "123456" });
+      expect(res.success).toBe(true);
+      expect(dbMocks.upsertUser).toHaveBeenCalled();
+    });
   });
 
   it("logs an activity and updates leaderboard + influence state", async () => {
@@ -183,6 +232,7 @@ describe("server/routers", () => {
       totalKg: 24,
     });
     dbMocks.saveStory.mockResolvedValue(undefined);
+    dbMocks.completeChallenge.mockResolvedValue({ title: "Bike once", carbonSavingKg: 1, pointsReward: 50 });
 
     aiMocks.routeAI
       .mockResolvedValueOnce({
@@ -201,6 +251,8 @@ describe("server/routers", () => {
     const caller = appRouter.createCaller(makeCtx());
     const challenges = await caller.challenges.generate();
     const story = await caller.stories.generate({ period: "month" });
+    const completeRes = await caller.challenges.complete({ challengeId: 1 });
+    const profile = await caller.user.profile();
 
     expect(challenges).toHaveLength(3);
     expect(dbMocks.createChallenge).toHaveBeenCalledTimes(3);
@@ -215,6 +267,30 @@ describe("server/routers", () => {
         carbonSavedKg: 12,
       })
     );
+    expect(completeRes).toEqual({ success: true });
+    expect(dbMocks.completeChallenge).toHaveBeenCalledWith(1, 42);
+    expect(profile).toMatchObject({ id: 42, name: "Demo User" });
+  });
+
+  it("handles user profile not found", async () => {
+    dbMocks.getUserById.mockResolvedValueOnce(null);
+    const caller = appRouter.createCaller(makeCtx());
+    await expect(caller.user.profile()).rejects.toThrow("NOT_FOUND");
+  });
+
+  it("handles leaderboard.current when season is missing", async () => {
+    dbMocks.getOrCreateActiveSeason.mockResolvedValueOnce(null);
+    const caller = appRouter.createCaller(makeCtx());
+    const res = await caller.leaderboard.current();
+    expect(res).toEqual({ season: null, entries: [] });
+  });
+
+  it("handles leaderboard.current when season exists", async () => {
+    dbMocks.getOrCreateActiveSeason.mockResolvedValueOnce({ id: 1 });
+    dbMocks.getLeaderboard.mockResolvedValueOnce([{ userId: 42, score: 100 }]);
+    const caller = appRouter.createCaller(makeCtx());
+    const res = await caller.leaderboard.current();
+    expect(res).toEqual({ season: { id: 1 }, entries: [{ userId: 42, score: 100 }] });
   });
 
   it("compares peers, creates collectives, and answers what-if scenarios", async () => {
