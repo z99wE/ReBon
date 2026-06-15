@@ -6,8 +6,11 @@ WORKDIR /app
 # Install pnpm
 RUN npm install -g pnpm
 
-# Copy lock file and install dependencies (cached)
+# Copy package files and patches
 COPY package.json pnpm-lock.yaml ./
+COPY patches/ ./patches/
+
+# Install dependencies
 RUN pnpm install --frozen-lockfile
 
 # Copy source code
@@ -27,11 +30,13 @@ RUN npm install -g pnpm
 # Copy built application
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./
+
+# Copy source files needed for production
 COPY --from=builder /app/drizzle ./drizzle
 COPY --from=builder /app/shared ./shared
 
-# Install only production dependencies
-RUN pnpm install --prod --frozen-lockfile
+# Install only production dependencies (without patches)
+RUN pnpm install --prod --ignore-scripts
 
 # Expose port
 EXPOSE 3000
