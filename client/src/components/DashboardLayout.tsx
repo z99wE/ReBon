@@ -22,7 +22,7 @@ import {
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
 import { LayoutDashboard, LogOut, PanelLeft, Users } from "lucide-react";
-import { CSSProperties, useEffect, useRef, useState } from "react";
+import { CSSProperties, Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
@@ -99,7 +99,7 @@ export default function DashboardLayout({
 
 type DashboardLayoutContentProps = {
   children: React.ReactNode;
-  setSidebarWidth: (width: number) => void;
+  setSidebarWidth: Dispatch<SetStateAction<number>>;
 };
 
 function DashboardLayoutContent({
@@ -114,6 +114,9 @@ function DashboardLayoutContent({
   const sidebarRef = useRef<HTMLDivElement>(null);
   const activeMenuItem = menuItems.find(item => item.path === location);
   const isMobile = useIsMobile();
+  const adjustSidebarWidth = (delta: number) => {
+    setSidebarWidth(prev => Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, prev + delta)));
+  };
 
   useEffect(() => {
     if (isCollapsed) {
@@ -168,6 +171,34 @@ function DashboardLayoutContent({
               >
                 <PanelLeft className="h-4 w-4 text-muted-foreground" />
               </button>
+              {!isCollapsed ? (
+                <div className="flex items-center gap-1" aria-label="Resize navigation">
+                  <button
+                    type="button"
+                    onClick={() => adjustSidebarWidth(-24)}
+                    className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-accent transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    aria-label="Narrow sidebar"
+                  >
+                    <span aria-hidden="true" className="text-sm leading-none">−</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSidebarWidth(DEFAULT_WIDTH)}
+                    className="h-8 px-2 flex items-center justify-center rounded-lg hover:bg-accent transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring text-xs font-medium text-muted-foreground"
+                    aria-label="Reset sidebar width"
+                  >
+                    Reset
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => adjustSidebarWidth(24)}
+                    className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-accent transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    aria-label="Widen sidebar"
+                  >
+                    <span aria-hidden="true" className="text-sm leading-none">+</span>
+                  </button>
+                </div>
+              ) : null}
               {!isCollapsed ? (
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="font-semibold tracking-tight truncate">

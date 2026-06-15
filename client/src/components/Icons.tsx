@@ -1,3 +1,5 @@
+import React from "react";
+
 /**
  * ReBon Icon System — Ionicons-inspired greyscale SVG icons
  * All icons are monochrome, stroke-based, no fill colours.
@@ -13,6 +15,7 @@ const base = (size: number) => ({
   width: size,
   height: size,
   viewBox: "0 0 512 512",
+  "data-rebon-icon": "true",
   fill: "none",
   stroke: "currentColor",
   strokeWidth: 32,
