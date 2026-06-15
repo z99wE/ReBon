@@ -1,4 +1,4 @@
-import { and, count, desc, eq, gte, lt, sql } from "drizzle-orm";
+import { and, count, desc, eq, gt, gte, inArray, lt, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   activities, challenges, collectiveMembers, collectives,
@@ -72,12 +72,35 @@ export async function logActivity(data: InsertActivity) {
 
 export async function getUserActivities(userId: number, limit = 50) {
   const db = await getDb(); if (!db) return [];
-  return db.select().from(activities).where(eq(activities.userId, userId)).orderBy(desc(activities.loggedAt)).limit(limit);
+  // Select only list-view columns — voiceTranscript is a TEXT blob not needed here
+  return db.select({
+    id: activities.id,
+    userId: activities.userId,
+    category: activities.category,
+    subcategory: activities.subcategory,
+    label: activities.label,
+    carbonKg: activities.carbonKg,
+    quantity: activities.quantity,
+    unit: activities.unit,
+    inputMethod: activities.inputMethod,
+    loggedAt: activities.loggedAt,
+  }).from(activities).where(eq(activities.userId, userId)).orderBy(desc(activities.loggedAt)).limit(limit);
 }
 
 export async function getUserActivitiesByDateRange(userId: number, from: Date, to: Date) {
   const db = await getDb(); if (!db) return [];
-  return db.select().from(activities).where(and(eq(activities.userId, userId), gte(activities.loggedAt, from), lt(activities.loggedAt, to))).orderBy(desc(activities.loggedAt));
+  return db.select({
+    id: activities.id,
+    userId: activities.userId,
+    category: activities.category,
+    subcategory: activities.subcategory,
+    label: activities.label,
+    carbonKg: activities.carbonKg,
+    quantity: activities.quantity,
+    unit: activities.unit,
+    inputMethod: activities.inputMethod,
+    loggedAt: activities.loggedAt,
+  }).from(activities).where(and(eq(activities.userId, userId), gte(activities.loggedAt, from), lt(activities.loggedAt, to))).orderBy(desc(activities.loggedAt));
 }
 
 export async function getUserCarbonSummary(userId: number) {
@@ -152,11 +175,13 @@ export async function getCollectiveById(id: number) {
 
 export async function getUserCollectives(userId: number) {
   const db = await getDb(); if (!db) return [];
-  const memberships = await db.select().from(collectiveMembers).where(eq(collectiveMembers.userId, userId));
+  const memberships = await db.select({ collectiveId: collectiveMembers.collectiveId })
+    .from(collectiveMembers)
+    .where(eq(collectiveMembers.userId, userId));
   if (memberships.length === 0) return [];
-  const results = [];
-  for (const m of memberships) { const c = await getCollectiveById(m.collectiveId); if (c) results.push(c); }
-  return results;
+  // Single query with OR conditions instead of N+1 loop
+  const ids = memberships.map(m => m.collectiveId);
+  return db.select().from(collectives).where(or(...ids.map(id => eq(collectives.id, id))));
 }
 
 export async function getCollectiveMembers(collectiveId: number) {

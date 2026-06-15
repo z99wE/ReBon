@@ -7,6 +7,7 @@ import {
   IconSwords, IconRobot, IconCar, IconFlash, IconRestaurant,
   IconCart, IconLeaf, IconPulse, IconShield, IconPeople, IconArrowForward
 } from "@/components/Icons";
+import { NegotiationPanel } from "@/components/NegotiationPanel";
 import type { JSX } from "react";
 
 const CATEGORY_ICONS: Record<string, JSX.Element> = {
@@ -103,9 +104,9 @@ export default function AgentArena() {
           <div className="space-y-6">
             {/* Peer selector */}
             <div>
-              <label className="label-tech text-white/30 text-[10px] tracking-widest block mb-3">
+              <p id="peer-label" className="label-tech text-white/30 text-[10px] tracking-widest block mb-3">
                 SELECT PEER TO CHALLENGE
-              </label>
+              </p>
               {peersQuery.isLoading ? (
                 <div className="text-white/30 text-sm py-4 text-center">Loading peers...</div>
               ) : peers.length === 0 ? (
@@ -115,7 +116,7 @@ export default function AgentArena() {
                   <p className="text-white/20 text-xs mt-1">Invite others to join ReBon to unlock negotiations.</p>
                 </div>
               ) : (
-                <div className="space-y-2 max-h-40 overflow-y-auto">
+                <div className="space-y-2 max-h-40 overflow-y-auto" role="group" aria-labelledby="peer-label">
                   {peers.map((peer) => (
                     <button
                       key={peer.id}
@@ -140,8 +141,8 @@ export default function AgentArena() {
 
             {/* Category */}
             <div>
-              <label className="label-tech text-white/30 text-[10px] tracking-widest block mb-3">CATEGORY</label>
-              <div className="grid grid-cols-3 gap-2">
+              <p id="category-label" className="label-tech text-white/30 text-[10px] tracking-widest block mb-3">CATEGORY</p>
+              <div className="grid grid-cols-3 gap-2" role="group" aria-labelledby="category-label">
                 {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
                   <button
                     key={key}
@@ -162,20 +163,21 @@ export default function AgentArena() {
 
             {/* Reduction target */}
             <div>
-              <label className="label-tech text-white/30 text-[10px] tracking-widest block mb-3">
+              <label htmlFor="proposed-kg" className="label-tech text-white/30 text-[10px] tracking-widest block mb-3">
                 PROPOSED WEEKLY REDUCTION
               </label>
               <div className="flex items-center gap-4">
                 <input
+                  id="proposed-kg"
                   type="range"
                   min={1}
                   max={50}
                   value={proposedKg}
                   onChange={(e) => setProposedKg(Number(e.target.value))}
                   className="flex-1 accent-white"
-                  aria-label="Proposed CO₂ reduction in kg per week"
+                  aria-valuetext={`${proposedKg} kg CO₂ per week`}
                 />
-                <span className="text-2xl font-black text-white w-20 text-right tabular-nums">{proposedKg} kg</span>
+                <span className="text-2xl font-black text-white w-20 text-right tabular-nums" aria-hidden="true">{proposedKg} kg</span>
               </div>
               <p className="text-white/20 text-xs mt-2">CO₂ reduction commitment per week</p>
             </div>
@@ -215,60 +217,7 @@ export default function AgentArena() {
               <p className="text-white/30 text-xs mt-0.5">Watch your agents negotiate in real time</p>
             </div>
           </div>
-
-          {!activeNeg && !initiateMutation.isPending && (
-            <div className="flex flex-col items-center justify-center flex-1 min-h-48 text-center">
-              <IconSwords className="w-10 h-10 text-white/[0.07] mb-4" />
-              <p className="text-white/25 text-sm">No active negotiation.</p>
-              <p className="text-white/15 text-xs mt-2">Select a peer and deploy your agent to begin.</p>
-            </div>
-          )}
-
-          {initiateMutation.isPending && (
-            <div className="flex flex-col items-center justify-center flex-1 min-h-48 text-center">
-              <div className="w-8 h-8 border-2 border-white/10 border-t-white/60 rounded-full animate-spin mb-4" />
-              <p className="text-white/40 text-sm">Agents are negotiating...</p>
-              <p className="text-white/20 text-xs mt-2">Analysing profiles · Generating proposals · Reaching consensus</p>
-            </div>
-          )}
-
-          {activeNeg && (
-            <div className="space-y-3 max-h-80 overflow-y-auto pr-1 flex-1">
-              {activeNeg.turns.map((turn, i) => (
-                <div
-                  key={i}
-                  className={`p-3 rounded-lg text-sm ${
-                    turn.speaker === "initiator"
-                      ? "bg-white/[0.07] border border-white/10 ml-6"
-                      : "bg-white/[0.02] border border-white/[0.05] mr-6"
-                  }`}
-                >
-                  <div className="label-tech text-white/30 text-[9px] tracking-widest mb-1.5">
-                    {turn.speaker === "initiator" ? "YOUR AGENT" : "PEER AGENT"}
-                    {turn.proposedKg != null && (
-                      <span className="ml-2 text-white/20">· {turn.proposedKg} kg proposed</span>
-                    )}
-                  </div>
-                  <p className="text-white/70 leading-relaxed">{turn.message}</p>
-                </div>
-              ))}
-
-              {activeNeg.agreedKg !== null && (
-                <div className="p-5 rounded-lg border border-white/20 bg-white/[0.04] text-center mt-4">
-                  <div className="label-tech text-white/30 text-[9px] tracking-widest mb-3">AGREEMENT REACHED</div>
-                  <div className="text-4xl font-black text-white mb-1 tabular-nums">{activeNeg.agreedKg} kg</div>
-                  <div className="text-white/30 text-xs">weekly CO₂ reduction · both parties bound</div>
-                </div>
-              )}
-
-              {activeNeg.status === "rejected" && (
-                <div className="p-4 rounded-lg border border-white/10 bg-white/[0.02] text-center mt-4">
-                  <div className="label-tech text-white/20 text-[9px] tracking-widest mb-2">NO AGREEMENT</div>
-                  <p className="text-white/30 text-xs">Agents could not reach consensus. Try a different proposal or peer.</p>
-                </div>
-              )}
-            </div>
-          )}
+          <NegotiationPanel isPending={initiateMutation.isPending} activeNeg={activeNeg} />
         </div>
       </div>
 

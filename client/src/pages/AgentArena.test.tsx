@@ -57,4 +57,23 @@ describe("AgentArena", () => {
     expect(screen.getByText(/agent arena/i)).toBeInTheDocument();
     expect(initiateMutate).toHaveBeenCalledWith({ targetUserId: 2, category: "transport", proposedKg: 5 });
   });
+
+  // ── Accessibility ───────────────────────────────────────────────────────────
+
+  it("has no axe violations when unauthenticated", async () => {
+    const { axe, toHaveNoViolations } = await import("jest-axe");
+    expect.extend(toHaveNoViolations);
+    authState = { isAuthenticated: false };
+    const { container } = render(<AgentArena />);
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+
+  it("has no axe violations when authenticated with peers", async () => {
+    const { axe, toHaveNoViolations } = await import("jest-axe");
+    expect.extend(toHaveNoViolations);
+    const { container } = render(<AgentArena />);
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
 });

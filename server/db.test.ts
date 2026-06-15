@@ -23,9 +23,11 @@ type UpdateState = {
 const mocks = vi.hoisted(() => ({
   drizzle: vi.fn(),
   and: vi.fn((...parts: unknown[]) => ({ kind: "and", parts })),
+  or: vi.fn((...parts: unknown[]) => ({ kind: "or", parts })),
   count: vi.fn(() => ({ kind: "count" })),
   desc: vi.fn((value: unknown) => ({ kind: "desc", value })),
   eq: vi.fn((left: unknown, right: unknown) => ({ kind: "eq", left, right })),
+  gt: vi.fn((left: unknown, right: unknown) => ({ kind: "gt", left, right })),
   gte: vi.fn((left: unknown, right: unknown) => ({ kind: "gte", left, right })),
   lt: vi.fn((left: unknown, right: unknown) => ({ kind: "lt", left, right })),
   sql: vi.fn((strings: TemplateStringsArray, ...values: unknown[]) => ({
@@ -40,9 +42,11 @@ vi.mock("drizzle-orm/mysql2", () => ({
 
 vi.mock("drizzle-orm", () => ({
   and: mocks.and,
+  or: mocks.or,
   count: mocks.count,
   desc: mocks.desc,
   eq: mocks.eq,
+  gt: mocks.gt,
   gte: mocks.gte,
   lt: mocks.lt,
   sql: mocks.sql,

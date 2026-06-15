@@ -202,8 +202,7 @@ describe("Collective", () => {
     fireEvent.click(screen.getByRole("button", { name: /^join$/i }));
     const input = screen.getByPlaceholderText(/8-character code/i);
     fireEvent.change(input, { target: { value: "AB" } });
-    const joinBtns = screen.getAllByRole("button", { name: /^join$/i });
-    expect(joinBtns[joinBtns.length - 1]).toBeDisabled();
+    expect(screen.getByRole("button", { name: /confirm join/i })).toBeDisabled();
   });
 
   it("calls join mutation with the entered invite code", () => {
@@ -211,8 +210,7 @@ describe("Collective", () => {
     fireEvent.click(screen.getByRole("button", { name: /^join$/i }));
     const input = screen.getByPlaceholderText(/8-character code/i);
     fireEvent.change(input, { target: { value: "ABCD1234" } });
-    const joinBtns = screen.getAllByRole("button", { name: /^join$/i });
-    fireEvent.click(joinBtns[joinBtns.length - 1]);
+    fireEvent.click(screen.getByRole("button", { name: /confirm join/i }));
     expect(mockJoinMutate).toHaveBeenCalledWith({ inviteCode: "ABCD1234" });
   });
 
@@ -256,4 +254,33 @@ describe("Collective", () => {
     render(<Collective />);
     expect(screen.queryByText("My Collectives")).not.toBeInTheDocument();
   });
+
+  // ── Accessibility ───────────────────────────────────────────────────────────
+
+  it("has no axe violations on base render", async () => {
+    const { axe, toHaveNoViolations } = await import("jest-axe");
+    expect.extend(toHaveNoViolations);
+    const { container } = render(<Collective />);
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+
+  it("has no axe violations with Create form open", async () => {
+    const { axe, toHaveNoViolations } = await import("jest-axe");
+    expect.extend(toHaveNoViolations);
+    const { container } = render(<Collective />);
+    fireEvent.click(screen.getByRole("button", { name: /create/i }));
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+
+  it("has no axe violations with Join form open", async () => {
+    const { axe, toHaveNoViolations } = await import("jest-axe");
+    expect.extend(toHaveNoViolations);
+    const { container } = render(<Collective />);
+    fireEvent.click(screen.getByRole("button", { name: /^join$/i }));
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
 });
+

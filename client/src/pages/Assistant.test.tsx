@@ -119,7 +119,7 @@ describe("Assistant", () => {
 
   it("renders the send button", () => {
     render(<Assistant />);
-    expect(screen.getByRole("button", { name: "" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /send message/i })).toBeInTheDocument();
   });
 
   it("send button is disabled when input is empty", () => {

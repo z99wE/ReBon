@@ -79,7 +79,12 @@ export default function Assistant() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+      <div
+        className="flex-1 overflow-y-auto space-y-4 pr-1"
+        aria-live="polite"
+        aria-label="Conversation messages"
+        role="log"
+      >
         {messages.length === 0 && (
           <div className="space-y-6 py-4">
             <div className="text-center">
@@ -89,7 +94,12 @@ export default function Assistant() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {SUGGESTED_PROMPTS.map(prompt => (
-                <button key={prompt} onClick={() => sendMessage(prompt)} className="text-left p-3 rounded-xl border border-white/10 hover:border-primary/40 hover:bg-indigo-600/5 text-sm text-white/50 hover:text-white transition-all">
+                <button
+                  key={prompt}
+                  onClick={() => sendMessage(prompt)}
+                  aria-label={`Ask: ${prompt}`}
+                  className="text-left p-3 rounded-xl border border-white/10 hover:border-primary/40 hover:bg-indigo-600/5 text-sm text-white/50 hover:text-white transition-all"
+                >
                   {prompt}
                 </button>
               ))}
@@ -147,17 +157,21 @@ export default function Assistant() {
       {/* Input */}
       <div className="mt-4 pt-4 border-t border-white/10">
         <div className="flex gap-2">
+          <label htmlFor="chat-input" className="sr-only">Message ReBon AI</label>
           <input
+            id="chat-input"
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(input); } }}
             placeholder="Ask ReBon AI anything about carbon..."
             disabled={chatMutation.isPending}
+            aria-label="Message ReBon AI"
             className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/50 focus:outline-none focus:border-primary/50 transition-colors"
           />
           <button
             onClick={() => sendMessage(input)}
             disabled={!input.trim() || chatMutation.isPending}
+            aria-label="Send message"
             className="w-12 h-12 rounded-xl btn-primary flex items-center justify-center flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {chatMutation.isPending ? <IconPulse className="w-4 h-4 animate-spin" /> : <IconArrowForward className="w-4 h-4" />}
