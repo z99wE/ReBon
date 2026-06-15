@@ -9,7 +9,7 @@ import {
   completeChallenge, createChallenge, createCollective, createFeedItem,
   getCommunityFeed, getLatestPeerSnapshot, getLeaderboard, getOrCreateActiveSeason,
   getPublicCollectives, getTopInfluencers, getUserActivities, getUserCarbonSummary,
-  getUserById, getUserChallenges, getUserCollectives, getUserStories,
+  getCollectiveById, getCollectiveByInviteCode, getUserById, getUserChallenges, getUserCollectives, getUserStories,
   getArchetypePeers, getUserLiveStats, incrementStoryShares, joinCollective, likeFeedItem,
   logActivity, savePeerSnapshot, saveStory, updateUserInfluenceScore,
   updateUserProfile, upsertLeaderboardEntry,
@@ -280,15 +280,5 @@ export const appRouter = router({
       }),
   }),
 });
-
-function getCollectiveByInviteCode(code: string) {
-  const { getCollectiveByInviteCode: fn } = require("./db");
-  return fn(code);
-}
-
-function getCollectiveById(id: number) {
-  const { getCollectiveById: fn } = require("./db");
-  return fn(id);
-}
 
 export type AppRouter = typeof appRouter;

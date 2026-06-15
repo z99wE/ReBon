@@ -32,6 +32,9 @@ export default function LogActivity() {
   const challengesQuery = trpc.challenges.list.useQuery(undefined, { enabled: isAuthenticated });
   const completeMutation = trpc.challenges.complete.useMutation({ onSuccess: () => toast.success("Challenge completed!"), onError: e => toast.error(e.message) });
 
+  const iconTone = "text-zinc-400";
+  const iconToneSoft = "text-zinc-500";
+
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -67,15 +70,15 @@ export default function LogActivity() {
 
       {/* Voice Input */}
       <div className="card-glass rounded-xl border border-white/10 p-6">
-        <h3 className="font-bold text-white mb-4 flex items-center gap-2"><IconMic className="w-4 h-4 text-white/70" /> Speak to Log</h3>
+        <h3 className="font-bold text-white mb-4 flex items-center gap-2"><IconMic className={`w-4 h-4 ${iconTone}`} /> Speak to Log</h3>
         <div className="flex flex-col items-center gap-4">
           <button
             onClick={recording ? stopRecording : startRecording}
             disabled={voiceMutation.isPending}
             aria-label={recording ? "Stop recording" : "Start voice recording"}
-            className={`w-20 h-20 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${recording ? "bg-red-500/20 border-red-500 animate-pulse" : "bg-indigo-600/10 border-primary/40 hover:bg-indigo-600/20"}`}
+            className={`w-20 h-20 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${recording ? "bg-primary/12 border-primary/60 animate-pulse hover:bg-primary/16" : "bg-white/5 border-white/10 hover:bg-primary/10 hover:border-primary/40"}`}
           >
-            {voiceMutation.isPending ? <IconPulse className="w-8 h-8 animate-spin text-white/70" /> : recording ? <IconMicOff className="w-8 h-8 text-white/70" /> : <IconMic className="w-8 h-8 text-white/70" />}
+            {voiceMutation.isPending ? <IconPulse className={`w-8 h-8 animate-spin ${iconTone}`} /> : recording ? <IconMicOff className={`w-8 h-8 ${iconTone}`} /> : <IconMic className={`w-8 h-8 ${iconTone}`} />}
           </button>
           <p className="text-sm text-white/50 text-center">
             {recording ? "Recording… tap to stop" : voiceMutation.isPending ? "Processing your voice…" : 'Say something like "I drove 10 miles to work"'}
@@ -93,7 +96,7 @@ export default function LogActivity() {
                       <div className="text-xs text-white/50">{a.carbonKg?.toFixed(2)} kg CO₂</div>
                     </div>
                     <button onClick={() => logMutation.mutate({ category: a.category, subcategory: a.subcategory, label: a.label, carbonKg: a.carbonKg, quantity: a.quantity, unit: a.unit, inputMethod: "voice", voiceTranscript: voiceResult.transcript })} disabled={logMutation.isPending} className="btn-primary px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1">
-                      <IconAdd className="w-3 h-3" /> Log
+                      <IconAdd className={`w-3 h-3 ${iconToneSoft}`} /> Log
                     </button>
                   </div>
                 ))}
@@ -109,11 +112,11 @@ export default function LogActivity() {
       {categories.map(cat => (
         <div key={cat} className="card-glass rounded-xl border border-white/10 p-5">
           <h3 className="font-bold text-white mb-3 capitalize flex items-center gap-2">
-            {cat === "transport" && <IconCar className="w-4 h-4 text-white/70" />}
-            {cat === "meals" && <IconRestaurant className="w-4 h-4 text-white/70" />}
-            {cat === "energy" && <IconFlash className="w-4 h-4 text-white/70" />}
-            {cat === "shopping" && <IconCart className="w-4 h-4 text-white/70" />}
-            {!["transport","meals","energy","shopping"].includes(cat) && <IconAdd className="w-4 h-4 text-white/70" />}
+            {cat === "transport" && <IconCar className={`w-4 h-4 ${iconTone}`} />}
+            {cat === "meals" && <IconRestaurant className={`w-4 h-4 ${iconTone}`} />}
+            {cat === "energy" && <IconFlash className={`w-4 h-4 ${iconTone}`} />}
+            {cat === "shopping" && <IconCart className={`w-4 h-4 ${iconTone}`} />}
+            {!["transport","meals","energy","shopping"].includes(cat) && <IconAdd className={`w-4 h-4 ${iconTone}`} />}
             {cat}
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -122,7 +125,7 @@ export default function LogActivity() {
                 key={preset.id}
                 onClick={() => setSelectedPreset({ ...preset, category: cat })}
                 aria-pressed={selectedPreset?.id === preset.id}
-                className={`p-3 rounded-lg border text-left transition-all ${selectedPreset?.id === preset.id ? "border-primary bg-indigo-600/10" : "border-white/10 hover:border-primary/40 hover:bg-white/5"}`}
+                className={`p-3 rounded-lg border text-left transition-all ${selectedPreset?.id === preset.id ? "border-primary bg-primary/10" : "border-white/10 hover:border-primary/40 hover:bg-primary/5"}`}
               >
                 <div className="text-lg mb-1" aria-hidden="true">{preset.icon}</div>
                 <div className="text-xs font-medium text-white leading-tight">{preset.label}</div>
@@ -162,7 +165,7 @@ export default function LogActivity() {
             <span className="text-xs text-white/50">{selectedPreset.unit}</span>
           </div>
           <div className="flex gap-2">
-            <button onClick={() => setSelectedPreset(null)} className="flex-1 py-2 rounded-lg border border-white/10 text-sm text-white/50 hover:bg-white/5 transition-colors">Cancel</button>
+            <button onClick={() => setSelectedPreset(null)} className="flex-1 py-2 rounded-lg border border-white/10 text-sm text-white/50 hover:bg-primary/5 transition-colors">Cancel</button>
             <button
               onClick={() => logMutation.mutate({
                 category: selectedPreset.category as "transport" | "meals" | "energy" | "shopping" | "other",
@@ -176,7 +179,7 @@ export default function LogActivity() {
               disabled={logMutation.isPending}
               className="flex-1 btn-primary py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-1"
             >
-              {logMutation.isPending ? <IconPulse className="w-4 h-4 animate-spin text-white/70" /> : <><IconCheckmark className="w-4 h-4 text-white/70" /> Log</>}
+              {logMutation.isPending ? <IconPulse className={`w-4 h-4 animate-spin ${iconTone}`} /> : <><IconCheckmark className={`w-4 h-4 ${iconToneSoft}`} /> Log</>}
             </button>
           </div>
         </div>
@@ -197,7 +200,7 @@ export default function LogActivity() {
                   onClick={() => completeMutation.mutate({ challengeId: c.id })}
                   disabled={completeMutation.isPending}
                   aria-label={`Complete challenge: ${c.title}`}
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-green-400/10 border border-green-400/30 text-white/70 hover:bg-green-400/20 transition-colors"
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary/10 border border-primary/30 text-white/70 hover:bg-primary/15 hover:border-primary/50 transition-colors"
                 >
                   Done
                 </button>

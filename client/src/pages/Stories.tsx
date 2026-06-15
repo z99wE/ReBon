@@ -1,3 +1,4 @@
+import React from "react";
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -72,7 +73,7 @@ export default function Stories() {
                   </div>
                 ))}
               </div>
-              <div className="text-xs text-white/50 text-right">Powered by {generateMutation.data.equivalents ? "ReBon AI" : "ReBon AI"}</div>
+              <div className="text-xs text-white/50 text-right">Powered by ReBon</div>
             </div>
           )}
 
