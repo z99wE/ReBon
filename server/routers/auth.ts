@@ -41,7 +41,7 @@ export const authRouter = router({
       await upsertUser({ openId, name: input.name || (isEmail ? input.identifier.split("@")[0] : input.identifier), email: isEmail ? input.identifier.toLowerCase() : undefined, loginMethod: isEmail ? "email_otp" : "phone_otp", lastSignedIn: new Date() });
       const secret = Buffer.from(ENV.cookieSecret, 'utf-8');
       const displayName = input.name || (isEmail ? input.identifier.split("@")[0] : input.identifier);
-      const token = await new SignJWT({ openId, appId: ENV.appId, name: displayName }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("30d").sign(secret);
+      const token = await new SignJWT({ openId, appId: ENV.appId, name: displayName, email: isEmail ? input.identifier.toLowerCase() : "" }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("30d").sign(secret);
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.cookie(COOKIE_NAME, token, { ...cookieOptions, maxAge: 30 * 24 * 60 * 60 * 1000 });
       return { success: true };
