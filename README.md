@@ -146,9 +146,9 @@ A graph-based influence score (`calculateInfluenceScore`) weights five signals t
 - **Frontend:** React 19 + Tailwind 4 + Vite (HMR dev server)
 - **Backend:** Express 4 + tRPC 11 (type-safe RPC)
 - **Database:** MySQL/TiDB with Drizzle ORM
-- **Auth:** Email/OTP (Manus OAuth compatible)
+- **Auth:** Simple JWT-based authentication
 - **AI Models:** Groq, NVIDIA NIM, Deepgram, Sarvam AI
-- **Storage:** S3 (via Manus built-in storage)
+- **Storage:** S3 compatible storage
 - **Testing:** Vitest (249 tests passing)
 
 ### Project Structure
@@ -555,7 +555,7 @@ pnpm build
 
 ## Environment Variables
 
-Required environment variables are automatically injected by Manus. For local development, create a `.env.local` file:
+For local development, create a `.env.local` file:
 
 ```bash
 # Database
@@ -563,9 +563,6 @@ DATABASE_URL=mysql://user:password@localhost:3306/rebon
 
 # Auth
 JWT_SECRET=your-secret-key-here
-VITE_APP_ID=your-manus-app-id
-OAUTH_SERVER_URL=https://api.manus.im
-VITE_OAUTH_PORTAL_URL=https://manus.im/login
 
 # AI Models
 GROQ_API_KEY=your-groq-key
@@ -573,19 +570,12 @@ NVIDIA_NIM_API_KEY=your-nim-key
 DEEPGRAM_API_KEY=your-deepgram-key
 SARVAM_API_KEY=your-sarvam-key
 
-# Manus Built-in APIs
-BUILT_IN_FORGE_API_URL=https://api.manus.im/forge
-BUILT_IN_FORGE_API_KEY=your-forge-key
-VITE_FRONTEND_FORGE_API_URL=https://api.manus.im/forge
-VITE_FRONTEND_FORGE_API_KEY=your-frontend-forge-key
-
-# Owner Info
+# Owner Info (for initial admin user)
 OWNER_OPEN_ID=your-open-id
 OWNER_NAME=Your Name
 
-# Analytics (optional)
-VITE_ANALYTICS_ENDPOINT=https://analytics.manus.im
-VITE_ANALYTICS_WEBSITE_ID=your-website-id
+# Server port
+PORT=3000
 ```
 
 ---

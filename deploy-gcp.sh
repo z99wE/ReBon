@@ -19,7 +19,7 @@ gcloud services enable containerregistry.googleapis.com
 
 # Build Docker image
 echo "🔨 Building Docker image..."
-docker build -t gcr.io/$PROJECT_ID/rebon:latest .
+docker build --platform linux/amd64 -t gcr.io/$PROJECT_ID/rebon:latest .
 
 # Push to Container Registry
 echo "📤 Pushing to Container Registry..."

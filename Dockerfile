@@ -11,13 +11,13 @@ COPY package.json pnpm-lock.yaml ./
 COPY patches/ ./patches/
 
 # Install all dependencies
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --no-frozen-lockfile
 
-# Copy source code
+# Copy source code (excluding .env files that might interfere with NODE_ENV)
 COPY . .
 
-# Build the application
-RUN pnpm build
+# Build the application - NODE_ENV will be set by the build environment
+RUN NODE_ENV=production pnpm build
 
 # Production stage
 FROM node:22-alpine AS production
