@@ -92,137 +92,138 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] flex flex-col items-center justify-center p-4 relative overflow-hidden">
-      {/* Vibrant abstract background shapes */}
+    <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center p-4 relative overflow-hidden">
+      {/* Premium organic/carbon gradient orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-        <div className="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-gradient-to-br from-violet-600/30 to-indigo-600/10 blur-3xl" />
-        <div className="absolute top-1/3 -right-32 w-80 h-80 rounded-full bg-gradient-to-bl from-emerald-500/20 to-teal-600/10 blur-3xl" />
-        <div className="absolute -bottom-32 left-1/3 w-72 h-72 rounded-full bg-gradient-to-tr from-pink-600/20 to-orange-500/10 blur-3xl" />
+        <div className="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-[oklch(0.47_0.09_160)]/15 blur-3xl animate-pulse" style={{ animationDuration: '6s' }} />
+        <div className="absolute top-1/3 -right-32 w-80 h-80 rounded-full bg-violet/10 blur-3xl animate-pulse" style={{ animationDuration: '8s' }} />
         {/* Grid overlay */}
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
+        <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
       </div>
 
       {/* Logo */}
-      <div className="relative z-10 mb-8 text-center">
-        <div className="inline-flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
-            <IconLeaf className="w-5 h-5 text-white" />
+      <div className="relative z-10 mb-8 text-center animate-fade-up">
+        <div className="inline-flex items-center gap-3 mb-2">
+          <div className="w-9 h-9 rounded bg-white/5 border border-white/12 flex items-center justify-center shadow-lg">
+            <IconLeaf className="w-4 h-4 text-white/90" />
           </div>
-          <span className="text-2xl font-black text-white tracking-tight">ReBon</span>
+          <span className="text-xl font-black text-white uppercase tracking-tight">ReBon</span>
         </div>
-        <p className="text-sm text-zinc-400 max-w-xs">Carbon intelligence for the climate generation</p>
+        <p className="label-tech text-[9px] text-white/30">Carbon intelligence platform</p>
       </div>
 
       {/* Card */}
-      <div className="relative z-10 w-full max-w-md">
-        <div className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-800 rounded-2xl p-8 shadow-2xl">
+      <div className="relative z-10 w-full max-w-md animate-fade-up">
+        <div className="glass-card border border-white/8 rounded-md p-8 shadow-2xl">
 
           {step === "identifier" && (
-            <form onSubmit={handleSendOtp} noValidate>
-              <h1 className="text-xl font-bold text-white mb-1">Sign in to ReBon</h1>
-              <p className="text-sm text-zinc-400 mb-6">Choose a sign-in method to access your carbon footprint metrics.</p>
+            <form onSubmit={handleSendOtp} noValidate className="space-y-6">
+              <div>
+                <h1 className="text-lg font-bold text-white uppercase tracking-tight mb-1">Sign in to ReBon</h1>
+                <p className="text-xs text-white/40">Select your authorization channel to verify credentials.</p>
+              </div>
 
               <button
                 type="button"
                 onClick={handleGoogleSignIn}
                 disabled={verifyFirebaseTokenMutation.isPending}
-                className="w-full mb-4 py-3 px-4 rounded-xl bg-white text-zinc-900 font-semibold text-sm hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-md active:scale-[0.98]"
+                className="btn-primary w-full justify-center gap-2 mb-2"
               >
-                <svg className="w-4 h-4 mr-1" viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
-                  <g transform="matrix(1, 0, 0, 1, 0, 0)">
-                    <path d="M21.35,11.1H12v2.7h5.38c-0.24,1.28 -0.96,2.37 -2.04,3.1v2.6h3.3c1.93,-1.78 3.04,-4.4 3.04,-7.4C21.68,11.83 21.56,11.43 21.35,11.1z" fill="#4285F4" />
-                    <path d="M12,20.6c2.43,0 4.47,-0.8 5.96,-2.2l-3.3,-2.6c-0.9,0.6 -2.07,0.98 -3.3,0.98 -2.34,0 -4.33,-1.58 -5.03,-3.7H3.03v2.7C4.52,18.73 8.04,20.6 12,20.6z" fill="#34A853" />
-                    <path d="M6.97,13.08a5.1,5.1 0 0 1 0,-3.2v-2.7H3.03a8.6,8.6 0 0 0 0,8.6z" fill="#FBBC05" />
-                    <path d="M12,7.22c1.32,0 2.5,0.45 3.44,1.35l2.58,-2.58C16.46,4.54 14.4,3.6 12,3.6 8.04,3.6 4.52,5.47 3.03,8.47l3.94,3.03C7.67,9.38 9.66,7.22 12,7.22z" fill="#EA4335" />
-                  </g>
+                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M21.35,11.1H12v2.7h5.38c-0.24,1.28 -0.96,2.37 -2.04,3.1v2.6h3.3c1.93,-1.78 3.04,-4.4 3.04,-7.4C21.68,11.83 21.56,11.43 21.35,11.1z" />
+                  <path d="M12,20.6c2.43,0 4.47,-0.8 5.96,-2.2l-3.3,-2.6c-0.9,0.6 -2.07,0.98 -3.3,0.98 -2.34,0 -4.33,-1.58 -5.03,-3.7H3.03v2.7C4.52,18.73 8.04,20.6 12,20.6z" />
+                  <path d="M6.97,13.08a5.1,5.1 0 0 1 0,-3.2v-2.7H3.03a8.6,8.6 0 0 0 0,8.6z" />
+                  <path d="M12,7.22c1.32,0 2.5,0.45 3.44,1.35l2.58,-2.58C16.46,4.54 14.4,3.6 12,3.6 8.04,3.6 4.52,5.47 3.03,8.47l3.94,3.03C7.67,9.38 9.66,7.22 12,7.22z" />
                 </svg>
                 Continue with Google
               </button>
 
               <div className="flex items-center gap-3 my-4">
-                <div className="h-px bg-zinc-800 flex-1" />
-                <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-black">or sign in with code</span>
-                <div className="h-px bg-zinc-800 flex-1" />
+                <div className="h-px bg-white/6 flex-1" />
+                <span className="text-[9px] text-white/20 uppercase tracking-widest font-black font-mono">OR SIGN IN WITH CODE</span>
+                <div className="h-px bg-white/6 flex-1" />
               </div>
 
               {/* Toggle email / phone */}
-              <div className="flex rounded-lg bg-zinc-800 p-1 mb-4" role="group" aria-label="Sign in method">
+              <div className="flex border border-white/8 bg-white/3 p-1 rounded-md" role="group" aria-label="Sign in method">
                 <button
                   type="button"
                   onClick={() => setIdentifierType("email")}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${identifierType === "email" ? "bg-violet-600 text-white shadow-sm" : "text-zinc-400 hover:text-zinc-200"}`}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${identifierType === "email" ? "bg-[oklch(0.47_0.09_160)] text-white shadow-sm" : "text-white/40 hover:text-white/80"}`}
                   aria-pressed={identifierType === "email"}
                 >
-                  <IconMail className="w-4 h-4" aria-hidden="true" /> Email
+                  <IconMail className="w-3.5 h-3.5" aria-hidden="true" /> Email
                 </button>
                 <button
                   type="button"
                   onClick={() => setIdentifierType("phone")}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${identifierType === "phone" ? "bg-violet-600 text-white shadow-sm" : "text-zinc-400 hover:text-zinc-200"}`}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${identifierType === "phone" ? "bg-[oklch(0.47_0.09_160)] text-white shadow-sm" : "text-white/40 hover:text-white/80"}`}
                   aria-pressed={identifierType === "phone"}
                 >
-                  <IconPhone className="w-4 h-4" aria-hidden="true" /> Phone
+                  <IconPhone className="w-3.5 h-3.5" aria-hidden="true" /> Phone
                 </button>
               </div>
 
-              <div className="mb-4">
-                <label htmlFor="identifier" className="block text-sm font-medium text-zinc-300 mb-1.5">
-                  {identifierType === "email" ? "Email address" : "Phone number"}
+              <div>
+                <label htmlFor="identifier" className="label-tech mb-2 block">
+                  {identifierType === "email" ? "Email Address" : "Phone Number"}
                 </label>
                 <input
                   id="identifier"
                   type={identifierType === "email" ? "email" : "tel"}
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
-                  placeholder={identifierType === "email" ? "you@example.com" : "+1 555 000 0000"}
+                  placeholder={identifierType === "email" ? "name@example.com" : "+1 555 000 0000"}
                   required
                   autoComplete={identifierType === "email" ? "email" : "tel"}
-                  className="w-full px-4 py-3 rounded-xl bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all text-sm"
+                  className="w-full px-4 py-3 rounded bg-white/5 border border-white/8 text-white placeholder-white/20 focus:outline-none focus:border-[oklch(0.47_0.09_160)] transition-colors text-sm"
                   aria-describedby="identifier-hint"
                 />
-                <p id="identifier-hint" className="mt-1.5 text-xs text-zinc-500">
-                  {identifierType === "phone" ? "Include country code, e.g. +44 7700 900000" : "We'll send a sign-in code to this address"}
+                <p id="identifier-hint" className="mt-2 text-[10px] text-white/30">
+                  {identifierType === "phone" ? "Include country code (e.g., +1 555...)" : "A one-time passcode will be delivered to this inbox."}
                 </p>
               </div>
 
               <button
                 type="submit"
                 disabled={!identifier.trim() || sendOtpMutation.isPending}
-                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold text-sm hover:from-violet-500 hover:to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-lg shadow-violet-500/20 active:scale-[0.98]"
+                className="btn-primary w-full justify-center disabled:opacity-30 disabled:cursor-not-allowed"
                 aria-busy={sendOtpMutation.isPending}
               >
                 {sendOtpMutation.isPending ? (
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" aria-hidden="true" />
+                  <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" aria-hidden="true" />
                 ) : (
-                  <>Send code <IconArrowForward className="w-4 h-4" aria-hidden="true" /></>
+                  <>Send code <IconArrowForward className="w-3.5 h-3.5" aria-hidden="true" /></>
                 )}
               </button>
             </form>
           )}
 
           {step === "otp" && (
-            <form onSubmit={handleVerifyOtp} noValidate>
+            <form onSubmit={handleVerifyOtp} noValidate className="space-y-6">
               <button
                 type="button"
                 onClick={() => { setStep("identifier"); setOtp(""); setDevOtp(null); }}
-                className="text-xs text-zinc-500 hover:text-zinc-300 mb-4 flex items-center gap-1 transition-colors"
+                className="label-tech text-white/40 hover:text-white mb-2 flex items-center gap-1 transition-colors bg-transparent border-0 cursor-pointer p-0"
               >
                 ← Back
               </button>
-              <h1 className="text-xl font-bold text-white mb-1">Enter your code</h1>
-              <p className="text-sm text-zinc-400 mb-6">
-                We sent a 6-digit code to <span className="text-violet-400 font-medium">{identifier}</span>
-              </p>
+              <div>
+                <h1 className="text-lg font-bold text-white uppercase tracking-tight mb-1">Enter your code</h1>
+                <p className="text-xs text-white/40">
+                  We sent a 6-digit code to <span className="text-white/80 font-medium">{identifier}</span>
+                </p>
+              </div>
 
               {devOtp && (
-                <div className="mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm flex items-center gap-2">
-                  <IconZap className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-                  <span>Dev mode — your code is <strong className="font-mono text-base">{devOtp}</strong></span>
+                <div className="p-4 rounded bg-white/4 border border-white/8 text-white/80 text-xs flex items-center gap-2">
+                  <IconZap className="w-4 h-4 text-[oklch(0.47_0.09_160)] flex-shrink-0" aria-hidden="true" />
+                  <span>Dev mode — code: <strong className="font-mono text-sm tracking-wider text-white">{devOtp}</strong></span>
                 </div>
               )}
 
-              <div className="mb-4">
-                <label htmlFor="otp" className="block text-sm font-medium text-zinc-300 mb-1.5">6-digit code</label>
+              <div>
+                <label htmlFor="otp" className="label-tech mb-2 block">One-Time Passcode</label>
                 <input
                   id="otp"
                   type="text"
@@ -234,14 +235,14 @@ export default function Login() {
                   placeholder="000000"
                   required
                   autoComplete="one-time-code"
-                  className="w-full px-4 py-3 rounded-xl bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all text-2xl font-mono tracking-[0.5em] text-center"
+                  className="w-full px-4 py-3 rounded bg-white/5 border border-white/8 text-white placeholder-white/10 focus:outline-none focus:border-[oklch(0.47_0.09_160)] transition-colors text-2xl font-mono tracking-[0.5em] text-center"
                   aria-label="One-time passcode"
                 />
               </div>
 
-              <div className="mb-6">
-                <label htmlFor="display-name" className="block text-sm font-medium text-zinc-300 mb-1.5">
-                  Your name <span className="text-zinc-500 font-normal">(optional)</span>
+              <div>
+                <label htmlFor="display-name" className="label-tech mb-2 block">
+                  Your name <span className="text-white/20 font-normal">(optional)</span>
                 </label>
                 <input
                   id="display-name"
@@ -250,20 +251,20 @@ export default function Login() {
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. Alex"
                   autoComplete="name"
-                  className="w-full px-4 py-3 rounded-xl bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all text-sm"
+                  className="w-full px-4 py-3 rounded bg-white/5 border border-white/8 text-white placeholder-white/20 focus:outline-none focus:border-[oklch(0.47_0.09_160)] transition-colors text-sm"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={otp.length !== 6 || verifyOtpMutation.isPending}
-                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold text-sm hover:from-violet-500 hover:to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-lg shadow-violet-500/20 active:scale-[0.98]"
+                className="btn-primary w-full justify-center disabled:opacity-30 disabled:cursor-not-allowed"
                 aria-busy={verifyOtpMutation.isPending}
               >
                 {verifyOtpMutation.isPending ? (
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" aria-hidden="true" />
+                  <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" aria-hidden="true" />
                 ) : (
-                  <>Verify &amp; enter ReBon <IconArrowForward className="w-4 h-4" aria-hidden="true" /></>
+                  <>Verify &amp; enter <IconArrowForward className="w-3.5 h-3.5" aria-hidden="true" /></>
                 )}
               </button>
 
@@ -271,7 +272,7 @@ export default function Login() {
                 type="button"
                 onClick={() => sendOtpMutation.mutate({ identifier: identifier.trim(), identifierType })}
                 disabled={sendOtpMutation.isPending}
-                className="w-full mt-3 py-2 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+                className="w-full text-center label-tech text-[9px] text-white/30 hover:text-white/60 bg-transparent border-0 cursor-pointer transition-colors"
               >
                 Didn't receive it? Resend code
               </button>
@@ -280,10 +281,10 @@ export default function Login() {
         </div>
 
         {/* Trust badges */}
-        <div className="mt-6 flex items-center justify-center gap-6 text-xs text-zinc-600">
-          <span className="flex items-center gap-1.5"><IconShield className="w-3.5 h-3.5" aria-hidden="true" /> No password stored</span>
-          <span className="flex items-center gap-1.5"><IconZap className="w-3.5 h-3.5" aria-hidden="true" /> Instant access</span>
-          <span className="flex items-center gap-1.5"><IconGlobe className="w-3.5 h-3.5" aria-hidden="true" /> Any device</span>
+        <div className="mt-8 flex items-center justify-center gap-6 text-[10px] text-white/20 font-mono">
+          <span className="flex items-center gap-1.5"><IconShield className="w-3 h-3" aria-hidden="true" /> SECURE AUTH</span>
+          <span className="flex items-center gap-1.5"><IconZap className="w-3 h-3" aria-hidden="true" /> INSTANT ID</span>
+          <span className="flex items-center gap-1.5"><IconGlobe className="w-3 h-3" aria-hidden="true" /> SYNCED ACCESS</span>
         </div>
       </div>
     </div>
