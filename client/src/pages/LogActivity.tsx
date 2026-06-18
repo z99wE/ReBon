@@ -3,8 +3,8 @@ import { useState, useRef } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { ACTIVITY_PRESETS } from "../../../shared/carbonData";
-import { IconAdd, IconCar, IconCart, IconCheckmark, IconFlash, IconMic, IconMicOff, IconPulse, IconRestaurant } from "@/components/Icons";
 import { toast } from "sonner";
+
 
 /** Typed preset shape — mirrors the objects in shared/carbonData.ts ACTIVITY_PRESETS */
 interface ActivityPreset {
@@ -32,8 +32,7 @@ export default function LogActivity() {
   const challengesQuery = trpc.challenges.list.useQuery(undefined, { enabled: isAuthenticated });
   const completeMutation = trpc.challenges.complete.useMutation({ onSuccess: () => toast.success("Challenge completed!"), onError: e => toast.error(e.message) });
 
-  const iconTone = "text-zinc-400";
-  const iconToneSoft = "text-zinc-500";
+
 
   const startRecording = async () => {
     try {
@@ -69,17 +68,20 @@ export default function LogActivity() {
       </div>
 
       {/* Voice Input */}
-      <section aria-label="Voice Input" className="card-glass rounded-xl border border-white/10 p-6">
-        <h2 className="font-bold text-white mb-4 flex items-center gap-2"><IconMic className={`w-4 h-4 ${iconTone}`} aria-hidden="true" /> Speak to Log</h2>
+      <section aria-label="Voice Input" className="glass-card border border-white/[0.07] p-6">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="label-tech-bright">Speak to Log</h2>
+          <span className="text-[9px] font-black tracking-widest text-bottle">VOICE</span>
+        </div>
         <div className="flex flex-col items-center gap-4">
           <button
             onClick={recording ? stopRecording : startRecording}
             disabled={voiceMutation.isPending}
             aria-label={recording ? "Stop recording" : "Start voice recording"}
             aria-pressed={recording}
-            className={`w-20 h-20 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${recording ? "bg-primary/12 border-primary/60 animate-pulse hover:bg-primary/16" : "bg-white/5 border-white/10 hover:bg-primary/10 hover:border-primary/40"}`}
+            className={`w-20 h-20 border flex items-center justify-center transition-all duration-200 text-[10px] font-black tracking-widest ${recording ? "border-[oklch(0.82_0.21_142)] text-fluoro bg-[oklch(0.82_0.21_142_/_0.08)] animate-ring-pulse" : "border-white/[0.08] text-bottle hover:border-[oklch(0.82_0.21_142_/_0.4)] hover:text-fluoro"}`}
           >
-            {voiceMutation.isPending ? <IconPulse className={`w-8 h-8 animate-spin ${iconTone}`} /> : recording ? <IconMicOff className={`w-8 h-8 ${iconTone}`} /> : <IconMic className={`w-8 h-8 ${iconTone}`} />}
+            {voiceMutation.isPending ? "···" : recording ? "STOP" : "REC"}
           </button>
           <p className="text-sm text-white/50 text-center" aria-live="polite">
             {recording ? "Recording… tap to stop" : voiceMutation.isPending ? "Processing your voice…" : 'Say something like "I drove 10 miles to work"'}
@@ -91,13 +93,13 @@ export default function LogActivity() {
             {voiceResult.activities.length > 0 ? (
               <div className="space-y-2">
                 {voiceResult.activities.map((a, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 rounded-lg border border-green-400/20 bg-green-400/5">
+                  <div key={i} className="flex items-center justify-between p-3 border border-white/[0.06] bg-white/[0.02]">
                     <div>
-                      <div className="text-sm font-medium text-white">{a.label}</div>
-                      <div className="text-xs text-white/50">{a.carbonKg?.toFixed(2)} kg CO₂</div>
+                      <div className="text-sm font-bold text-white/80">{a.label}</div>
+                      <div className="text-[10px] font-mono text-bottle tabular-nums">{a.carbonKg?.toFixed(2)} kg CO₂</div>
                     </div>
-                    <button onClick={() => logMutation.mutate({ category: a.category, subcategory: a.subcategory, label: a.label, carbonKg: a.carbonKg, quantity: a.quantity, unit: a.unit, inputMethod: "voice", voiceTranscript: voiceResult.transcript })} disabled={logMutation.isPending} className="btn-primary px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1" aria-label={`Log ${a.label}`}>
-                      <IconAdd className={`w-3 h-3 ${iconToneSoft}`} /> Log
+                    <button onClick={() => logMutation.mutate({ category: a.category, subcategory: a.subcategory, label: a.label, carbonKg: a.carbonKg, quantity: a.quantity, unit: a.unit, inputMethod: "voice", voiceTranscript: voiceResult.transcript })} disabled={logMutation.isPending} className="btn-primary px-3 py-1.5 text-[9px] font-black tracking-widest" aria-label={`Log ${a.label}`}>
+                      Log →
                     </button>
                   </div>
                 ))}
@@ -110,37 +112,32 @@ export default function LogActivity() {
       </section>
 
       {/* Quick-Tap Presets */}
-      <section aria-label="Quick-Tap Presets" className="space-y-4 mt-8">
+      <section aria-label="Quick-Tap Presets" className="space-y-0 mt-8 divide-y divide-white/[0.05]">
       {categories.map(cat => (
-        <div key={cat} className="card-glass rounded-xl border border-white/10 p-5">
-          <h3 className="font-bold text-white mb-3 capitalize flex items-center gap-2">
-            {cat === "transport" && <IconCar className={`w-4 h-4 ${iconTone}`} aria-hidden="true" />}
-            {cat === "meals" && <IconRestaurant className={`w-4 h-4 ${iconTone}`} aria-hidden="true" />}
-            {cat === "energy" && <IconFlash className={`w-4 h-4 ${iconTone}`} aria-hidden="true" />}
-            {cat === "shopping" && <IconCart className={`w-4 h-4 ${iconTone}`} aria-hidden="true" />}
-            {!["transport","meals","energy","shopping"].includes(cat) && <IconAdd className={`w-4 h-4 ${iconTone}`} aria-hidden="true" />}
-            {cat}
-          </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2" role="group" aria-label={`${cat} presets`}>
+        <div key={cat} className="py-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="label-tech-bright capitalize">{cat}</h3>
+            <span className="text-[9px] font-black tracking-widest text-white/15">PRESET</span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-px bg-white/[0.05]" role="group" aria-label={`${cat} presets`}>
              {ACTIVITY_PRESETS[cat].map((preset) => (
               <button
                 key={preset.id}
                 onClick={() => setSelectedPreset({ ...preset, category: cat })}
                 aria-pressed={selectedPreset?.id === preset.id}
                 aria-label={`${preset.label}, ${preset.carbonKg} kg CO₂`}
-                className={`p-3 rounded-lg border text-left transition-all flex items-start gap-2 group ${selectedPreset?.id === preset.id ? "border-green-500 bg-green-500/10" : "border-white/10 hover:border-green-500/40 hover:bg-green-500/5"}`}
+                className={`bg-[#050505] p-4 text-left transition-all group hover:bg-white/[0.02] ${
+                  selectedPreset?.id === preset.id
+                    ? "outline outline-1 outline-[oklch(0.82_0.21_142_/_0.5)] z-10 relative bg-[oklch(0.82_0.21_142_/_0.04)]"
+                    : ""
+                }`}
               >
-                <div className={`transition-colors mt-0.5 flex-shrink-0 ${selectedPreset?.id === preset.id ? "text-green-400" : "text-zinc-400 group-hover:text-green-400"}`}>
-                  {cat === "transport" && <IconCar className="w-5 h-5" />}
-                  {cat === "meals" && <IconRestaurant className="w-5 h-5" />}
-                  {cat === "energy" && <IconFlash className="w-5 h-5" />}
-                  {cat === "shopping" && <IconCart className="w-5 h-5" />}
-                  {!["transport","meals","energy","shopping"].includes(cat) && <IconAdd className="w-5 h-5" />}
-                </div>
-                <div>
-                  <div className={`text-xs font-semibold leading-tight transition-colors ${selectedPreset?.id === preset.id ? "text-green-400" : "text-white group-hover:text-green-400"}`}>{preset.label}</div>
-                  <div className={`text-[10px] transition-colors ${selectedPreset?.id === preset.id ? "text-green-400/80" : "text-white/40 group-hover:text-green-400/70"}`}>{preset.carbonKg} kg CO₂</div>
-                </div>
+                <div className={`text-xs font-bold leading-tight mb-1 transition-colors ${
+                  selectedPreset?.id === preset.id ? "text-fluoro" : "text-white/70 group-hover:text-white"
+                }`}>{preset.label}</div>
+                <div className={`text-[10px] font-mono tabular-nums transition-colors ${
+                  selectedPreset?.id === preset.id ? "text-fluoro/70" : "text-bottle group-hover:text-fluoro/60"
+                }`}>{preset.carbonKg} kg CO₂</div>
               </button>
             ))}
           </div>
@@ -154,13 +151,13 @@ export default function LogActivity() {
           role="dialog"
           aria-modal="true"
           aria-label={`Log ${selectedPreset.label}`}
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 card-glass border border-primary/30 rounded-2xl p-4 shadow-2xl w-[calc(100%-2rem)] max-w-sm"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 glass-premium border border-[oklch(0.82_0.21_142_/_0.25)] p-5 shadow-2xl w-[calc(100%-2rem)] max-w-sm"
         >
-          <div className="flex items-center gap-3 mb-3">
-            <span className="text-2xl" aria-hidden="true">{selectedPreset.icon}</span>
-            <div className="flex-1">
-              <div className="font-bold text-white">{selectedPreset.label}</div>
-              <div className="text-xs text-white/50">{(selectedPreset.carbonKg * quantity).toFixed(2)} kg CO₂</div>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <div className="label-tech mb-1">{selectedPreset.category}</div>
+              <div className="font-black text-white text-base">{selectedPreset.label}</div>
+              <div className="text-[11px] font-mono text-fluoro tabular-nums">{(selectedPreset.carbonKg * quantity).toFixed(2)} kg CO₂</div>
             </div>
           </div>
           <div className="flex items-center gap-3 mb-3">
@@ -177,7 +174,7 @@ export default function LogActivity() {
             <span className="text-xs text-white/50">{selectedPreset.unit}</span>
           </div>
           <div className="flex gap-2">
-            <button onClick={() => setSelectedPreset(null)} className="flex-1 py-2 rounded-lg border border-white/10 text-sm text-white/50 hover:bg-primary/5 transition-colors">Cancel</button>
+            <button onClick={() => setSelectedPreset(null)} className="flex-1 py-2.5 border border-white/[0.08] text-[10px] font-black tracking-widest uppercase text-bottle hover:text-white transition-colors">Cancel</button>
             <button
               onClick={() => logMutation.mutate({
                 category: selectedPreset.category as "transport" | "meals" | "energy" | "shopping" | "other",
@@ -189,9 +186,9 @@ export default function LogActivity() {
                 inputMethod: "tap",
               })}
               disabled={logMutation.isPending}
-              className="flex-1 btn-primary py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-1"
+              className="flex-1 btn-primary py-2.5 text-[10px] font-black tracking-widest justify-center"
             >
-              {logMutation.isPending ? <IconPulse className={`w-4 h-4 animate-spin ${iconTone}`} /> : <><IconCheckmark className={`w-4 h-4 ${iconToneSoft}`} /> Log</>}
+              {logMutation.isPending ? "···" : "Log →"}
             </button>
           </div>
         </div>
@@ -199,32 +196,34 @@ export default function LogActivity() {
 
       {/* Active Challenges */}
       {challengesQuery.isLoading && (
-        <section aria-label="Active Challenges Loading" className="card-glass rounded-xl border border-orange-400/20 p-5 mt-8 animate-pulse">
-          <div className="h-6 w-40 bg-white/10 rounded mb-4" />
+        <section aria-label="Active Challenges Loading" className="glass-card border border-white/[0.06] p-5 mt-8 animate-pulse">
+          <div className="h-4 w-40 shimmer mb-4" />
           <div className="space-y-2">
-            <div className="h-16 bg-white/5 rounded" />
-            <div className="h-16 bg-white/5 rounded" />
+            <div className="h-14 shimmer" />
+            <div className="h-14 shimmer" />
           </div>
         </section>
       )}
       
       {challengesQuery.data && challengesQuery.data.filter((c: any) => !c.completedAt).length > 0 && (
-        <section aria-label="Active Challenges" className="card-glass rounded-xl border border-orange-400/20 p-5 mt-8">
-          <h2 className="font-bold text-white mb-3">Active Challenges</h2>
-          <div className="space-y-2">
+        <section aria-label="Active Challenges" className="glass-card border border-white/[0.06] mt-8">
+          <div className="px-5 py-4 border-b border-white/[0.06] flex items-center justify-between">
+            <h2 className="label-tech-bright">Active Challenges</h2>
+          </div>
+          <div className="divide-y divide-white/[0.05]">
             {challengesQuery.data.filter((c: any) => !c.completedAt).map((c: any) => (
-              <div key={c.id} className="flex items-center gap-3 p-3 rounded-lg bg-white/5">
+              <div key={c.id} className="flex items-center gap-4 px-5 py-4">
                 <div className="flex-1">
-                  <div className="text-sm font-medium text-white">{c.title}</div>
-                  <div className="text-xs text-white/50">{c.description}</div>
+                  <div className="text-sm font-bold text-white/80 mb-0.5">{c.title}</div>
+                  <div className="text-[10px] text-bottle">{c.description}</div>
                 </div>
                 <button
                   onClick={() => completeMutation.mutate({ challengeId: c.id })}
                   disabled={completeMutation.isPending}
                   aria-label={`Complete challenge: ${c.title}`}
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary/10 border border-primary/30 text-white/70 hover:bg-primary/15 hover:border-primary/50 transition-colors"
+                  className="btn-ghost text-[9px] py-1.5 px-3"
                 >
-                  Done
+                  Done →
                 </button>
               </div>
             ))}

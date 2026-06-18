@@ -70,9 +70,9 @@ export default function Stories() {
     };
   }, [generateMutation.isPending]);
 
-  const activeStory = generateMutation.data?.period === period
+  const activeStory = (generateMutation.data as any)?.period === period
     ? generateMutation.data
-    : (storiesQuery.data?.find(s => s.period === period) || null);
+    : (storiesQuery.data?.find(s => (s as any).period === period) || null);
 
   const handleShare = (story: any) => {
     if (navigator.share) {
@@ -192,7 +192,7 @@ export default function Stories() {
                 {[
                   { icon: IconTree, label: "Trees equiv.", value: activeStory.equivalents?.trees ?? 0, color: "text-white/70" },
                   { icon: IconCar, label: "km not driven", value: activeStory.equivalents?.km_not_driven ?? 0, color: "text-white/70" },
-                  { icon: IconZap, label: "kg CO₂", value: activeStory.carbonSavedKg?.toFixed(1) ?? activeStory.carbonSaved?.toFixed(1) ?? 0, color: "text-white/70" },
+                  { icon: IconZap, label: "kg CO₂", value: (activeStory as any).carbonSavedKg?.toFixed(1) ?? 0, color: "text-white/70" },
                 ].map(stat => (
                   <div key={stat.label} className="text-center p-3 rounded-xl bg-white/5 border border-white/10">
                     <stat.icon className={`w-5 h-5 mx-auto mb-1 ${stat.color}`} />

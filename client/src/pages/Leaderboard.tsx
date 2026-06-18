@@ -3,6 +3,7 @@ import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { IconTrophy, IconMedal, IconZap, IconPulse, IconStar } from "@/components/Icons";
 import { cn } from "@/lib/utils";
+import { SocialShare } from "@/components/SocialShare";
 
 export default function Leaderboard() {
   const { user } = useAuth();
@@ -150,10 +151,31 @@ export default function Leaderboard() {
       </div>
 
       {/* CTA */}
-      <div className="glass-card p-6 text-center border border-white/10">
-        <IconZap className="w-8 h-8 text-white/30 mx-auto mb-3" />
-        <p className="text-white font-bold text-lg mb-1">Your rank is waiting.</p>
-        <p className="text-white/40 text-sm">Log an activity today and climb the board. Every action moves the needle.</p>
+      <div className="glass-card p-6 border border-white/10 space-y-4">
+        <div className="text-center">
+          <IconZap className="w-8 h-8 text-white/30 mx-auto mb-3" />
+          <p className="text-white font-bold text-lg mb-1">Your rank is waiting.</p>
+          <p className="text-white/40 text-sm">Log an activity today and climb the board. Every action moves the needle.</p>
+        </div>
+        {/* Share your leaderboard position */}
+        {entries.length > 0 && (() => {
+          const myEntry = entries.find((e) => user && (e as any).userId === (user as any).id);
+          const myRank = myEntry ? (entries as any[]).indexOf(myEntry) + 1 : null;
+          const shareText = myRank
+            ? `I'm ranked #${myRank} on the ReBon Climate Leaderboard with ${(myEntry as any).eloScore} Elo points! Every kg of CO₂ saved counts 🌿 #ClimateAction #ReBon`
+            : "I'm competing on the ReBon Climate Leaderboard! Join me in tracking and reducing carbon emissions 🌿 #ClimateAction #ReBon";
+          return (
+            <div className="pt-3 border-t border-white/8 flex flex-wrap items-center justify-between gap-3">
+              <span className="text-[10px] text-white/30 font-mono tracking-widest uppercase">Share your rank</span>
+              <SocialShare
+                text={shareText}
+                title="My Climate Leaderboard Rank — ReBon"
+                platforms={["x", "linkedin", "whatsapp", "copy"]}
+                onShare={(p) => console.log('[ReBon] Leaderboard share →', p)}
+              />
+            </div>
+          );
+        })()}
       </div>
     </div>
   );

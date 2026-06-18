@@ -3,7 +3,7 @@ import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
-import { IconArrowForward, IconGlobe, IconLeaf, IconMail, IconPhone, IconShield, IconZap } from "@/components/Icons";
+import { IconZap } from "@/components/Icons";
 import { auth as clientAuth, googleProvider } from "@/lib/firebase";
 import { signInWithPopup, signInWithRedirect, getRedirectResult } from "firebase/auth";
 
@@ -101,15 +101,10 @@ export default function Login() {
         <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
       </div>
 
-      {/* Logo */}
+      {/* Wordmark only — no icon squatting */}
       <div className="relative z-10 mb-8 text-center animate-fade-up">
-        <div className="inline-flex items-center gap-3 mb-2">
-          <div className="w-9 h-9 rounded bg-white/5 border border-white/12 flex items-center justify-center shadow-lg">
-            <IconLeaf className="w-4 h-4 text-white/90" />
-          </div>
-          <span className="text-xl font-black text-white uppercase tracking-tight">ReBon</span>
-        </div>
-        <p className="label-tech text-[9px] text-white/30">Carbon intelligence platform</p>
+        <p className="font-black text-white tracking-[0.25em] text-sm uppercase mb-1">REBON</p>
+        <p className="text-[9px] font-bold tracking-[0.3em] text-bottle uppercase">Carbon Intelligence Platform</p>
       </div>
 
       {/* Card */}
@@ -173,7 +168,7 @@ export default function Login() {
                 {sendOtpMutation.isPending ? (
                   <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" aria-hidden="true" />
                 ) : (
-                  <>Send code <IconArrowForward className="w-3.5 h-3.5" aria-hidden="true" /></>
+                  <>Send code →</>
                 )}
               </button>
             </form>
@@ -196,9 +191,9 @@ export default function Login() {
               </div>
 
               {devOtp && (
-                <div className="p-4 rounded bg-white/4 border border-white/8 text-white/80 text-xs flex items-center gap-2">
-                  <IconZap className="w-4 h-4 text-[oklch(0.47_0.09_160)] flex-shrink-0" aria-hidden="true" />
-                  <span>Dev mode — code: <strong className="font-mono text-sm tracking-wider text-white">{devOtp}</strong></span>
+                <div className="p-4 border border-white/[0.08] text-white/80 text-xs flex items-center gap-2">
+                  <span className="text-[9px] font-black tracking-widest text-bottle">DEV</span>
+                  <span>Code: <strong className="font-mono text-sm tracking-wider text-white">{devOtp}</strong></span>
                 </div>
               )}
 
@@ -244,7 +239,7 @@ export default function Login() {
                 {verifyOtpMutation.isPending ? (
                   <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" aria-hidden="true" />
                 ) : (
-                  <>Verify &amp; enter <IconArrowForward className="w-3.5 h-3.5" aria-hidden="true" /></>
+                  <>Verify &amp; enter →</>
                 )}
               </button>
 
@@ -260,11 +255,13 @@ export default function Login() {
           )}
         </div>
 
-        {/* Trust badges */}
-        <div className="mt-8 flex items-center justify-center gap-6 text-[10px] text-white/20 font-mono">
-          <span className="flex items-center gap-1.5"><IconShield className="w-3 h-3" aria-hidden="true" /> SECURE AUTH</span>
-          <span className="flex items-center gap-1.5"><IconZap className="w-3 h-3" aria-hidden="true" /> INSTANT ID</span>
-          <span className="flex items-center gap-1.5"><IconGlobe className="w-3 h-3" aria-hidden="true" /> SYNCED ACCESS</span>
+        {/* Trust indicators — text only */}
+        <div className="mt-8 flex items-center justify-center gap-6">
+          <span className="text-[9px] font-bold tracking-[0.2em] text-white/15 uppercase">Secure Auth</span>
+          <span className="text-white/10">·</span>
+          <span className="text-[9px] font-bold tracking-[0.2em] text-white/15 uppercase">Instant ID</span>
+          <span className="text-white/10">·</span>
+          <span className="text-[9px] font-bold tracking-[0.2em] text-white/15 uppercase">Synced Access</span>
         </div>
       </div>
     </div>

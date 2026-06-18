@@ -3,6 +3,7 @@ import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Link } from "wouter";
 import { ARCHETYPES } from "@shared/carbonData";
+import { SocialShare } from "@/components/SocialShare";
 
 const QUICK_ACTIONS = [
   { href: "/log",        label: "Log Activity",   tag: "INPUT",   desc: "Voice or tap to log" },
@@ -123,6 +124,17 @@ export default function Dashboard() {
             High emissions week — ask ReBon AI for quick wins
           </p>
         )}
+
+        {/* Share weekly stats */}
+        <div className="pt-4 border-t border-white/5 flex flex-wrap items-center justify-between gap-3">
+          <span className="text-[10px] text-white/30 font-mono tracking-widest uppercase">Share your progress</span>
+          <SocialShare
+            text={`I'm tracking my carbon footprint with ReBon! This week: ${totalKg.toFixed(1)} kg CO₂ out of a ${weeklyBudget} kg target (${budgetUsed.toFixed(0)}% used). Join me on my climate action journey 🌿`}
+            title="My Weekly Carbon Footprint — ReBon"
+            platforms={["x", "linkedin", "whatsapp", "copy"]}
+            onShare={(p) => console.log('[ReBon] Dashboard share →', p)}
+          />
+        </div>
       </section>
 
       {/* ── Quick Actions + Recent Activity ── */}

@@ -4,6 +4,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { IconGitCompare, IconPeople, IconPulse, IconTrendingDown, IconTrendingUp } from "@/components/Icons";
 import { toast } from "sonner";
 import { ARCHETYPES } from "../../../shared/carbonData";
+import { SocialShare } from "@/components/SocialShare";
 
 export default function Mirror() {
   const { isAuthenticated } = useAuth();
@@ -91,6 +92,23 @@ export default function Mirror() {
                   ))}
                 </div>
               )}
+
+              {/* Share comparison result */}
+              <div className="card-glass rounded-xl border border-white/10 p-4 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <div className="text-xs font-bold text-white/70 mb-0.5">Share your result</div>
+                  <p className="text-[10px] text-white/40">{better ? "You\u2019re beating the average — inspire others!" : "Share your journey and get accountability"}</p>
+                </div>
+                <SocialShare
+                  text={better
+                    ? `I\u2019m in the ${data.percentileRank}th percentile for carbon efficiency on @ReBonApp! My weekly footprint: ${data.userCarbonKg.toFixed(1)} kg CO₂ vs. ${data.peerAvgKg.toFixed(1)} kg peer avg. ${Math.abs(diff).toFixed(1)} kg below average 🌿 #ClimateAction`
+                    : `Working on my carbon footprint with @ReBonApp. This week: ${data.userCarbonKg.toFixed(1)} kg CO₂ vs. ${data.peerAvgKg.toFixed(1)} kg peer avg. Every step counts 🌿 #ClimateAction #ReBon`
+                  }
+                  title="My CarbonMirror Result — ReBon"
+                  platforms={["x", "linkedin", "whatsapp", "copy"]}
+                  onShare={(p) => console.log('[ReBon] Mirror share →', p)}
+                />
+              </div>
             </div>
           )}
         </>
