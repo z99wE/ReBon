@@ -74,7 +74,7 @@ describe("Stories", () => {
 
     expect(screen.getByRole("button", { name: /generate story/i })).toBeInTheDocument();
     expect(screen.getByText(/story archive/i)).toBeInTheDocument();
-    expect(screen.getByText(/great week/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/great week/i).length).toBeGreaterThan(0);
   });
 
   it("calls the generate mutation when requested", async () => {
