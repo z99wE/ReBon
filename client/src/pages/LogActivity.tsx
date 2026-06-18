@@ -202,11 +202,11 @@ export default function LogActivity() {
         </section>
       )}
       
-      {challengesQuery.data && challengesQuery.data.filter(c => !c.completedAt).length > 0 && (
+      {challengesQuery.data && challengesQuery.data.filter((c: any) => !c.completedAt).length > 0 && (
         <section aria-label="Active Challenges" className="card-glass rounded-xl border border-orange-400/20 p-5 mt-8">
           <h2 className="font-bold text-white mb-3">Active Challenges</h2>
           <div className="space-y-2">
-            {challengesQuery.data.filter(c => !c.completedAt).map(c => (
+            {challengesQuery.data.filter((c: any) => !c.completedAt).map((c: any) => (
               <div key={c.id} className="flex items-center gap-3 p-3 rounded-lg bg-white/5">
                 <div className="flex-1">
                   <div className="text-sm font-medium text-white">{c.title}</div>

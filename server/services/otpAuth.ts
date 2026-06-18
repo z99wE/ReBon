@@ -1,45 +1,34 @@
 /**
  * OTP Authentication Service
  * Handles email and phone OTP generation, delivery, and verification.
- * No external auth provider required — works with any email/phone.
- *
- * Security:
- * - OTPs are bcrypt-hashed before storage
- * - 6-digit OTPs expire in 10 minutes
- * - Max 3 verification attempts per session
- * - Rate limited: 1 OTP per identifier per 60 seconds
+ * Powered by Firestore.
  */
 import crypto from "crypto";
 import nodemailer from "nodemailer";
-import { getDb } from "../db";
-import { otpSessions } from "../../drizzle/schema";
-import { eq, and, gt, desc } from "drizzle-orm";
+import { db } from "../firebase";
+
+const generateId = () => Math.random().toString(36).substring(2, 15);
 
 // ─── OTP Generation ───────────────────────────────────────────────────────────
 
-/** Generate a cryptographically random 6-digit OTP */
 export function generateOtp(): string {
   const bytes = crypto.randomBytes(3);
   const num = (bytes.readUIntBE(0, 3) % 1000000);
   return num.toString().padStart(6, "0");
 }
 
-/** Hash OTP using SHA-256 (fast enough for short-lived tokens) */
 export function hashOtp(otp: string): string {
   return crypto.createHash("sha256").update(otp).digest("hex");
 }
 
-/** Verify an OTP against its stored hash */
 export function verifyOtpHash(otp: string, hash: string): boolean {
   const inputHash = hashOtp(otp);
-  // Constant-time comparison to prevent timing attacks
   return crypto.timingSafeEqual(Buffer.from(inputHash), Buffer.from(hash));
 }
 
 // ─── Email Delivery ───────────────────────────────────────────────────────────
 
 function createTransporter() {
-  // Uses SMTP env vars if provided, otherwise falls back to Ethereal (dev preview)
   if (process.env.SMTP_HOST) {
     return nodemailer.createTransport({
       host: process.env.SMTP_HOST,
@@ -51,7 +40,6 @@ function createTransporter() {
       },
     });
   }
-  // Dev fallback: log OTP to console (no email sent)
   return null;
 }
 
@@ -74,8 +62,6 @@ export async function sendEmailOtp(email: string, otp: string): Promise<{ previe
   `;
 
   if (!transporter) {
-    // Dev mode: no email sent, but the caller can surface the OTP for local demos.
-    // Keep it out of logs so we do not create accidental secret leakage.
     return { preview: `DEV_MODE:${otp}` };
   }
 
@@ -89,10 +75,8 @@ export async function sendEmailOtp(email: string, otp: string): Promise<{ previe
   return { preview: nodemailer.getTestMessageUrl(info) || undefined };
 }
 
-/** For phone OTP — logs to console in dev, can integrate Twilio/Vonage via env */
 export async function sendPhoneOtp(phone: string, otp: string): Promise<{ preview?: string }> {
   if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
-    // Twilio integration (optional — only if env vars are set)
     const url = `https://api.twilio.com/2010-04-01/Accounts/${process.env.TWILIO_ACCOUNT_SID}/Messages.json`;
     const body = new URLSearchParams({
       From: process.env.TWILIO_PHONE_FROM || "",
@@ -109,52 +93,43 @@ export async function sendPhoneOtp(phone: string, otp: string): Promise<{ previe
     });
     return {};
   }
-  // Dev fallback: no SMS sent, but the caller can surface the OTP for local demos.
-  // Keep it out of logs so we do not create accidental secret leakage.
   return { preview: `DEV_MODE:${otp}` };
 }
 
 // ─── Session Management ───────────────────────────────────────────────────────
 
-const OTP_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
+const OTP_EXPIRY_MS = 10 * 60 * 1000;
 const MAX_ATTEMPTS = 3;
-const RATE_LIMIT_MS = 60 * 1000; // 1 OTP per identifier per 60 seconds
+const RATE_LIMIT_MS = 60 * 1000;
 
 export async function createOtpSession(
   identifier: string,
   identifierType: "email" | "phone"
 ): Promise<{ otp: string; rateLimited: boolean }> {
-  const db = await getDb();
-  if (!db) throw new Error("Database unavailable");
+  const snapshot = await db.collection('otp_sessions')
+    .where('identifier', '==', identifier.toLowerCase())
+    .where('createdAt', '>', new Date(Date.now() - RATE_LIMIT_MS))
+    .get();
 
-  // Rate limit: check if a session was created in the last 60 seconds
-  const recentSession = await db
-    .select()
-    .from(otpSessions)
-    .where(
-      and(
-        eq(otpSessions.identifier, identifier.toLowerCase()),
-        gt(otpSessions.createdAt, new Date(Date.now() - RATE_LIMIT_MS))
-      )
-    )
-    .orderBy(desc(otpSessions.createdAt))
-    .limit(1);
-
-  if (recentSession.length > 0) {
+  if (!snapshot.empty) {
     return { otp: "", rateLimited: true };
   }
 
   const otp = generateOtp();
   const otpHash = hashOtp(otp);
   const expiresAt = new Date(Date.now() + OTP_EXPIRY_MS);
+  const now = new Date();
 
-  await db.insert(otpSessions).values({
+  const id = generateId();
+  await db.collection('otp_sessions').doc(id).set({
+    id,
     identifier: identifier.toLowerCase(),
     identifierType,
     otpHash,
     expiresAt,
     attempts: 0,
     verified: false,
+    createdAt: now,
   });
 
   return { otp, rateLimited: false };
@@ -164,40 +139,36 @@ export async function verifyOtpSession(
   identifier: string,
   otp: string
 ): Promise<{ success: boolean; error?: string }> {
-  const db = await getDb();
-  if (!db) throw new Error("Database unavailable");
-
   const now = new Date();
+  const snapshot = await db.collection('otp_sessions')
+    .where('identifier', '==', identifier.toLowerCase())
+    .where('verified', '==', false)
+    .where('expiresAt', '>', now)
+    .get();
 
-  // Find the most recent unverified, unexpired session for this identifier
-  const sessions = await db
-    .select()
-    .from(otpSessions)
-    .where(
-      and(
-        eq(otpSessions.identifier, identifier.toLowerCase()),
-        eq(otpSessions.verified, false),
-        gt(otpSessions.expiresAt, now)
-      )
-    )
-    .orderBy(desc(otpSessions.createdAt))
-    .limit(1);
-
-  if (sessions.length === 0) {
+  if (snapshot.empty) {
     return { success: false, error: "OTP expired or not found. Request a new code." };
   }
 
-  const session = sessions[0];
+  // Sort locally since we query simple equalities
+  const docs = snapshot.docs.map(doc => doc.data() as any);
+  docs.sort((a, b) => b.createdAt.toDate().getTime() - a.createdAt.toDate().getTime());
+  
+  const sessionDocId = snapshot.docs.find(d => d.id === docs[0].id)?.id;
+  if (!sessionDocId) {
+    return { success: false, error: "OTP expired or not found. Request a new code." };
+  }
+
+  const session = docs[0];
 
   if (session.attempts >= MAX_ATTEMPTS) {
     return { success: false, error: "Too many attempts. Request a new code." };
   }
 
   // Increment attempts
-  await db
-    .update(otpSessions)
-    .set({ attempts: session.attempts + 1 })
-    .where(eq(otpSessions.id, session.id));
+  await db.collection('otp_sessions').doc(sessionDocId).update({
+    attempts: session.attempts + 1
+  });
 
   const isBypass = otp === "123456" && !process.env.SMTP_HOST && !process.env.TWILIO_ACCOUNT_SID;
   if (!isBypass && !verifyOtpHash(otp, session.otpHash)) {
@@ -206,10 +177,9 @@ export async function verifyOtpSession(
   }
 
   // Mark as verified
-  await db
-    .update(otpSessions)
-    .set({ verified: true })
-    .where(eq(otpSessions.id, session.id));
+  await db.collection('otp_sessions').doc(sessionDocId).update({
+    verified: true
+  });
 
   return { success: true };
 }

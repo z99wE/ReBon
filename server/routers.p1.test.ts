@@ -66,7 +66,7 @@ vi.mock("jose", () => ({
 function makeCtx(overrides?: Partial<TrpcContext["user"]>): TrpcContext {
   return {
     user: {
-      id: 42,
+      id: "42",
       openId: "test-open-id",
       email: "demo@rebon.app",
       name: "Demo User",
@@ -112,7 +112,7 @@ describe("server/routers", () => {
 
     expect(result.roadmap.phases).toHaveLength(1);
     expect(dbMocks.updateUserProfile).toHaveBeenCalledWith(
-      42,
+      "42",
       expect.objectContaining({
         onboardingCompleted: true,
         roadmap: expect.objectContaining({
@@ -176,14 +176,14 @@ describe("server/routers", () => {
 
     expect(result).toEqual({ success: true });
     expect(dbMocks.logActivity).toHaveBeenCalledWith(
-      expect.objectContaining({ userId: 42, carbonKg: 2.5 })
+      expect.objectContaining({ userId: "42", carbonKg: 2.5 })
     );
     expect(dbMocks.upsertLeaderboardEntry).toHaveBeenCalledWith(
       7,
-      42,
+      "42",
       expect.objectContaining({ activitiesLogged: 3 })
     );
-    expect(dbMocks.updateUserInfluenceScore).toHaveBeenCalledWith(42, expect.any(Number));
+    expect(dbMocks.updateUserInfluenceScore).toHaveBeenCalledWith("42", expect.any(Number));
     expect(dbMocks.createFeedItem).toHaveBeenCalledWith(
       expect.objectContaining({
         title: "Logged: Commute",
@@ -216,7 +216,7 @@ describe("server/routers", () => {
   });
 
   it("generates challenges and stories from the AI and stores them", async () => {
-    dbMocks.getUserById.mockResolvedValue({ id: 42, archetypeLabel: "Eco Pioneer", name: "Demo User" });
+    dbMocks.getUserById.mockResolvedValue({ id: "42", archetypeLabel: "Eco Pioneer", name: "Demo User" });
     const generatedChallenges = [
       { title: "Bike once", description: "Swap one drive", difficulty: "easy", carbonSavingKg: 1, pointsReward: 50 },
       { title: "Eat plant-based", description: "One meal", category: "meals", difficulty: "medium", carbonSavingKg: 2, pointsReward: 75 },
@@ -251,7 +251,7 @@ describe("server/routers", () => {
     const caller = appRouter.createCaller(makeCtx());
     const challenges = await caller.challenges.generate();
     const story = await caller.stories.generate({ period: "month" });
-    const completeRes = await caller.challenges.complete({ challengeId: 1 });
+    const completeRes = await caller.challenges.complete({ challengeId: "1" });
     const profile = await caller.user.profile();
 
     expect(challenges).toHaveLength(3);
@@ -268,8 +268,8 @@ describe("server/routers", () => {
       })
     );
     expect(completeRes).toEqual({ success: true });
-    expect(dbMocks.completeChallenge).toHaveBeenCalledWith(1, 42);
-    expect(profile).toMatchObject({ id: 42, name: "Demo User" });
+    expect(dbMocks.completeChallenge).toHaveBeenCalledWith("1", "42");
+    expect(profile).toMatchObject({ id: "42", name: "Demo User" });
   });
 
   it("handles user profile not found", async () => {
@@ -294,11 +294,11 @@ describe("server/routers", () => {
   });
 
   it("compares peers, creates collectives, and answers what-if scenarios", async () => {
-    dbMocks.getUserById.mockResolvedValue({ id: 42, archetype: "eco_pioneer", archetypeLabel: "Eco Pioneer", currentStreak: 4 });
+    dbMocks.getUserById.mockResolvedValue({ id: "42", archetype: "eco_pioneer", archetypeLabel: "Eco Pioneer", currentStreak: 4 });
     dbMocks.getUserCarbonSummary.mockResolvedValue({ weeklyKg: 8, weeklyByCategory: { transport: 4 } });
     dbMocks.getArchetypePeers.mockResolvedValue([
-      { id: 1, totalCarbonKg: 10, archetype: "eco_pioneer" },
-      { id: 2, totalCarbonKg: 6, archetype: "eco_pioneer" },
+      { id: "1", totalCarbonKg: 10, archetype: "eco_pioneer" },
+      { id: "2", totalCarbonKg: 6, archetype: "eco_pioneer" },
     ]);
     dbMocks.savePeerSnapshot.mockResolvedValue(undefined);
     dbMocks.createCollective.mockResolvedValue({ id: 21, inviteCode: "TEAM123" });
@@ -326,7 +326,7 @@ describe("server/routers", () => {
     });
     const joined = await caller.collective.join({ inviteCode: "team123" });
     const whatIf = await caller.collective.whatIf({
-      collectiveId: 21,
+      collectiveId: "21",
       scenario: "Everyone bikes one day per week",
     });
 
@@ -344,7 +344,7 @@ describe("server/routers", () => {
 
   it("answers assistant chat with the user context", async () => {
     dbMocks.getUserById.mockResolvedValue({
-      id: 42,
+      id: "42",
       name: "Demo User",
       archetypeLabel: "Eco Pioneer",
       currentStreak: 4,

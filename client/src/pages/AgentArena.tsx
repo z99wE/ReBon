@@ -29,7 +29,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 type NegotiationTurn = { speaker: string; message: string; proposedKg?: number | null };
 
 type NegotiationResult = {
-  id: number;
+  id: string;
   status: string;
   agreedKg: number | null;
   turns: NegotiationTurn[];
@@ -41,7 +41,7 @@ export default function AgentArena() {
   const { isAuthenticated } = useAuth();
   const [category, setCategory] = useState("transport");
   const [proposedKg, setProposedKg] = useState(5);
-  const [selectedPeer, setSelectedPeer] = useState<number | null>(null);
+  const [selectedPeer, setSelectedPeer] = useState<string | null>(null);
   const [activeNeg, setActiveNeg] = useState<NegotiationResult | null>(null);
 
   const historyQuery = trpc.agents.list.useQuery(undefined, { enabled: isAuthenticated });

@@ -23,14 +23,14 @@ export const challengesRouter = router({
       const category = validCategories.find(v => rawCat.includes(v)) ?? "lifestyle";
       const rawDiff = (c.difficulty ?? "medium").toLowerCase();
       const difficulty = validDifficulties.find(v => rawDiff.includes(v)) ?? "medium";
-      await createChallenge({ userId: ctx.user.id, title: c.title ?? "Weekly Challenge", description: c.description ?? "", category: category as any, difficulty: difficulty as any, carbonSavingKg: typeof c.carbonSavingKg === 'number' ? c.carbonSavingKg : 5, pointsReward: typeof c.pointsReward === 'number' ? c.pointsReward : 100, weekNumber, year: now.getFullYear(), aiProvider: response.provider, trendingTopic: c.trendingTopic ?? trending });
+      await createChallenge({ userId: ctx.user.id, title: c.title ?? "Weekly Challenge", description: c.description ?? "", category: category as any, difficulty: difficulty as any, carbonSavingKg: typeof c.carbonSavingKg === 'number' ? c.carbonSavingKg : 5, pointsReward: typeof c.pointsReward === 'number' ? c.pointsReward : 100, weekNumber, year: now.getFullYear(), status: "active", aiProvider: response.provider, trendingTopic: c.trendingTopic ?? trending });
     }
     return getUserChallenges(ctx.user.id, weekNumber, now.getFullYear());
   }),
   list: protectedProcedure.query(async ({ ctx }) => { const now = new Date(); return getUserChallenges(ctx.user.id, getWeekNumber(now), now.getFullYear()); }),
-  complete: protectedProcedure.input(z.object({ challengeId: z.number() })).mutation(async ({ ctx, input }) => {
+  complete: protectedProcedure.input(z.object({ challengeId: z.string() })).mutation(async ({ ctx, input }) => {
     const challenge = await completeChallenge(input.challengeId, ctx.user.id);
-    await createFeedItem({ userId: ctx.user.id, type: "challenge_complete", title: `Completed: ${challenge.title}`, body: `Saved ${challenge.carbonSavingKg} kg CO₂ · +${challenge.pointsReward} pts`, carbonKg: challenge.carbonSavingKg, isInfluencer: (ctx.user.influenceScore ?? 0) > 100 });
+    await createFeedItem({ userId: ctx.user.id, type: "challenge_complete", title: `Completed: ${challenge.title}`, body: `Saved ${challenge.carbonSavingKg} kg CO₂ · +${challenge.pointsReward} pts`, carbonKg: challenge.carbonSavingKg, isInfluencer: (ctx.user.influenceScore ?? 0) > 100, amplified: false });
     return { success: true };
   }),
 });

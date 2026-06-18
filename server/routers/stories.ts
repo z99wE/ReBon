@@ -20,5 +20,5 @@ export const storiesRouter = router({
     return { ...storyData, carbonSavedKg: carbonSaved, equivalents };
   }),
   list: protectedProcedure.query(async ({ ctx }) => getUserStories(ctx.user.id)),
-  share: protectedProcedure.input(z.object({ storyId: z.number() })).mutation(async ({ input }) => { await incrementStoryShares(input.storyId); return { success: true }; }),
+  share: protectedProcedure.input(z.object({ storyId: z.string() })).mutation(async ({ input }) => { await incrementStoryShares(input.storyId); return { success: true }; }),
 });

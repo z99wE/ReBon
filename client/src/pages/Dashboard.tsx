@@ -40,7 +40,7 @@ export default function Dashboard() {
   const STATS = [
     { label: "Elo Score",        value: profile?.eloScore ?? 1000,          unit: "pts",  accent: "stat-accent-violet", color: "#a78bfa" },
     { label: "Weekly CO₂",       value: totalKg.toFixed(1),                  unit: "kg",   accent: "stat-accent-green",  color: "#4ade80" },
-    { label: "Active Challenges", value: challenges?.filter(c => !c.completedAt).length ?? 0, unit: "",  accent: "stat-accent-cyan",   color: "#67e8f9" },
+    { label: "Active Challenges", value: challenges?.filter((c: any) => !c.completedAt).length ?? 0, unit: "",  accent: "stat-accent-cyan",   color: "#67e8f9" },
     { label: "Influence Score",   value: profile?.influenceScore?.toFixed(0) ?? "0", unit: "pts", accent: "stat-accent-amber", color: "#fbbf24" },
   ];
 
@@ -181,14 +181,14 @@ export default function Dashboard() {
       </div>
 
       {/* ── Active Challenges ── */}
-      {challenges && challenges.filter(c => !c.completedAt).length > 0 && (
+      {challenges && challenges.filter((c: any) => !c.completedAt).length > 0 && (
         <div className="glass-card border border-white/8">
           <div className="px-6 py-4 border-b border-white/8 flex items-center justify-between">
             <p className="label-tech-bright">Active Challenges</p>
             <Link href="/assistant" className="text-[9px] font-black tracking-widest text-white/30 hover:text-white/60 transition-colors no-underline uppercase">Get New →</Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/8">
-            {challenges.filter(c => !c.completedAt).slice(0, 3).map((c) => (
+            {challenges.filter((c: any) => !c.completedAt).slice(0, 3).map((c: any) => (
               <div key={c.id} className="p-6">
                 <p className="label-tech mb-2">{c.category}</p>
                 <p className="text-sm font-700 text-white/80 mb-2">{c.title}</p>

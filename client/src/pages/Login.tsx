@@ -4,6 +4,8 @@ import { trpc } from "@/lib/trpc";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
 import { IconArrowForward, IconGlobe, IconLeaf, IconMail, IconPhone, IconShield, IconZap } from "@/components/Icons";
+import { auth as clientAuth, googleProvider } from "@/lib/firebase";
+import { signInWithPopup } from "firebase/auth";
 
 type Step = "identifier" | "otp" | "name";
 
@@ -15,6 +17,24 @@ export default function Login() {
   const [otp, setOtp] = useState("");
   const [name, setName] = useState("");
   const [devOtp, setDevOtp] = useState<string | null>(null);
+
+  const verifyFirebaseTokenMutation = trpc.auth.verifyFirebaseToken.useMutation({
+    onSuccess: () => {
+      toast.success("Welcome to ReBon!");
+      window.location.href = "/dashboard";
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const handleGoogleSignIn = async () => {
+    try {
+      const result = await signInWithPopup(clientAuth, googleProvider);
+      const idToken = await result.user.getIdToken();
+      verifyFirebaseTokenMutation.mutate({ idToken, name: result.user.displayName || undefined });
+    } catch (e: any) {
+      toast.error(e.message || "Google Sign-In failed");
+    }
+  };
 
   const sendOtpMutation = trpc.auth.sendOtp.useMutation({
     onSuccess: (data) => {
@@ -79,7 +99,30 @@ export default function Login() {
           {step === "identifier" && (
             <form onSubmit={handleSendOtp} noValidate>
               <h1 className="text-xl font-bold text-white mb-1">Sign in to ReBon</h1>
-              <p className="text-sm text-zinc-400 mb-6">No password needed. We'll send you a 6-digit code.</p>
+              <p className="text-sm text-zinc-400 mb-6">Choose a sign-in method to access your carbon footprint metrics.</p>
+
+              <button
+                type="button"
+                onClick={handleGoogleSignIn}
+                disabled={verifyFirebaseTokenMutation.isPending}
+                className="w-full mb-4 py-3 px-4 rounded-xl bg-white text-zinc-900 font-semibold text-sm hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 shadow-md active:scale-[0.98]"
+              >
+                <svg className="w-4 h-4 mr-1" viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+                  <g transform="matrix(1, 0, 0, 1, 0, 0)">
+                    <path d="M21.35,11.1H12v2.7h5.38c-0.24,1.28 -0.96,2.37 -2.04,3.1v2.6h3.3c1.93,-1.78 3.04,-4.4 3.04,-7.4C21.68,11.83 21.56,11.43 21.35,11.1z" fill="#4285F4" />
+                    <path d="M12,20.6c2.43,0 4.47,-0.8 5.96,-2.2l-3.3,-2.6c-0.9,0.6 -2.07,0.98 -3.3,0.98 -2.34,0 -4.33,-1.58 -5.03,-3.7H3.03v2.7C4.52,18.73 8.04,20.6 12,20.6z" fill="#34A853" />
+                    <path d="M6.97,13.08a5.1,5.1 0 0 1 0,-3.2v-2.7H3.03a8.6,8.6 0 0 0 0,8.6z" fill="#FBBC05" />
+                    <path d="M12,7.22c1.32,0 2.5,0.45 3.44,1.35l2.58,-2.58C16.46,4.54 14.4,3.6 12,3.6 8.04,3.6 4.52,5.47 3.03,8.47l3.94,3.03C7.67,9.38 9.66,7.22 12,7.22z" fill="#EA4335" />
+                  </g>
+                </svg>
+                Continue with Google
+              </button>
+
+              <div className="flex items-center gap-3 my-4">
+                <div className="h-px bg-zinc-800 flex-1" />
+                <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-black">or sign in with code</span>
+                <div className="h-px bg-zinc-800 flex-1" />
+              </div>
 
               {/* Toggle email / phone */}
               <div className="flex rounded-lg bg-zinc-800 p-1 mb-4" role="group" aria-label="Sign in method">

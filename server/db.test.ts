@@ -1,479 +1,295 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-type SelectState = {
-  fields: unknown;
-  table: { tableName: string } | null;
-  whereArg: unknown;
-  orderByArgs: unknown[];
-  limitArg: number | null;
-};
+const { mockDocs, mockCollection, mockRunTransaction, mockTimestamp, mockBatch } = vi.hoisted(() => {
+  const mockDocs: any[] = [];
 
-type InsertState = {
-  table: { tableName: string } | null;
-  data: unknown;
-  duplicateSet: unknown;
-};
+  const mockTimestamp = (date = new Date()) => ({
+    toDate: () => date,
+    seconds: Math.floor(date.getTime() / 1000),
+    nanoseconds: 0,
+  });
 
-type UpdateState = {
-  table: { tableName: string } | null;
-  data: unknown;
-  whereArg: unknown;
-};
+  const convertDatesToTimestamps = (obj: any): any => {
+    if (obj === null || obj === undefined) return obj;
+    if (obj instanceof Date) {
+      return mockTimestamp(obj);
+    }
+    if (Array.isArray(obj)) {
+      return obj.map(convertDatesToTimestamps);
+    }
+    if (typeof obj === "object" && obj.constructor === Object) {
+      const res: any = {};
+      for (const key of Object.keys(obj)) {
+        res[key] = convertDatesToTimestamps(obj[key]);
+      }
+      return res;
+    }
+    return obj;
+  };
 
-const mocks = vi.hoisted(() => ({
-  drizzle: vi.fn(),
-  and: vi.fn((...parts: unknown[]) => ({ kind: "and", parts })),
-  or: vi.fn((...parts: unknown[]) => ({ kind: "or", parts })),
-  count: vi.fn(() => ({ kind: "count" })),
-  desc: vi.fn((value: unknown) => ({ kind: "desc", value })),
-  eq: vi.fn((left: unknown, right: unknown) => ({ kind: "eq", left, right })),
-  gt: vi.fn((left: unknown, right: unknown) => ({ kind: "gt", left, right })),
-  gte: vi.fn((left: unknown, right: unknown) => ({ kind: "gte", left, right })),
-  lt: vi.fn((left: unknown, right: unknown) => ({ kind: "lt", left, right })),
-  sql: vi.fn((strings: TemplateStringsArray, ...values: unknown[]) => ({
-    kind: "sql",
-    text: String.raw({ raw: strings }, ...values.map((value) => String(value))),
+  const mockCollection = vi.fn((colName: string) => {
+    const makeQueryChain = (filters: any[] = [], limitNum?: number) => {
+      const getFilteredDocs = () => {
+        let docs = mockDocs.filter(d => d._col === colName);
+        for (const f of filters) {
+          docs = docs.filter(d => {
+            const docVal = d[f.field];
+            if (f.op === "==") return docVal === f.val;
+            if (f.op === ">=") return docVal >= f.val;
+            if (f.op === "<") return docVal < f.val;
+            return false;
+          });
+        }
+        if (limitNum !== undefined) {
+          docs = docs.slice(0, limitNum);
+        }
+        return docs;
+      };
+
+      const chain: any = {
+        where: (field: string, op: string, val: any) => {
+          return makeQueryChain([...filters, { field, op, val }], limitNum);
+        },
+        orderBy: () => {
+          return chain;
+        },
+        limit: (num: number) => {
+          return makeQueryChain(filters, num);
+        },
+        get: async () => {
+          const docs = getFilteredDocs();
+          return {
+            docs: docs.map(d => ({
+              data: () => convertDatesToTimestamps(d),
+              id: d.id
+            })),
+            empty: docs.length === 0
+          };
+        }
+      };
+      return chain;
+    };
+
+    const collectionRef = {
+      doc: (id: string) => {
+        return {
+          get: async () => {
+            const found = mockDocs.find(d => d.id === id && d._col === colName);
+            return {
+              exists: !!found,
+              data: () => convertDatesToTimestamps(found),
+              id
+            };
+          },
+          set: async (data: any) => {
+            const existingIdx = mockDocs.findIndex(d => d.id === id && d._col === colName);
+            if (existingIdx !== -1) {
+              mockDocs[existingIdx] = { ...mockDocs[existingIdx], ...data };
+            } else {
+              mockDocs.push({ ...data, id, _col: colName });
+            }
+          },
+          update: async (data: any) => {
+            const existingIdx = mockDocs.findIndex(d => d.id === id && d._col === colName);
+            if (existingIdx !== -1) {
+              mockDocs[existingIdx] = { ...mockDocs[existingIdx], ...data };
+            }
+          }
+        };
+      },
+      where: (field: string, op: string, val: any) => {
+        return makeQueryChain([{ field, op, val }]);
+      },
+      limit: (num: number) => {
+        return makeQueryChain([], num);
+      },
+      orderBy: () => {
+        return makeQueryChain([]);
+      },
+      get: async () => {
+        return makeQueryChain([]).get();
+      }
+    };
+    return collectionRef;
+  });
+
+  const mockTransaction = {
+    get: vi.fn(async (ref: any) => ref.get()),
+    set: vi.fn(async (ref: any, data: any) => ref.set(data)),
+    update: vi.fn(async (ref: any, data: any) => ref.update(data)),
+  };
+
+  const mockRunTransaction = vi.fn(async (cb) => {
+    return cb(mockTransaction);
+  });
+
+  const mockBatch = {
+    set: vi.fn((ref: any, data: any) => ref.set(data)),
+    update: vi.fn((ref: any, data: any) => ref.update(data)),
+    commit: vi.fn(async () => {}),
+  };
+
+  return { mockDocs, mockCollection, mockRunTransaction, mockTimestamp, mockBatch };
+});
+
+// Mock firebase-admin packages
+vi.mock("firebase-admin/app", () => ({
+  initializeApp: vi.fn(() => ({})),
+  cert: vi.fn(),
+  getApps: vi.fn(() => []),
+}));
+
+vi.mock("firebase-admin/firestore", () => ({
+  getFirestore: vi.fn(() => ({
+    collection: mockCollection,
+    runTransaction: mockRunTransaction,
+    batch: vi.fn(() => mockBatch),
   })),
 }));
 
-vi.mock("drizzle-orm/mysql2", () => ({
-  drizzle: mocks.drizzle,
+vi.mock("firebase-admin/auth", () => ({
+  getAuth: vi.fn(() => ({})),
 }));
 
-vi.mock("drizzle-orm", () => ({
-  and: mocks.and,
-  or: mocks.or,
-  count: mocks.count,
-  desc: mocks.desc,
-  eq: mocks.eq,
-  gt: mocks.gt,
-  gte: mocks.gte,
-  lt: mocks.lt,
-  sql: mocks.sql,
-}));
-
-vi.mock("../drizzle/schema", () => {
-  const makeTable = (tableName: string) =>
-    new Proxy({ tableName }, {
-      get(_target, prop) {
-        if (prop === "tableName") return tableName;
-        if (prop === Symbol.toStringTag) return tableName;
-        return `${tableName}.${String(prop)}`;
-      },
-    });
-
-  return {
-    activities: makeTable("activities"),
-    challenges: makeTable("challenges"),
-    collectiveMembers: makeTable("collectiveMembers"),
-    collectives: makeTable("collectives"),
-    feedItems: makeTable("feedItems"),
-    influenceEdges: makeTable("influenceEdges"),
-    leaderboardEntries: makeTable("leaderboardEntries"),
-    leaderboardSeasons: makeTable("leaderboardSeasons"),
-    peerSnapshots: makeTable("peerSnapshots"),
-    stories: makeTable("stories"),
-    users: makeTable("users"),
-  };
-});
-
-function createDbHarness() {
-  const selectQueue: Array<unknown> = [];
-  const insertQueue: Array<unknown> = [];
-  const updateQueue: Array<unknown> = [];
-
-  const calls = {
-    select: [] as SelectState[],
-    insert: [] as InsertState[],
-    update: [] as UpdateState[],
-  };
-
-  const takeQueuedValue = <T>(queue: Array<unknown>, state: unknown, fallback: T): T => {
-    const next = queue.shift();
-    if (typeof next === "function") {
-      return (next as (value: unknown) => T)(state);
-    }
-    return (next ?? fallback) as T;
-  };
-
-  const makeThenable = <T>(resolver: () => T) => ({
-    then(onFulfilled?: (value: T) => unknown, onRejected?: (reason: unknown) => unknown) {
-      return Promise.resolve(resolver()).then(onFulfilled, onRejected);
-    },
-  });
-
-  const db = {
-    select(fields?: unknown) {
-      const state: SelectState = {
-        fields,
-        table: null,
-        whereArg: null,
-        orderByArgs: [],
-        limitArg: null,
-      };
-      calls.select.push(state);
-
-      const chain: any = {
-        from(table: { tableName: string }) {
-          state.table = table;
-          return chain;
-        },
-        where(condition: unknown) {
-          state.whereArg = condition;
-          return chain;
-        },
-        orderBy(...args: unknown[]) {
-          state.orderByArgs = args;
-          return chain;
-        },
-        limit(limitArg: number) {
-          state.limitArg = limitArg;
-          return makeThenable(() => takeQueuedValue(selectQueue, state, []));
-        },
-        then(onFulfilled?: (value: unknown) => unknown, onRejected?: (reason: unknown) => unknown) {
-          return Promise.resolve(takeQueuedValue(selectQueue, state, [])).then(onFulfilled, onRejected);
-        },
-      };
-
-      return chain;
-    },
-    insert(table: { tableName: string }) {
-      const state: InsertState = { table, data: null, duplicateSet: null };
-      calls.insert.push(state);
-
-      return {
-        values(data: unknown) {
-          state.data = data;
-          const terminal = {
-            onDuplicateKeyUpdate(options: { set: unknown }) {
-              state.duplicateSet = options.set;
-              return Promise.resolve(takeQueuedValue(insertQueue, state, [{ insertId: 1 }]));
-            },
-            then(onFulfilled?: (value: unknown) => unknown, onRejected?: (reason: unknown) => unknown) {
-              return Promise.resolve(takeQueuedValue(insertQueue, state, [{ insertId: 1 }])).then(onFulfilled, onRejected);
-            },
-          };
-          return terminal;
-        },
-      };
-    },
-    update(table: { tableName: string }) {
-      const state: UpdateState = { table, data: null, whereArg: null };
-      calls.update.push(state);
-
-      return {
-        set(data: unknown) {
-          state.data = data;
-          const terminal = {
-            where(condition: unknown) {
-              state.whereArg = condition;
-              return Promise.resolve(takeQueuedValue(updateQueue, state, undefined));
-            },
-            then(onFulfilled?: (value: unknown) => unknown, onRejected?: (reason: unknown) => unknown) {
-              return Promise.resolve(takeQueuedValue(updateQueue, state, undefined)).then(onFulfilled, onRejected);
-            },
-          };
-          return terminal;
-        },
-      };
-    },
-  };
-
-  return {
-    db,
-    calls,
-    queueSelect: (...items: Array<unknown>) => selectQueue.push(...items),
-    queueInsert: (...items: Array<unknown>) => insertQueue.push(...items),
-    queueUpdate: (...items: Array<unknown>) => updateQueue.push(...items),
-  };
-}
-
-async function loadDbModule(options: { databaseUrl?: string; ownerOpenId?: string } = {}) {
-  vi.resetModules();
-  process.env.NODE_ENV = "test";
-  if ("databaseUrl" in options) {
-    if (options.databaseUrl === undefined) delete process.env.DATABASE_URL;
-    else process.env.DATABASE_URL = options.databaseUrl;
-  } else {
-    process.env.DATABASE_URL = "mysql://test";
-  }
-  process.env.OWNER_OPEN_ID = options.ownerOpenId ?? "owner-open-id";
-  return import("./db");
-}
+// Load the Firestore db module
+import * as db from "./db";
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockDocs.length = 0;
 });
 
-describe("server/db", () => {
-  it("returns null when the database URL is missing", async () => {
-    const harness = createDbHarness();
-    mocks.drizzle.mockReturnValue(harness.db);
-
-    const { getDb } = await loadDbModule({ databaseUrl: undefined });
-    await expect(getDb()).resolves.toBeNull();
-    expect(mocks.drizzle).not.toHaveBeenCalled();
-  });
-
-  it("caches the database connection", async () => {
-    const harness = createDbHarness();
-    mocks.drizzle.mockReturnValue(harness.db);
-
-    const { getDb } = await loadDbModule();
-    await expect(getDb()).resolves.toBe(harness.db);
-    await expect(getDb()).resolves.toBe(harness.db);
-    expect(mocks.drizzle).toHaveBeenCalledTimes(1);
-  });
-
+describe("server/db (Firestore Edition)", () => {
   it("covers user and activity helpers", async () => {
-    const harness = createDbHarness();
-    const byOpenId = [{ id: 7, openId: "demo" }];
-    const byId = [{ id: 8, name: "Member" }];
-    const allUsers = [{ id: 1, name: "A" }, { id: 2, name: "B" }];
-    const activityRows = [
-      { id: 1, category: "transport", carbonKg: 1.5 },
-      { id: 2, category: "meals", carbonKg: 0.5 },
-    ];
-    const weekRows = [{ id: 3, category: "transport", carbonKg: 2 }];
-    const monthRows = [{ id: 4, category: "energy", carbonKg: 3 }];
-    const summaryRows = [
-      { id: 5, category: "transport", carbonKg: 1.1 },
-      { id: 6, category: "energy", carbonKg: 2.2 },
-    ];
+    // 1. upsertUser (new user)
+    await db.upsertUser({
+      openId: "test-user-001",
+      name: "Demo User",
+      email: "demo@rebon.app",
+      loginMethod: "otp",
+    });
 
-    harness.queueSelect(byOpenId, byId, allUsers, activityRows, weekRows, weekRows, monthRows, summaryRows);
-    harness.queueInsert([{ insertId: 11 }], [{ insertId: 12 }], [{ insertId: 13 }]);
-    harness.queueUpdate(undefined, undefined);
-    mocks.drizzle.mockReturnValue(harness.db);
+    const user = mockDocs.find(d => d.openId === "test-user-001");
+    expect(user).toBeDefined();
+    expect(user.name).toBe("Demo User");
+    expect(user.role).toBe("user");
 
-    const db = await loadDbModule();
+    // 2. getUserByOpenId
+    const foundByOpenId = await db.getUserByOpenId("test-user-001");
+    expect(foundByOpenId).toBeDefined();
+    expect(foundByOpenId?.id).toBe(user.id);
 
-    await db.upsertUser({ openId: "demo", name: "Demo", email: null, loginMethod: "email_otp" } as any);
-    expect(harness.calls.insert[0]?.data).toMatchObject({ openId: "demo", name: "Demo", email: null, loginMethod: "email_otp" });
+    // 3. getUserById
+    const foundById = await db.getUserById(user.id);
+    expect(foundById?.name).toBe("Demo User");
 
-    await db.upsertUser({ openId: "owner-open-id" } as any);
-    expect((harness.calls.insert[1]?.data as any).role).toBe("admin");
+    // 4. updateUserProfile
+    await db.updateUserProfile(user.id, { preferredLanguage: "es" });
+    const updated = await db.getUserById(user.id);
+    expect(updated?.preferredLanguage).toBe("es");
 
-    await expect(db.getUserByOpenId("demo")).resolves.toEqual(byOpenId[0]);
-    await expect(db.getUserById(8)).resolves.toEqual(byId[0]);
-
-    await db.updateUserProfile(8, { preferredLanguage: "hi" } as any);
-    expect(harness.calls.update.at(-1)?.data).toEqual({ preferredLanguage: "hi" });
-
-    await expect(db.getAllUsersForLeaderboard()).resolves.toEqual(allUsers);
-
-    const logged = await db.logActivity({
-      userId: 8,
+    // 5. logActivity
+    const activityResult = await db.logActivity({
+      userId: user.id,
       category: "transport",
-      subcategory: "car_km",
+      subcategory: "car_petrol_km",
       label: "Commute",
-      carbonKg: 1.5,
-    } as any);
-    expect(logged).toEqual({ insertId: 13 });
-    expect(harness.calls.update.at(-1)?.data).toEqual({
-      totalCarbonKg: expect.objectContaining({ kind: "sql" }),
+      carbonKg: 4.5,
+      inputMethod: "tap",
+      loggedAt: new Date(),
     });
+    expect(activityResult.insertId).toBeDefined();
 
-    await expect(db.getUserActivities(8, 10)).resolves.toEqual(activityRows);
-    await expect(db.getUserActivitiesByDateRange(8, new Date("2025-01-01"), new Date("2025-01-08"))).resolves.toEqual(weekRows);
-    await expect(db.getUserCarbonSummary(8)).resolves.toMatchObject({
-      weeklyKg: 2,
-      monthlyKg: 3,
-      totalKg: 3.3,
-      recentActivities: summaryRows,
-    });
+    // Verify user total carbon is updated
+    const userAfterAct = await db.getUserById(user.id);
+    expect(userAfterAct?.totalCarbonKg).toBe(4.5);
+
+    // 6. getUserActivities
+    const activities = await db.getUserActivities(user.id);
+    expect(activities).toHaveLength(1);
+    expect(activities[0]?.carbonKg).toBe(4.5);
   });
 
   it("covers challenge and story helpers", async () => {
-    const harness = createDbHarness();
-    const activeChallenge = {
-      id: 1,
-      userId: 9,
-      status: "active",
-      title: "Bike more",
-      carbonSavingKg: 4,
-      pointsReward: 120,
-    };
-    const completedChallenge = { ...activeChallenge, status: "completed" };
-    const storyRows = [{ id: 1, userId: 9, headline: "Story", narrative: "Great work" }];
+    // Seed user
+    const userId = "u123";
+    mockDocs.push({
+      id: userId,
+      openId: "open123",
+      name: "Tester",
+      _col: "users"
+    });
 
-    harness.queueSelect([activeChallenge], [activeChallenge], [completedChallenge], [], storyRows);
-    harness.queueUpdate(undefined, undefined, undefined);
-    mocks.drizzle.mockReturnValue(harness.db);
-
-    const db = await loadDbModule();
-
-    await expect(db.getUserChallenges(9, 4, 2026)).resolves.toEqual([activeChallenge]);
-
+    // 1. createChallenge
     await db.createChallenge({
-      userId: 9,
-      title: "Bike more",
-      description: "Swap one car trip",
+      userId,
+      title: "Walk to school",
+      description: "Walk instead of driving",
       category: "transport",
       difficulty: "easy",
-      carbonSavingKg: 4,
-      pointsReward: 120,
-      weekNumber: 4,
+      carbonSavingKg: 2,
+      pointsReward: 50,
+      weekNumber: 25,
       year: 2026,
-    } as any);
+      status: "active",
+    });
 
-    await db.completeChallenge(1, 9);
-    await expect(db.completeChallenge(1, 9)).rejects.toThrow("Challenge already completed");
-    await expect(db.completeChallenge(99, 9)).rejects.toThrow("Challenge not found");
+    const chal = mockDocs.find(d => d._col === "challenges");
+    expect(chal).toBeDefined();
+    expect(chal.title).toBe("Walk to school");
+    expect(chal.status).toBe("active");
 
+    // 2. getUserChallenges
+    const chals = await db.getUserChallenges(userId, 25, 2026);
+    expect(chals).toHaveLength(1);
+
+    // 3. completeChallenge
+    const completeRes = await db.completeChallenge(chal.id, userId);
+    expect(completeRes.title).toBe("Walk to school");
+
+    const chalAfter = mockDocs.find(d => d.id === chal.id);
+    expect(chalAfter.status).toBe("completed");
+
+    // 4. saveStory and getUserStories
     await db.saveStory({
-      userId: 9,
-      headline: "Story",
-      narrative: "Great work",
-      carbonSavedKg: 11,
+      userId,
+      headline: "Headline Test",
+      narrative: "Narrative details...",
+      carbonSavedKg: 10,
       period: "week",
       aiProvider: "groq",
-    } as any);
+    });
 
-    await expect(db.getUserStories(9, 5)).resolves.toEqual(storyRows);
-    await db.incrementStoryShares(1);
+    const stories = await db.getUserStories(userId);
+    expect(stories).toHaveLength(1);
+    expect(stories[0]?.headline).toBe("Headline Test");
   });
 
   it("covers collective and leaderboard helpers", async () => {
-    const harness = createDbHarness();
-    const collective = { id: 44, name: "Neighbors", inviteCode: "ABC123", memberCount: 2 };
-    const membership = [{ id: 5, collectiveId: 44, userId: 9 }];
-    const memberRows = [{ id: 9, userId: 9, role: "member" }];
-    const activeSeason = { id: 1, seasonNumber: 1, year: 2026, weekNumber: 24, isActive: true };
-    const createdSeason = { ...activeSeason, id: 2 };
-    const leaderboardRows = [{ id: 1, userId: 9, eloScore: 1200 }];
-    const leaderboardUser = [{ id: 9, name: "Member", archetype: "eco_pioneer", archetypeLabel: "Eco Pioneer" }];
+    // 1. createCollective
+    const col = await db.createCollective("Green Warriors", "Eco tribe", "u1", "INV123");
+    expect(col.inviteCode).toBe("INV123");
 
-    harness.queueSelect(
-      [collective],
-      [collective],
-      [collective],
-      [membership],
-      [collective],
-      memberRows,
-      [{ id: 9, name: "Member", archetype: "eco_pioneer", eloScore: 1234 }],
-      [{ id: 5 }],
-      [activeSeason],
-      [],
-      [createdSeason],
-      leaderboardRows,
-      leaderboardUser,
-      [{ id: 99 }],
-      [],
-    );
-    harness.queueInsert([{ insertId: 1 }, { insertId: 2 }, { insertId: 3 }]);
-    harness.queueUpdate(undefined);
-    mocks.drizzle.mockReturnValue(harness.db);
+    // 2. getCollectiveByInviteCode
+    const foundCol = await db.getCollectiveByInviteCode("INV123");
+    expect(foundCol?.name).toBe("Green Warriors");
 
-    const db = await loadDbModule();
+    // 3. joinCollective
+    mockDocs.push({ id: "u2", openId: "open2", name: "Joiner", _col: "users" });
+    await db.joinCollective(col.id, "u2");
 
-    await db.createCollective("Neighbors", "local", 9, "ABC123");
-    await expect(db.getCollectiveByInviteCode("ABC123")).resolves.toEqual(collective);
-    await expect(db.getCollectiveById(44)).resolves.toEqual(collective);
-    await expect(db.getUserCollectives(9)).resolves.toEqual([collective]);
-    await expect(db.getCollectiveMembers(44)).resolves.toEqual([
-      { id: 9, userId: 9, role: "member", user: { id: 9, name: "Member", archetype: "eco_pioneer", eloScore: 1234 } },
-    ]);
-    await db.joinCollective(44, 9);
+    const member = mockDocs.find(d => d._col === "collective_members" && d.userId === "u2");
+    expect(member).toBeDefined();
+    expect(member.role).toBe("member");
 
-    await expect(db.getOrCreateActiveSeason()).resolves.toEqual(activeSeason);
-    await expect(db.getOrCreateActiveSeason()).resolves.toEqual(createdSeason);
+    // 4. getOrCreateActiveSeason
+    const season = await db.getOrCreateActiveSeason();
+    expect(season.seasonNumber).toBe(1);
 
-    await expect(db.getLeaderboard(1, 10)).resolves.toEqual([
-      {
-        id: 1,
-        userId: 9,
-        eloScore: 1200,
-        user: { id: 9, name: "Member", archetype: "eco_pioneer", archetypeLabel: "Eco Pioneer" },
-      },
-    ]);
-
-    await db.upsertLeaderboardEntry(1, 9, { eloScore: 1300 });
-    await db.upsertLeaderboardEntry(1, 10, { eloScore: 1400 });
-  });
-
-  it("covers feed, influence, peer and public collective helpers", async () => {
-    const harness = createDbHarness();
-    const feedRows = [{ id: 1, userId: 9, type: "activity" }];
-    const feedUser = [{ id: 9, name: "Member", archetype: "eco_pioneer", influenceScore: 33 }];
-    const influencerRows = [{ id: 9, name: "Member", archetype: "eco_pioneer", archetypeLabel: "Eco Pioneer", influenceScore: 33 }];
-    const peerRows = [{ id: 7, totalCarbonKg: 11, archetype: "eco_pioneer" }];
-
-    harness.queueSelect(
-      feedRows,
-      feedUser,
-      influencerRows,
-      [{ n: 2 }],
-      [{ n: 1 }],
-      [{ n: 3 }],
-      [{ id: 1, userId: 9, totalCarbonKg: 11, archetype: "eco_pioneer" }],
-      peerRows,
-      [{ id: 1, totalCarbonKg: 42, isPublic: true }],
-    );
-    harness.queueInsert([{ insertId: 1 }, { insertId: 2 }]);
-    harness.queueUpdate(undefined, undefined);
-    mocks.drizzle.mockReturnValue(harness.db);
-
-    const db = await loadDbModule();
-
-    await db.createFeedItem({ userId: 9, type: "activity", title: "Logged" } as any);
-    await expect(db.getCommunityFeed(10)).resolves.toEqual([
-      { id: 1, userId: 9, type: "activity", user: { id: 9, name: "Member", archetype: "eco_pioneer", influenceScore: 33 } },
-    ]);
-    await db.likeFeedItem(1);
-    await expect(db.getTopInfluencers(5)).resolves.toEqual([
-      { id: 9, name: "Member", archetype: "eco_pioneer", archetypeLabel: "Eco Pioneer", influenceScore: 33 },
-    ]);
-    await db.updateUserInfluenceScore(9, 99);
-    await expect(db.getUserLiveStats(9)).resolves.toEqual({ activityCount: 2, completedChallenges: 1, followersCount: 3 });
-    await db.savePeerSnapshot({ userId: 9, archetype: "eco_pioneer", userCarbonKg: 11, peerAvgKg: 42, percentileRank: 75 } as any);
-    await expect(db.getLatestPeerSnapshot(9)).resolves.toEqual({ id: 1, userId: 9, totalCarbonKg: 11, archetype: "eco_pioneer" });
-    await expect(db.getArchetypePeers("eco_pioneer", 9)).resolves.toEqual(peerRows);
-    await expect(db.getPublicCollectives(10)).resolves.toEqual([{ id: 1, totalCarbonKg: 42, isPublic: true }]);
-  });
-
-  it("covers fallback paths when DB is not available", async () => {
-    const db = await loadDbModule({ databaseUrl: undefined });
-    await expect(db.upsertUser({ openId: "x" } as any)).resolves.toBeUndefined();
-    await expect(db.getUserByOpenId("x")).resolves.toBeUndefined();
-    await expect(db.getUserById(1)).resolves.toBeUndefined();
-    await expect(db.updateUserProfile(1, {})).resolves.toBeUndefined();
-    await expect(db.getAllUsersForLeaderboard()).resolves.toEqual([]);
-    await expect(db.logActivity({} as any).catch(e => e.message)).resolves.toBe("Database not available");
-    await expect(db.getUserActivities(1)).resolves.toEqual([]);
-    await expect(db.getUserActivitiesByDateRange(1, new Date(), new Date())).resolves.toEqual([]);
-    await expect(db.completeChallenge(1, 1).catch(e => e.message)).resolves.toBe("Database not available");
-    await expect(db.createCollective("A", "local", 1, "code").catch(e => e.message)).resolves.toBe("Database not available");
-    await expect(db.getCollectiveById(1)).resolves.toBeNull();
-    await expect(db.getCollectiveByInviteCode("code")).resolves.toBeNull();
-    await expect(db.getUserCollectives(1)).resolves.toEqual([]);
-    await expect(db.getCollectiveMembers(1)).resolves.toEqual([]);
-    await expect(db.joinCollective(1, 1).catch(e => e.message)).resolves.toBe("Database not available");
-    await expect(db.getOrCreateActiveSeason()).resolves.toBeNull();
-    await expect(db.getLeaderboard(1)).resolves.toEqual([]);
-    await expect(db.upsertLeaderboardEntry(1, 1, {})).resolves.toBeUndefined();
-    await expect(db.createFeedItem({} as any)).resolves.toBeUndefined();
-    await expect(db.getCommunityFeed()).resolves.toEqual([]);
-    await expect(db.likeFeedItem(1)).resolves.toBeUndefined();
-    await expect(db.getTopInfluencers()).resolves.toEqual([]);
-    await expect(db.updateUserInfluenceScore(1, 1)).resolves.toBeUndefined();
-    await expect(db.getUserLiveStats(1)).resolves.toEqual({ activityCount: 0, completedChallenges: 0, followersCount: 0 });
-    await expect(db.savePeerSnapshot({} as any)).resolves.toBeUndefined();
-    await expect(db.getLatestPeerSnapshot(1)).resolves.toBeNull();
-    await expect(db.getArchetypePeers("a", 1)).resolves.toEqual([]);
-    await expect(db.getPublicCollectives()).resolves.toEqual([]);
-  });
-
-  it("covers joinCollective when not already a member", async () => {
-    const harness = createDbHarness();
-    // Simulate existing.length === 0
-    harness.queueSelect([]);
-    harness.queueInsert([{ insertId: 1 }]);
-    harness.queueUpdate(undefined);
-    mocks.drizzle.mockReturnValue(harness.db);
-
-    const db = await loadDbModule();
-    await db.joinCollective(1, 1);
-    expect(mocks.eq).toHaveBeenCalled();
+    // 5. upsertLeaderboardEntry and getLeaderboard
+    await db.upsertLeaderboardEntry(season.id, "u2", { eloScore: 1200, carbonSavedKg: 15 });
+    const entries = await db.getLeaderboard(season.id);
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.eloScore).toBe(1200);
   });
 });

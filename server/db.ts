@@ -1,296 +1,525 @@
-import { and, count, desc, eq, gt, gte, inArray, lt, or, sql } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
-import {
-  activities, challenges, collectiveMembers, collectives,
-  feedItems, influenceEdges, InsertActivity, InsertUser,
-  leaderboardEntries, leaderboardSeasons, peerSnapshots, stories, users,
-} from "../drizzle/schema";
+import { db } from "./firebase";
 import { ENV } from "./_core/env";
+import type { 
+  User, InsertUser, Activity, InsertActivity, Challenge, Story, Collective, 
+  CollectiveMember, LeaderboardSeason, LeaderboardEntry, InfluenceEdge, FeedItem, 
+  PeerSnapshot, AgentNegotiation 
+} from "./types/db";
 
-let _db: ReturnType<typeof drizzle> | null = null;
-
-export async function getDb() {
-  if (!_db && process.env.DATABASE_URL) {
-    try { _db = drizzle(process.env.DATABASE_URL); }
-    catch (error) { console.warn("[Database] Failed to connect:", error); _db = null; }
-  }
-  return _db;
-}
+// Helper to generate string IDs
+const generateId = () => Math.random().toString(36).substring(2, 15);
 
 export async function upsertUser(user: InsertUser): Promise<void> {
   if (!user.openId) throw new Error("User openId is required for upsert");
-  const db = await getDb();
-  if (!db) { console.warn("[Database] Cannot upsert user: database not available"); return; }
-  try {
-    const values: InsertUser = { openId: user.openId };
-    const updateSet: Record<string, unknown> = {};
-    const textFields = ["name", "email", "loginMethod"] as const;
-    type TextField = (typeof textFields)[number];
-    const assignNullable = (field: TextField) => {
-      const value = user[field]; if (value === undefined) return;
-      const normalized = value ?? null; values[field] = normalized; updateSet[field] = normalized;
-    };
-    textFields.forEach(assignNullable);
-    if (user.lastSignedIn !== undefined) { values.lastSignedIn = user.lastSignedIn; updateSet.lastSignedIn = user.lastSignedIn; }
-    if (user.role !== undefined) { values.role = user.role; updateSet.role = user.role; }
-    else if (user.openId === ENV.ownerOpenId) { values.role = "admin"; updateSet.role = "admin"; }
-    if (!values.lastSignedIn) values.lastSignedIn = new Date();
-    if (Object.keys(updateSet).length === 0) updateSet.lastSignedIn = new Date();
-    await db.insert(users).values(values).onDuplicateKeyUpdate({ set: updateSet });
-  } catch (error) { console.error("[Database] Failed to upsert user:", error); throw error; }
+  const usersRef = db.collection('users');
+  const snapshot = await usersRef.where('openId', '==', user.openId).limit(1).get();
+  
+  const role = user.role || (user.openId === ENV.ownerOpenId ? "admin" : "user");
+  const now = new Date();
+  
+  if (snapshot.empty) {
+    // Insert new
+    const id = generateId();
+    await usersRef.doc(id).set({
+      id,
+      openId: user.openId,
+      name: user.name || "",
+      email: user.email || "",
+      loginMethod: user.loginMethod || "manus",
+      archetype: "urban_commuter",
+      totalCarbonKg: 0,
+      weeklyBudgetKg: 70,
+      eloScore: 1000,
+      influenceScore: 0,
+      currentStreak: 0,
+      longestStreak: 0,
+      preferredLanguage: "en",
+      onboardingCompleted: false,
+      role,
+      createdAt: now,
+      updatedAt: now,
+      lastSignedIn: user.lastSignedIn || now,
+    });
+  } else {
+    // Update existing
+    const doc = snapshot.docs[0];
+    const updateData: any = { updatedAt: now, lastSignedIn: user.lastSignedIn || now };
+    if (user.name !== undefined) updateData.name = user.name;
+    if (user.email !== undefined) updateData.email = user.email;
+    if (user.loginMethod !== undefined) updateData.loginMethod = user.loginMethod;
+    if (user.role !== undefined) updateData.role = user.role;
+    
+    await usersRef.doc(doc.id).update(updateData);
+  }
 }
 
-export async function getUserByOpenId(openId: string) {
-  const db = await getDb();
-  if (!db) { console.warn("[Database] Cannot get user: database not available"); return undefined; }
-  const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
-  return result.length > 0 ? result[0] : undefined;
+export async function getUserByOpenId(openId: string): Promise<User | undefined> {
+  const snapshot = await db.collection('users').where('openId', '==', openId).limit(1).get();
+  if (snapshot.empty) return undefined;
+  const data = snapshot.docs[0].data() as any;
+  // Firestore timestamps need to be converted to JS Dates
+  return { ...data, createdAt: data.createdAt?.toDate(), updatedAt: data.updatedAt?.toDate(), lastSignedIn: data.lastSignedIn?.toDate() } as User;
 }
 
-export async function getUserById(id: number) {
-  const db = await getDb(); if (!db) return undefined;
-  const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
-  return result.length > 0 ? result[0] : undefined;
+export async function getUserById(id: string): Promise<User | undefined> {
+  const doc = await db.collection('users').doc(id).get();
+  if (!doc.exists) return undefined;
+  const data = doc.data() as any;
+  return { ...data, createdAt: data.createdAt?.toDate(), updatedAt: data.updatedAt?.toDate(), lastSignedIn: data.lastSignedIn?.toDate() } as User;
 }
 
-export async function updateUserProfile(userId: number, data: Partial<InsertUser>) {
-  const db = await getDb(); if (!db) return;
-  await db.update(users).set(data as any).where(eq(users.id, userId));
+export async function updateUserProfile(userId: string, data: Partial<InsertUser>) {
+  await db.collection('users').doc(userId).update({ ...data, updatedAt: new Date() });
 }
 
 export async function getAllUsersForLeaderboard() {
-  const db = await getDb(); if (!db) return [];
-  return db.select({ id: users.id, name: users.name, archetype: users.archetype, archetypeLabel: users.archetypeLabel, eloScore: users.eloScore, influenceScore: users.influenceScore, totalCarbonKg: users.totalCarbonKg, currentStreak: users.currentStreak }).from(users).orderBy(desc(users.eloScore)).limit(100);
+  const snapshot = await db.collection('users').orderBy('eloScore', 'desc').limit(100).get();
+  return snapshot.docs.map(doc => {
+    const data = doc.data() as any;
+    return {
+      id: data.id,
+      name: data.name,
+      archetype: data.archetype,
+      archetypeLabel: data.archetypeLabel || "Urban Commuter",
+      eloScore: data.eloScore,
+      influenceScore: data.influenceScore,
+      totalCarbonKg: data.totalCarbonKg,
+      currentStreak: data.currentStreak,
+    };
+  });
 }
 
 export async function logActivity(data: InsertActivity) {
-  const db = await getDb(); if (!db) throw new Error("Database not available");
-  const [result] = await db.insert(activities).values(data);
-  await db.update(users).set({ totalCarbonKg: sql`totalCarbonKg + ${data.carbonKg}` }).where(eq(users.id, data.userId));
-  return result;
+  const id = generateId();
+  const now = new Date();
+  await db.collection('activities').doc(id).set({
+    id,
+    userId: data.userId,
+    category: data.category,
+    subcategory: data.subcategory || null,
+    label: data.label || null,
+    carbonKg: data.carbonKg,
+    quantity: data.quantity || null,
+    unit: data.unit || null,
+    inputMethod: data.inputMethod || "tap",
+    voiceTranscript: data.voiceTranscript || null,
+    notes: data.notes || null,
+    loggedAt: data.loggedAt || now,
+    createdAt: now,
+  });
+  
+  // Update user's total carbon
+  const userRef = db.collection('users').doc(data.userId);
+  await db.runTransaction(async (t) => {
+    const doc = await t.get(userRef);
+    if (doc.exists) {
+      const current = doc.data()?.totalCarbonKg || 0;
+      t.update(userRef, { totalCarbonKg: current + data.carbonKg, updatedAt: now });
+    }
+  });
+  
+  return { insertId: id };
 }
 
-export async function getUserActivities(userId: number, limit = 50) {
-  const db = await getDb(); if (!db) return [];
-  // Select only list-view columns — voiceTranscript is a TEXT blob not needed here
-  return db.select({
-    id: activities.id,
-    userId: activities.userId,
-    category: activities.category,
-    subcategory: activities.subcategory,
-    label: activities.label,
-    carbonKg: activities.carbonKg,
-    quantity: activities.quantity,
-    unit: activities.unit,
-    inputMethod: activities.inputMethod,
-    loggedAt: activities.loggedAt,
-  }).from(activities).where(eq(activities.userId, userId)).orderBy(desc(activities.loggedAt)).limit(limit);
+export async function getUserActivities(userId: string, limit = 50) {
+  const snapshot = await db.collection('activities').where('userId', '==', userId).orderBy('loggedAt', 'desc').limit(limit).get();
+  return snapshot.docs.map(doc => {
+    const data = doc.data() as any;
+    return { ...data, loggedAt: data.loggedAt?.toDate(), createdAt: data.createdAt?.toDate() } as Activity;
+  });
 }
 
-export async function getUserActivitiesByDateRange(userId: number, from: Date, to: Date) {
-  const db = await getDb(); if (!db) return [];
-  return db.select({
-    id: activities.id,
-    userId: activities.userId,
-    category: activities.category,
-    subcategory: activities.subcategory,
-    label: activities.label,
-    carbonKg: activities.carbonKg,
-    quantity: activities.quantity,
-    unit: activities.unit,
-    inputMethod: activities.inputMethod,
-    loggedAt: activities.loggedAt,
-  }).from(activities).where(and(eq(activities.userId, userId), gte(activities.loggedAt, from), lt(activities.loggedAt, to))).orderBy(desc(activities.loggedAt));
+export async function getUserActivitiesByDateRange(userId: string, from: Date, to: Date) {
+  const snapshot = await db.collection('activities')
+    .where('userId', '==', userId)
+    .where('loggedAt', '>=', from)
+    .where('loggedAt', '<', to)
+    .orderBy('loggedAt', 'desc')
+    .get();
+  return snapshot.docs.map(doc => {
+    const data = doc.data() as any;
+    return { ...data, loggedAt: data.loggedAt?.toDate(), createdAt: data.createdAt?.toDate() } as Activity;
+  });
 }
 
-export async function getUserCarbonSummary(userId: number) {
-  const db = await getDb(); if (!db) return null;
+export async function getUserCarbonSummary(userId: string) {
   const now = new Date();
   const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-  const [weekActs, monthActs, allActs] = await Promise.all([getUserActivitiesByDateRange(userId, weekAgo, now), getUserActivitiesByDateRange(userId, monthAgo, now), getUserActivities(userId, 500)]);
-  const sumCarbon = (acts: typeof allActs) => acts.reduce((s, a) => s + (a.carbonKg ?? 0), 0);
-  const byCategory = (acts: typeof allActs) => { const cats: Record<string, number> = {}; acts.forEach(a => { cats[a.category] = (cats[a.category] ?? 0) + (a.carbonKg ?? 0); }); return cats; };
-  return { weeklyKg: +sumCarbon(weekActs).toFixed(2), monthlyKg: +sumCarbon(monthActs).toFixed(2), totalKg: +sumCarbon(allActs).toFixed(2), weeklyByCategory: byCategory(weekActs), monthlyByCategory: byCategory(monthActs), recentActivities: allActs.slice(0, 10) };
-}
-
-export async function getUserChallenges(userId: number, weekNumber?: number, year?: number) {
-  const db = await getDb(); if (!db) return [];
-  const conditions: any[] = [eq(challenges.userId, userId)];
-  if (weekNumber !== undefined) conditions.push(eq(challenges.weekNumber, weekNumber));
-  if (year !== undefined) conditions.push(eq(challenges.year, year));
-  return db.select().from(challenges).where(and(...conditions)).orderBy(desc(challenges.createdAt));
-}
-
-export async function createChallenge(data: typeof challenges.$inferInsert) {
-  const db = await getDb(); if (!db) throw new Error("Database not available");
-  await db.insert(challenges).values(data);
-}
-
-export async function completeChallenge(challengeId: number, userId: number) {
-  const db = await getDb(); if (!db) throw new Error("Database not available");
-  const [challenge] = await db.select().from(challenges).where(and(eq(challenges.id, challengeId), eq(challenges.userId, userId))).limit(1);
-  if (!challenge) throw new Error("Challenge not found");
-  // Idempotency guard: only award points once
-  if (challenge.status !== "active") throw new Error("Challenge already completed");
-  await db.update(challenges).set({ status: "completed", completedAt: new Date() }).where(and(eq(challenges.id, challengeId), eq(challenges.status, "active")));
-  await db.update(users).set({ eloScore: sql`eloScore + ${challenge.pointsReward}`, currentStreak: sql`currentStreak + 1` }).where(eq(users.id, userId));
-  return challenge;
-}
-
-export async function saveStory(data: typeof stories.$inferInsert) {
-  const db = await getDb(); if (!db) throw new Error("Database not available");
-  await db.insert(stories).values(data);
-}
-
-export async function getUserStories(userId: number, limit = 10) {
-  const db = await getDb(); if (!db) return [];
-  return db.select().from(stories).where(eq(stories.userId, userId)).orderBy(desc(stories.generatedAt)).limit(limit);
-}
-
-export async function incrementStoryShares(storyId: number) {
-  const db = await getDb(); if (!db) return;
-  await db.update(stories).set({ shareCount: sql`shareCount + 1` }).where(eq(stories.id, storyId));
-}
-
-export async function createCollective(name: string, description: string | undefined, creatorId: number, inviteCode: string) {
-  const db = await getDb(); if (!db) throw new Error("Database not available");
-  await db.insert(collectives).values({ name, description, creatorId, inviteCode });
-  const [created] = await db.select().from(collectives).where(eq(collectives.inviteCode, inviteCode)).limit(1);
-  if (created) await db.insert(collectiveMembers).values({ collectiveId: created.id, userId: creatorId, role: "admin" });
-  return created;
-}
-
-export async function getCollectiveByInviteCode(code: string) {
-  const db = await getDb(); if (!db) return null;
-  const result = await db.select().from(collectives).where(eq(collectives.inviteCode, code)).limit(1);
-  return result[0] ?? null;
-}
-
-export async function getCollectiveById(id: number) {
-  const db = await getDb(); if (!db) return null;
-  const result = await db.select().from(collectives).where(eq(collectives.id, id)).limit(1);
-  return result[0] ?? null;
-}
-
-export async function getUserCollectives(userId: number) {
-  const db = await getDb(); if (!db) return [];
-  const memberships = await db.select({ collectiveId: collectiveMembers.collectiveId })
-    .from(collectiveMembers)
-    .where(eq(collectiveMembers.userId, userId));
-  if (memberships.length === 0) return [];
-  // Single query with OR conditions instead of N+1 loop
-  const ids = memberships.map(m => m.collectiveId);
-  return db.select().from(collectives).where(or(...ids.map(id => eq(collectives.id, id))));
-}
-
-export async function getCollectiveMembers(collectiveId: number) {
-  const db = await getDb(); if (!db) return [];
-  const members = await db.select().from(collectiveMembers).where(eq(collectiveMembers.collectiveId, collectiveId));
-  const result = [];
-  for (const m of members) { const u = await getUserById(m.userId); if (u) result.push({ ...m, user: { id: u.id, name: u.name, archetype: u.archetype, eloScore: u.eloScore } }); }
-  return result;
-}
-
-export async function joinCollective(collectiveId: number, userId: number) {
-  const db = await getDb(); if (!db) throw new Error("Database not available");
-  // Idempotency guard: skip if already a member to prevent duplicate rows and inflated counts
-  const existing = await db.select({ id: collectiveMembers.id }).from(collectiveMembers)
-    .where(and(eq(collectiveMembers.collectiveId, collectiveId), eq(collectiveMembers.userId, userId)))
-    .limit(1);
-  if (existing.length > 0) return; // already a member — no-op
-  await db.insert(collectiveMembers).values({ collectiveId, userId, role: "member" });
-  await db.update(collectives).set({ memberCount: sql`memberCount + 1` }).where(eq(collectives.id, collectiveId));
-}
-
-export async function getOrCreateActiveSeason() {
-  const db = await getDb(); if (!db) return null;
-  const active = await db.select().from(leaderboardSeasons).where(eq(leaderboardSeasons.isActive, true)).limit(1);
-  if (active.length > 0) return active[0];
-  const now = new Date();
-  const weekNumber = Math.ceil((now.getTime() - new Date(now.getFullYear(), 0, 1).getTime()) / (7 * 24 * 60 * 60 * 1000));
-  const endDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-  await db.insert(leaderboardSeasons).values({ seasonNumber: 1, year: now.getFullYear(), weekNumber, startDate: now, endDate, isActive: true });
-  const created = await db.select().from(leaderboardSeasons).where(eq(leaderboardSeasons.isActive, true)).limit(1);
-  return created[0] ?? null;
-}
-
-export async function getLeaderboard(seasonId: number, limit = 50) {
-  const db = await getDb(); if (!db) return [];
-  const entries = await db.select().from(leaderboardEntries).where(eq(leaderboardEntries.seasonId, seasonId)).orderBy(desc(leaderboardEntries.eloScore)).limit(limit);
-  const result = [];
-  for (const e of entries) { const u = await getUserById(e.userId); if (u) result.push({ ...e, user: { id: u.id, name: u.name, archetype: u.archetype, archetypeLabel: u.archetypeLabel } }); }
-  return result;
-}
-
-export async function upsertLeaderboardEntry(seasonId: number, userId: number, data: Partial<typeof leaderboardEntries.$inferInsert>) {
-  const db = await getDb(); if (!db) return;
-  const existing = await db.select().from(leaderboardEntries).where(and(eq(leaderboardEntries.seasonId, seasonId), eq(leaderboardEntries.userId, userId))).limit(1);
-  if (existing.length > 0) { await db.update(leaderboardEntries).set(data as any).where(eq(leaderboardEntries.id, existing[0].id)); }
-  else { await db.insert(leaderboardEntries).values({ seasonId, userId, eloScore: 1000, ...data } as any); }
-}
-
-export async function createFeedItem(data: typeof feedItems.$inferInsert) {
-  const db = await getDb(); if (!db) return;
-  await db.insert(feedItems).values(data);
-}
-
-export async function getCommunityFeed(limit = 30) {
-  const db = await getDb(); if (!db) return [];
-  const items = await db.select().from(feedItems).orderBy(desc(feedItems.createdAt)).limit(limit);
-  const result = [];
-  for (const item of items) { const u = await getUserById(item.userId); if (u) result.push({ ...item, user: { id: u.id, name: u.name, archetype: u.archetype, influenceScore: u.influenceScore } }); }
-  return result;
-}
-
-export async function likeFeedItem(feedItemId: number) {
-  const db = await getDb(); if (!db) return;
-  await db.update(feedItems).set({ likeCount: sql`likeCount + 1` }).where(eq(feedItems.id, feedItemId));
-}
-
-export async function getTopInfluencers(limit = 10) {
-  const db = await getDb(); if (!db) return [];
-  return db.select({ id: users.id, name: users.name, archetype: users.archetype, archetypeLabel: users.archetypeLabel, influenceScore: users.influenceScore, totalCarbonKg: users.totalCarbonKg, currentStreak: users.currentStreak, eloScore: users.eloScore }).from(users).orderBy(desc(users.influenceScore)).limit(limit);
-}
-
-export async function updateUserInfluenceScore(userId: number, score: number) {
-  const db = await getDb(); if (!db) return;
-  await db.update(users).set({ influenceScore: score }).where(eq(users.id, userId));
-}
-
-/** Returns live counters needed for influence score calculation. */
-export async function getUserLiveStats(userId: number) {
-  const db = await getDb();
-  if (!db) return { activityCount: 0, completedChallenges: 0, followersCount: 0 };
-  const [[actRow], [chalRow], [follRow]] = await Promise.all([
-    db.select({ n: count() }).from(activities).where(eq(activities.userId, userId)),
-    db.select({ n: count() }).from(challenges).where(and(eq(challenges.userId, userId), eq(challenges.status, "completed"))),
-    db.select({ n: count() }).from(influenceEdges).where(eq(influenceEdges.targetUserId, userId)),
+  
+  const [weekActs, monthActs, allActs] = await Promise.all([
+    getUserActivitiesByDateRange(userId, weekAgo, now),
+    getUserActivitiesByDateRange(userId, monthAgo, now),
+    getUserActivities(userId, 500)
   ]);
-  return {
-    activityCount: actRow?.n ?? 0,
-    completedChallenges: chalRow?.n ?? 0,
-    followersCount: follRow?.n ?? 0,
+  
+  const sumCarbon = (acts: any[]) => acts.reduce((s, a) => s + (Number(a.carbonKg) ?? 0), 0);
+  const byCategory = (acts: any[]) => { 
+    const cats: Record<string, number> = {}; 
+    acts.forEach(a => { cats[a.category] = (cats[a.category] ?? 0) + (Number(a.carbonKg) ?? 0); }); 
+    return cats; 
+  };
+  
+  return { 
+    weeklyKg: +sumCarbon(weekActs).toFixed(2), 
+    monthlyKg: +sumCarbon(monthActs).toFixed(2), 
+    totalKg: +sumCarbon(allActs).toFixed(2), 
+    weeklyByCategory: byCategory(weekActs), 
+    monthlyByCategory: byCategory(monthActs), 
+    recentActivities: allActs.slice(0, 10) 
   };
 }
 
-export async function savePeerSnapshot(data: typeof peerSnapshots.$inferInsert) {
-  const db = await getDb(); if (!db) return;
-  await db.insert(peerSnapshots).values(data);
+export async function getUserChallenges(userId: string, weekNumber?: number, year?: number) {
+  let query: any = db.collection('challenges').where('userId', '==', userId);
+  if (weekNumber !== undefined) query = query.where('weekNumber', '==', weekNumber);
+  if (year !== undefined) query = query.where('year', '==', year);
+  
+  const snapshot = await query.orderBy('createdAt', 'desc').get();
+  return snapshot.docs.map((doc: any) => {
+    const data = doc.data() as any;
+    return { ...data, completedAt: data.completedAt?.toDate(), createdAt: data.createdAt?.toDate() } as Challenge;
+  });
 }
 
-export async function getLatestPeerSnapshot(userId: number) {
-  const db = await getDb(); if (!db) return null;
-  const result = await db.select().from(peerSnapshots).where(eq(peerSnapshots.userId, userId)).orderBy(desc(peerSnapshots.snapshotDate)).limit(1);
-  return result[0] ?? null;
+export async function createChallenge(data: Omit<Challenge, 'id' | 'createdAt'>) {
+  const id = generateId();
+  await db.collection('challenges').doc(id).set({
+    id,
+    ...data,
+    createdAt: new Date(),
+  });
 }
 
-export async function getArchetypePeers(archetype: string, excludeUserId: number) {
-  const db = await getDb(); if (!db) return [];
-  return db.select({ id: users.id, totalCarbonKg: users.totalCarbonKg, archetype: users.archetype }).from(users).where(and(eq(users.archetype, archetype as any), sql`${users.id} != ${excludeUserId}`)).limit(100);
+export async function completeChallenge(challengeId: string, userId: string) {
+  const ref = db.collection('challenges').doc(challengeId);
+  const userRef = db.collection('users').doc(userId);
+  let challengeData: any;
+  
+  await db.runTransaction(async (t) => {
+    const doc = await t.get(ref);
+    if (!doc.exists) throw new Error("Challenge not found");
+    challengeData = doc.data();
+    if (challengeData.userId !== userId) throw new Error("Unauthorized");
+    if (challengeData.status !== "active") throw new Error("Challenge already completed");
+    
+    t.update(ref, { status: "completed", completedAt: new Date() });
+    
+    const uDoc = await t.get(userRef);
+    if (uDoc.exists) {
+      const uData = uDoc.data()!;
+      t.update(userRef, { 
+        eloScore: (uData.eloScore || 1000) + (challengeData.pointsReward || 50),
+        currentStreak: (uData.currentStreak || 0) + 1,
+        updatedAt: new Date()
+      });
+    }
+  });
+  
+  return challengeData;
+}
+
+export async function saveStory(data: Omit<Story, 'id' | 'generatedAt' | 'shareCount'>) {
+  const id = generateId();
+  await db.collection('stories').doc(id).set({
+    id,
+    ...data,
+    shareCount: 0,
+    generatedAt: new Date(),
+  });
+}
+
+export async function getUserStories(userId: string, limit = 10) {
+  const snapshot = await db.collection('stories').where('userId', '==', userId).orderBy('generatedAt', 'desc').limit(limit).get();
+  return snapshot.docs.map(doc => {
+    const data = doc.data() as any;
+    return { ...data, generatedAt: data.generatedAt?.toDate() } as Story;
+  });
+}
+
+export async function incrementStoryShares(storyId: string) {
+  const ref = db.collection('stories').doc(storyId);
+  await db.runTransaction(async (t) => {
+    const doc = await t.get(ref);
+    if (doc.exists) {
+      t.update(ref, { shareCount: (doc.data()?.shareCount || 0) + 1 });
+    }
+  });
+}
+
+export async function createCollective(name: string, description: string | undefined, creatorId: string, inviteCode: string) {
+  const id = generateId();
+  const now = new Date();
+  
+  const colRef = db.collection('collectives').doc(id);
+  const memRef = db.collection('collective_members').doc(generateId());
+  
+  const batch = db.batch();
+  
+  const colData = {
+    id,
+    name,
+    description: description || null,
+    creatorId,
+    inviteCode,
+    totalCarbonKg: 0,
+    memberCount: 1,
+    isPublic: true,
+    createdAt: now,
+    updatedAt: now,
+  };
+  
+  batch.set(colRef, colData);
+  batch.set(memRef, {
+    id: memRef.id,
+    collectiveId: id,
+    userId: creatorId,
+    contributionKg: 0,
+    role: "admin",
+    joinedAt: now,
+  });
+  
+  await batch.commit();
+  return colData;
+}
+
+export async function getCollectiveByInviteCode(code: string): Promise<Collective | null> {
+  const snapshot = await db.collection('collectives').where('inviteCode', '==', code).limit(1).get();
+  if (snapshot.empty) return null;
+  const data = snapshot.docs[0].data() as any;
+  return { ...data, createdAt: data.createdAt?.toDate(), updatedAt: data.updatedAt?.toDate() } as Collective;
+}
+
+export async function getCollectiveById(id: string): Promise<Collective | null> {
+  const doc = await db.collection('collectives').doc(id).get();
+  if (!doc.exists) return null;
+  const data = doc.data() as any;
+  return { ...data, createdAt: data.createdAt?.toDate(), updatedAt: data.updatedAt?.toDate() } as Collective;
+}
+
+export async function getUserCollectives(userId: string) {
+  const snapshot = await db.collection('collective_members').where('userId', '==', userId).get();
+  if (snapshot.empty) return [];
+  const collectiveIds = snapshot.docs.map(doc => doc.data().collectiveId);
+  
+  // Note: Firestore limits 'in' queries to 30 items
+  const chunks = [];
+  for (let i = 0; i < collectiveIds.length; i += 30) {
+    chunks.push(collectiveIds.slice(i, i + 30));
+  }
+  
+  let collectives: any[] = [];
+  for (const chunk of chunks) {
+    const colSnap = await db.collection('collectives').where('id', 'in', chunk).get();
+    collectives.push(...colSnap.docs.map(d => {
+      const data = d.data() as any;
+      return { ...data, createdAt: data.createdAt?.toDate(), updatedAt: data.updatedAt?.toDate() } as Collective;
+    }));
+  }
+  
+  return collectives;
+}
+
+export async function getCollectiveMembers(collectiveId: string) {
+  const snapshot = await db.collection('collective_members').where('collectiveId', '==', collectiveId).get();
+  const members = snapshot.docs.map(doc => doc.data() as CollectiveMember);
+  
+  const result = [];
+  for (const m of members) {
+    const u = await getUserById(m.userId);
+    if (u) result.push({ ...m, joinedAt: (m.joinedAt as any)?.toDate ? (m.joinedAt as any).toDate() : m.joinedAt, user: { id: u.id, name: u.name, archetype: u.archetype, eloScore: u.eloScore } });
+  }
+  return result;
+}
+
+export async function joinCollective(collectiveId: string, userId: string) {
+  const existing = await db.collection('collective_members')
+    .where('collectiveId', '==', collectiveId)
+    .where('userId', '==', userId)
+    .limit(1).get();
+    
+  if (!existing.empty) return;
+  
+  const id = generateId();
+  const now = new Date();
+  
+  const batch = db.batch();
+  batch.set(db.collection('collective_members').doc(id), {
+    id,
+    collectiveId,
+    userId,
+    contributionKg: 0,
+    role: "member",
+    joinedAt: now,
+  });
+  
+  const colRef = db.collection('collectives').doc(collectiveId);
+  batch.update(colRef, {
+    memberCount: require('firebase-admin/firestore').FieldValue.increment(1),
+    updatedAt: now
+  });
+  
+  await batch.commit();
+}
+
+export async function getOrCreateActiveSeason(): Promise<LeaderboardSeason> {
+  const snapshot = await db.collection('leaderboard_seasons').where('isActive', '==', true).limit(1).get();
+  if (!snapshot.empty) {
+    const data = snapshot.docs[0].data() as any;
+    return { ...data, startDate: data.startDate?.toDate(), endDate: data.endDate?.toDate(), createdAt: data.createdAt?.toDate() } as LeaderboardSeason;
+  }
+  
+  const now = new Date();
+  const weekNumber = Math.ceil((now.getTime() - new Date(now.getFullYear(), 0, 1).getTime()) / (7 * 24 * 60 * 60 * 1000));
+  const endDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+  
+  const id = generateId();
+  const seasonData = {
+    id,
+    seasonNumber: 1,
+    year: now.getFullYear(),
+    weekNumber,
+    startDate: now,
+    endDate,
+    isActive: true,
+    createdAt: now,
+  };
+  
+  await db.collection('leaderboard_seasons').doc(id).set(seasonData);
+  return seasonData as LeaderboardSeason;
+}
+
+export async function getLeaderboard(seasonId: string, limit = 50) {
+  const snapshot = await db.collection('leaderboard_entries').where('seasonId', '==', seasonId).orderBy('eloScore', 'desc').limit(limit).get();
+  
+  const result = [];
+  for (const doc of snapshot.docs) {
+    const e = doc.data() as LeaderboardEntry;
+    const u = await getUserById(e.userId);
+    if (u) result.push({ ...e, updatedAt: (e.updatedAt as any)?.toDate ? (e.updatedAt as any).toDate() : e.updatedAt, user: { id: u.id, name: u.name, archetype: u.archetype, archetypeLabel: u.archetypeLabel } });
+  }
+  return result;
+}
+
+export async function upsertLeaderboardEntry(seasonId: string, userId: string, data: Partial<Omit<LeaderboardEntry, 'id'|'seasonId'|'userId'>>) {
+  const snapshot = await db.collection('leaderboard_entries').where('seasonId', '==', seasonId).where('userId', '==', userId).limit(1).get();
+  const now = new Date();
+  
+  if (!snapshot.empty) {
+    await db.collection('leaderboard_entries').doc(snapshot.docs[0].id).update({ ...data, updatedAt: now });
+  } else {
+    const id = generateId();
+    await db.collection('leaderboard_entries').doc(id).set({
+      id,
+      seasonId,
+      userId,
+      eloScore: 1000,
+      carbonSavedKg: 0,
+      activitiesLogged: 0,
+      challengesCompleted: 0,
+      influenceScore: 0,
+      ...data,
+      updatedAt: now
+    });
+  }
+}
+
+export async function createFeedItem(data: Omit<FeedItem, 'id'|'createdAt'|'likeCount'>) {
+  const id = generateId();
+  await db.collection('feed_items').doc(id).set({
+    id,
+    ...data,
+    likeCount: 0,
+    createdAt: new Date(),
+  });
+}
+
+export async function getCommunityFeed(limit = 30) {
+  const snapshot = await db.collection('feed_items').orderBy('createdAt', 'desc').limit(limit).get();
+  
+  const result = [];
+  for (const doc of snapshot.docs) {
+    const item = doc.data() as FeedItem;
+    const u = await getUserById(item.userId);
+    if (u) result.push({ ...item, createdAt: (item.createdAt as any)?.toDate(), user: { id: u.id, name: u.name, archetype: u.archetype, influenceScore: u.influenceScore } });
+  }
+  return result;
+}
+
+export async function likeFeedItem(feedItemId: string) {
+  const ref = db.collection('feed_items').doc(feedItemId);
+  await db.runTransaction(async (t) => {
+    const doc = await t.get(ref);
+    if (doc.exists) {
+      t.update(ref, { likeCount: (doc.data()?.likeCount || 0) + 1 });
+    }
+  });
+}
+
+export async function getTopInfluencers(limit = 10) {
+  const snapshot = await db.collection('users').orderBy('influenceScore', 'desc').limit(limit).get();
+  return snapshot.docs.map(doc => {
+    const u = doc.data() as any;
+    return {
+      id: u.id,
+      name: u.name,
+      archetype: u.archetype,
+      archetypeLabel: u.archetypeLabel || "Urban Commuter",
+      influenceScore: u.influenceScore,
+      totalCarbonKg: u.totalCarbonKg,
+      currentStreak: u.currentStreak,
+      eloScore: u.eloScore,
+    };
+  });
+}
+
+export async function updateUserInfluenceScore(userId: string, score: number) {
+  await db.collection('users').doc(userId).update({ influenceScore: score, updatedAt: new Date() });
+}
+
+export async function getUserLiveStats(userId: string) {
+  const actsSnap = await db.collection('activities').where('userId', '==', userId).get();
+  const chalsSnap = await db.collection('challenges').where('userId', '==', userId).where('status', '==', 'completed').get();
+  const follsSnap = await db.collection('influence_edges').where('targetUserId', '==', userId).get();
+  
+  return {
+    activityCount: actsSnap.size,
+    completedChallenges: chalsSnap.size,
+    followersCount: follsSnap.size,
+  };
+}
+
+export async function savePeerSnapshot(data: Omit<PeerSnapshot, 'id'|'snapshotDate'>) {
+  const id = generateId();
+  await db.collection('peer_snapshots').doc(id).set({
+    id,
+    ...data,
+    snapshotDate: new Date(),
+  });
+}
+
+export async function getLatestPeerSnapshot(userId: string) {
+  const snapshot = await db.collection('peer_snapshots').where('userId', '==', userId).orderBy('snapshotDate', 'desc').limit(1).get();
+  if (snapshot.empty) return null;
+  const data = snapshot.docs[0].data() as any;
+  return { ...data, snapshotDate: data.snapshotDate?.toDate() } as PeerSnapshot;
+}
+
+export async function getArchetypePeers(archetype: string, excludeUserId: string) {
+  const snapshot = await db.collection('users').where('archetype', '==', archetype).limit(101).get();
+  return snapshot.docs
+    .filter(doc => doc.id !== excludeUserId)
+    .slice(0, 100)
+    .map(doc => {
+      const u = doc.data() as any;
+      return { id: u.id, totalCarbonKg: u.totalCarbonKg, archetype: u.archetype };
+    });
 }
 
 export async function getPublicCollectives(limit = 20) {
-  const db = await getDb(); if (!db) return [];
-  return db.select().from(collectives).where(eq(collectives.isPublic, true)).orderBy(desc(collectives.totalCarbonKg)).limit(limit);
+  const snapshot = await db.collection('collectives').where('isPublic', '==', true).orderBy('totalCarbonKg', 'desc').limit(limit).get();
+  return snapshot.docs.map(doc => {
+    const data = doc.data() as any;
+    return { ...data, createdAt: data.createdAt?.toDate(), updatedAt: data.updatedAt?.toDate() } as Collective;
+  });
 }

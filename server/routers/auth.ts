@@ -8,9 +8,50 @@ import { createOtpSession, sendEmailOtp, sendPhoneOtp, verifyOtpSession } from "
 import { SignJWT } from "jose";
 import { Buffer } from "buffer";
 import { ENV } from "../_core/env";
+import { auth as firebaseAuth } from "../services/firebaseAdmin";
 
 export const authRouter = router({
   me: publicProcedure.query(opts => opts.ctx.user),
+  verifyFirebaseToken: publicProcedure
+    .input(z.object({ idToken: z.string(), name: z.string().optional() }))
+    .mutation(async ({ input, ctx }) => {
+      try {
+        const decodedToken = await firebaseAuth.verifyIdToken(input.idToken);
+        const openId = `firebase:${decodedToken.uid}`;
+        const email = decodedToken.email || "";
+        const name = input.name || decodedToken.name || email.split("@")[0] || "Firebase User";
+        
+        await upsertUser({
+          openId,
+          name,
+          email: email || undefined,
+          loginMethod: "firebase",
+          lastSignedIn: new Date(),
+        });
+        
+        const secret = Buffer.from(ENV.cookieSecret, 'utf-8');
+        const token = await new SignJWT({
+          openId,
+          appId: ENV.appId,
+          name,
+          email,
+        })
+          .setProtectedHeader({ alg: "HS256" })
+          .setIssuedAt()
+          .setExpirationTime("30d")
+          .sign(secret);
+          
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, token, { ...cookieOptions, maxAge: 30 * 24 * 60 * 60 * 1000 });
+        return { success: true };
+      } catch (error: any) {
+        console.error("Firebase token verification failed:", error);
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: error.message || "Invalid Firebase ID token",
+        });
+      }
+    }),
   logout: publicProcedure.mutation(({ ctx }) => {
     const cookieOptions = getSessionCookieOptions(ctx.req);
     ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });

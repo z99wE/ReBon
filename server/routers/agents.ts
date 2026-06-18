@@ -1,27 +1,11 @@
 /**
- * Agent-to-Agent (A2A) Carbon Negotiation Router
- *
- * Architecture: Each user has a "ReBon Agent" — a lightweight AI persona
- * that represents their carbon profile. Agents negotiate reduction pledges
- * with each other using a structured multi-turn protocol:
- *
- *   1. Initiator sends a pledge proposal (category + kg target)
- *   2. Target agent evaluates feasibility vs. their archetype profile
- *   3. Agents exchange 2-3 turns of negotiation (Groq for speed)
- *   4. Final agreement is stored as a mutual pledge
- *
- * Low-compute strategy:
- *   - Uses Groq (llama3-8b-instant) for sub-200ms responses
- *   - Each negotiation is max 3 turns × 150 tokens = ~450 tokens total
- *   - No streaming — fire-and-forget with optimistic UI
- *   - Negotiations are cached for 24h to avoid re-runs
+ * Agent-to-Agent (A2A) Carbon Negotiation Router (Firestore edition)
  */
 
 import { z } from "zod";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
-import { getDb } from "../db";
-import { agentNegotiations, users } from "../../drizzle/schema";
-import { eq, desc, and, or } from "drizzle-orm";
+import { db } from "../firebase";
+import { getUserById } from "../db";
 import { invokeLLM } from "../_core/llm";
 import { ARCHETYPES } from "../../shared/carbonData";
 
@@ -33,25 +17,21 @@ interface NegotiationTurn {
   proposedKg?: number;
 }
 
+const generateId = () => Math.random().toString(36).substring(2, 15);
+
 // ── Helpers ────────────────────────────────────────────────────────────────
 
-async function buildAgentPersona(userId: number): Promise<string> {
-  const db = await getDb();
-  if (!db) return "a climate-conscious individual";
+async function buildAgentPersona(userId: string): Promise<string> {
+  const user = await getUserById(userId);
+  if (!user) return "a climate-conscious individual";
 
-  const user = await db
-    .select({ name: users.name, archetype: users.archetype, weeklyBudgetKg: users.weeklyBudgetKg })
-    .from(users)
-    .where(eq(users.id, userId))
-    .limit(1);
-
-  const archetype = user[0]?.archetype
-    ? ARCHETYPES[user[0].archetype as keyof typeof ARCHETYPES]
+  const archetype = user.archetype
+    ? ARCHETYPES[user.archetype as keyof typeof ARCHETYPES]
     : null;
 
-  const name = user[0]?.name ?? "User";
+  const name = user.name ?? "User";
   const archetypeName = archetype?.label ?? "Climate Warrior";
-  const weeklyAvg = archetype?.weeklyAvgKg ?? (user[0]?.weeklyBudgetKg ?? 70);
+  const weeklyAvg = archetype?.weeklyAvgKg ?? (user.weeklyBudgetKg ?? 70);
 
   return `${name}, a ${archetypeName} who currently emits ~${weeklyAvg}kg CO₂/week`;
 }
@@ -112,51 +92,44 @@ Rules:
 export const agentsRouter = router({
   /** List all negotiations involving the current user */
   list: protectedProcedure.query(async ({ ctx }) => {
-    const db = await getDb();
-    if (!db) return [];
+    const initSnap = await db.collection("agent_negotiations").where("initiatorId", "==", ctx.user.id).get();
+    const targetSnap = await db.collection("agent_negotiations").where("targetId", "==", ctx.user.id).get();
+    
+    const negotiations = [...initSnap.docs, ...targetSnap.docs].map(doc => {
+      const data = doc.data() as any;
+      return {
+        ...data,
+        createdAt: data.createdAt?.toDate(),
+      };
+    });
 
-    const rows = await db
-      .select({
-        id: agentNegotiations.id,
-        initiatorId: agentNegotiations.initiatorId,
-        targetId: agentNegotiations.targetId,
-        category: agentNegotiations.category,
-        proposedKg: agentNegotiations.proposedKg,
-        agreedKg: agentNegotiations.agreedKg,
-        status: agentNegotiations.status,
-        turns: agentNegotiations.turns,
-        createdAt: agentNegotiations.createdAt,
-        initiatorName: users.name,
-      })
-      .from(agentNegotiations)
-      .leftJoin(users, eq(users.id, agentNegotiations.initiatorId))
-      .where(
-        or(
-          eq(agentNegotiations.initiatorId, ctx.user.id),
-          eq(agentNegotiations.targetId, ctx.user.id)
-        )
-      )
-      .orderBy(desc(agentNegotiations.createdAt))
-      .limit(20);
+    // Sort by createdAt desc
+    negotiations.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    
+    const result = [];
+    for (const neg of negotiations) {
+      const initUser = await getUserById(neg.initiatorId);
+      result.push({
+        ...neg,
+        initiatorName: initUser?.name || "Anonymous",
+      });
+    }
 
-    return rows;
+    return result;
   }),
 
   /** Get available peers to negotiate with */
   getPeers: protectedProcedure.query(async ({ ctx }) => {
-    const db = await getDb();
-    if (!db) return [];
-
-    const rows = await db
-      .select({
-        id: users.id,
-        name: users.name,
-        archetype: users.archetype,
-        eloScore: users.eloScore,
-      })
-      .from(users)
-      .where(eq(users.role, "user"))
-      .limit(20);
+    const snap = await db.collection("users").where("role", "==", "user").limit(20).get();
+    const rows = snap.docs.map(doc => {
+      const data = doc.data() as any;
+      return {
+        id: data.id,
+        name: data.name,
+        archetype: data.archetype,
+        eloScore: data.eloScore,
+      };
+    });
 
     return rows.filter((r) => r.id !== ctx.user.id);
   }),
@@ -165,16 +138,13 @@ export const agentsRouter = router({
   initiate: protectedProcedure
     .input(
       z.object({
-        targetUserId: z.number().int().positive(),
+        targetUserId: z.string(),
         category: z.string().min(1).max(50),
         proposedKg: z.number().positive().max(200),
         message: z.string().max(200).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const db = await getDb();
-      if (!db) throw new Error("Database unavailable");
-
       // Build agent personas
       const [initiatorPersona, targetPersona] = await Promise.all([
         buildAgentPersona(ctx.user.id),
@@ -238,7 +208,10 @@ export const agentsRouter = router({
       }
 
       // Persist negotiation
-      const [inserted] = await db.insert(agentNegotiations).values({
+      const id = generateId();
+      const now = new Date();
+      await db.collection("agent_negotiations").doc(id).set({
+        id,
         initiatorId: ctx.user.id,
         targetId: input.targetUserId,
         category: input.category,
@@ -246,10 +219,11 @@ export const agentsRouter = router({
         agreedKg: agreedKg?.toString() ?? null,
         status: finalStatus,
         turns: JSON.stringify(turns),
+        createdAt: now,
       });
 
       return {
-        id: (inserted as { insertId?: number })?.insertId ?? 0,
+        id,
         status: finalStatus,
         agreedKg,
         turns,
@@ -260,46 +234,27 @@ export const agentsRouter = router({
 
   /** Get a single negotiation with full turn history */
   get: protectedProcedure
-    .input(z.object({ id: z.number().int().positive() }))
+    .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
-      const db = await getDb();
-      if (!db) return null;
+      const doc = await db.collection("agent_negotiations").doc(input.id).get();
+      if (!doc.exists) return null;
+      const row = doc.data() as any;
 
-      const rows = await db
-        .select()
-        .from(agentNegotiations)
-        .where(
-          and(
-            eq(agentNegotiations.id, input.id),
-            or(
-              eq(agentNegotiations.initiatorId, ctx.user.id),
-              eq(agentNegotiations.targetId, ctx.user.id)
-            )
-          )
-        )
-        .limit(1);
+      if (row.initiatorId !== ctx.user.id && row.targetId !== ctx.user.id) {
+        return null;
+      }
 
-      if (!rows[0]) return null;
-
-      const row = rows[0];
       return {
         ...row,
+        createdAt: row.createdAt?.toDate(),
         turns: JSON.parse(row.turns as string) as NegotiationTurn[],
       };
     }),
 
   /** Public stats for the Agent Arena landing section */
   stats: publicProcedure.query(async () => {
-    const db = await getDb();
-    if (!db) return { total: 0, agreed: 0, totalKgPledged: 0 };
-
-    const rows = await db
-      .select({
-        status: agentNegotiations.status,
-        agreedKg: agentNegotiations.agreedKg,
-      })
-      .from(agentNegotiations)
-      .limit(1000);
+    const snap = await db.collection("agent_negotiations").limit(1000).get();
+    const rows = snap.docs.map(doc => doc.data() as any);
 
     const agreed = rows.filter((r) => r.status === "agreed");
     const totalKgPledged = agreed.reduce(

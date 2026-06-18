@@ -28,6 +28,12 @@ vi.mock("@/lib/trpc", () => ({
           isPending: false,
         }),
       },
+      verifyFirebaseToken: {
+        useMutation: () => ({
+          mutate: vi.fn(),
+          isPending: false,
+        }),
+      },
     },
   },
 }));

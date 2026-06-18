@@ -1,49 +1,128 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { TrpcContext } from "./_core/context";
 
-const mocks = vi.hoisted(() => ({
-  getDb: vi.fn(),
+const mockDocs: any[] = [];
+
+const mockCollection = vi.fn((colName: string) => {
+  const chain: any = {
+    where: vi.fn((field, op, val) => {
+      return {
+        get: vi.fn(async () => {
+          // simple filter
+          const docs = mockDocs.filter(d => d._col === colName && d[field] === val);
+          return {
+            docs: docs.map(d => ({
+              data: () => d,
+              id: d.id
+            })),
+            empty: docs.length === 0
+          };
+        }),
+        limit: vi.fn((num) => ({
+          get: vi.fn(async () => {
+            const docs = mockDocs.filter(d => d._col === colName && d[field] === val).slice(0, num);
+            return {
+              docs: docs.map(d => ({
+                data: () => d,
+                id: d.id
+              })),
+              empty: docs.length === 0
+            };
+          })
+        }))
+      };
+    }),
+    limit: vi.fn((num) => {
+      return {
+        get: vi.fn(async () => {
+          const docs = mockDocs.filter(d => d._col === colName).slice(0, num);
+          return {
+            docs: docs.map(d => ({
+              data: () => d,
+              id: d.id
+            })),
+            empty: docs.length === 0
+          };
+        })
+      };
+    }),
+    get: vi.fn(async () => {
+      const docs = mockDocs.filter(d => d._col === colName);
+      return {
+        docs: docs.map(d => ({
+          data: () => d,
+          id: d.id
+        })),
+        empty: docs.length === 0
+      };
+    }),
+    doc: vi.fn((id: string) => {
+      return {
+        get: vi.fn(async () => {
+          const found = mockDocs.find(d => d.id === id && d._col === colName);
+          return {
+            exists: !!found,
+            data: () => found,
+            id
+          };
+        }),
+        set: vi.fn(async (data) => {
+          const existingIdx = mockDocs.findIndex(d => d.id === id && d._col === colName);
+          if (existingIdx !== -1) {
+            mockDocs[existingIdx] = { ...mockDocs[existingIdx], ...data };
+          } else {
+            mockDocs.push({ ...data, id, _col: colName });
+          }
+        }),
+        update: vi.fn(async (data) => {
+          const existingIdx = mockDocs.findIndex(d => d.id === id && d._col === colName);
+          if (existingIdx !== -1) {
+            mockDocs[existingIdx] = { ...mockDocs[existingIdx], ...data };
+          }
+        })
+      };
+    })
+  };
+  return chain;
+});
+
+const dbMocks = vi.hoisted(() => ({
+  getUserById: vi.fn(),
+}));
+
+const aiMocks = vi.hoisted(() => ({
   invokeLLM: vi.fn(),
-  and: vi.fn((...parts: unknown[]) => ({ kind: "and", parts })),
-  desc: vi.fn((value: unknown) => ({ kind: "desc", value })),
-  eq: vi.fn((left: unknown, right: unknown) => ({ kind: "eq", left, right })),
-  or: vi.fn((...parts: unknown[]) => ({ kind: "or", parts })),
+}));
+
+// Mock the firebase-admin modules directly
+vi.mock("firebase-admin/app", () => ({
+  initializeApp: vi.fn(() => ({})),
+  cert: vi.fn(),
+  getApps: vi.fn(() => []),
+}));
+
+vi.mock("firebase-admin/firestore", () => ({
+  getFirestore: vi.fn(() => ({
+    collection: mockCollection
+  })),
+}));
+
+vi.mock("firebase-admin/auth", () => ({
+  getAuth: vi.fn(() => ({})),
 }));
 
 vi.mock("./db", () => ({
-  getDb: mocks.getDb,
+  getUserById: dbMocks.getUserById,
 }));
 
 vi.mock("./_core/llm", () => ({
-  invokeLLM: mocks.invokeLLM,
+  invokeLLM: aiMocks.invokeLLM,
 }));
-
-vi.mock("drizzle-orm", () => ({
-  and: mocks.and,
-  desc: mocks.desc,
-  eq: mocks.eq,
-  or: mocks.or,
-}));
-
-vi.mock("../../drizzle/schema", () => {
-  const makeTable = (tableName: string) =>
-    new Proxy({ tableName }, {
-      get(_target, prop) {
-        if (prop === "tableName") return tableName;
-        return `${tableName}.${String(prop)}`;
-      },
-    });
-
-  return {
-    agentNegotiations: makeTable("agentNegotiations"),
-    users: makeTable("users"),
-  };
-});
 
 function makeCtx(): TrpcContext {
   return {
     user: {
-      id: 7,
+      id: "7",
       openId: "agent-user",
       email: "agent@rebon.app",
       name: "Agent User",
@@ -52,76 +131,23 @@ function makeCtx(): TrpcContext {
       createdAt: new Date(),
       updatedAt: new Date(),
       lastSignedIn: new Date(),
+      archetype: "eco_pioneer",
+      weeklyBudgetKg: 55,
+      totalCarbonKg: 0,
+      influenceScore: 0,
+      currentStreak: 0,
+      longestStreak: 0,
+      preferredLanguage: "en",
+      onboardingCompleted: true
     },
     req: { protocol: "https", headers: {} } as TrpcContext["req"],
     res: {} as TrpcContext["res"],
   };
 }
 
-function createHarness() {
-  const selectQueue: Array<unknown> = [];
-  const insertQueue: Array<unknown> = [];
-
-  const makeThenable = <T>(resolver: () => T) => ({
-    then(onFulfilled?: (value: T) => unknown, onRejected?: (reason: unknown) => unknown) {
-      return Promise.resolve(resolver()).then(onFulfilled, onRejected);
-    },
-  });
-
-  const db = {
-    select(fields?: unknown) {
-      const state: Record<string, unknown> = { fields };
-      const chain: any = {
-        from(table: { tableName: string }) {
-          state.table = table;
-          return chain;
-        },
-        leftJoin(table: { tableName: string }, condition: unknown) {
-          state.leftJoin = { table, condition };
-          return chain;
-        },
-        where(condition: unknown) {
-          state.where = condition;
-          return chain;
-        },
-        orderBy(...args: unknown[]) {
-          state.orderBy = args;
-          return chain;
-        },
-        limit(limitArg: number) {
-          state.limit = limitArg;
-          return makeThenable(() => selectQueue.shift() ?? []);
-        },
-        then(onFulfilled?: (value: unknown) => unknown, onRejected?: (reason: unknown) => unknown) {
-          return Promise.resolve(selectQueue.shift() ?? []).then(onFulfilled, onRejected);
-        },
-      };
-      return chain;
-    },
-    insert(table: { tableName: string }) {
-      const state: Record<string, unknown> = { table };
-      return {
-        values(data: unknown) {
-          state.data = data;
-          return {
-            then(onFulfilled?: (value: unknown) => unknown, onRejected?: (reason: unknown) => unknown) {
-              return Promise.resolve(insertQueue.shift() ?? [{ insertId: 1 }]).then(onFulfilled, onRejected);
-            },
-          };
-        },
-      };
-    },
-  };
-
-  return {
-    db,
-    queueSelect: (...items: Array<unknown>) => selectQueue.push(...items),
-    queueInsert: (...items: Array<unknown>) => insertQueue.push(...items),
-  };
-}
-
 beforeEach(() => {
-  vi.resetAllMocks();
+  vi.clearAllMocks();
+  mockDocs.length = 0;
 });
 
 async function loadAgentsRouter() {
@@ -130,101 +156,108 @@ async function loadAgentsRouter() {
 }
 
 describe("server/routers/agents", () => {
-  it("returns safe defaults when the database is unavailable", async () => {
-    mocks.getDb.mockResolvedValue(null);
+  it("returns safe defaults when the database is empty or unavailable", async () => {
+    // When no docs exist, should return empty arrays/null/0s
     const { agentsRouter } = await loadAgentsRouter();
     const caller = agentsRouter.createCaller(makeCtx());
 
     await expect(caller.list()).resolves.toEqual([]);
     await expect(caller.getPeers()).resolves.toEqual([]);
-    await expect(caller.get({ id: 1 })).resolves.toBeNull();
+    await expect(caller.get({ id: "1" })).resolves.toBeNull();
     await expect(caller.stats()).resolves.toEqual({ total: 0, agreed: 0, totalKgPledged: 0 });
   });
 
   it("lists, filters, and aggregates agent rows", async () => {
-    const harness = createHarness();
-    mocks.getDb.mockResolvedValue(harness.db);
-    harness.queueSelect(
-      [{ id: 1, category: "transport", status: "pending" }],
-      [
-        { id: 7, name: "Agent User", archetype: "eco_pioneer", eloScore: 1200 },
-        { id: 8, name: "Other", archetype: "urban_commuter", eloScore: 1100 },
-      ],
-      [{ id: 99, turns: JSON.stringify([{ speaker: "initiator", message: "hi" }]) }],
-      [
-        { status: "agreed", agreedKg: "10" },
-        { status: "pending", agreedKg: null },
-        { status: "agreed", agreedKg: "6" },
-      ],
+    // Push test data into mockDocs
+    mockDocs.push(
+      { id: "1", initiatorId: "7", targetId: "8", category: "transport", status: "pending", _col: "agent_negotiations", createdAt: { toDate: () => new Date() } },
+      { id: "7", openId: "agent-user", name: "Agent User", archetype: "eco_pioneer", eloScore: 1200, role: "user", _col: "users" },
+      { id: "8", name: "Other", archetype: "urban_commuter", eloScore: 1100, role: "user", _col: "users" },
+      { id: "99", initiatorId: "7", targetId: "8", turns: JSON.stringify([{ speaker: "initiator", message: "hi" }]), status: "agreed", agreedKg: "10", _col: "agent_negotiations", createdAt: { toDate: () => new Date() } }
     );
+
+    dbMocks.getUserById.mockImplementation(async (id) => {
+      return mockDocs.find(d => d.id === id && d._col === "users");
+    });
 
     const { agentsRouter } = await loadAgentsRouter();
     const caller = agentsRouter.createCaller(makeCtx());
-    await expect(caller.list()).resolves.toEqual([{ id: 1, category: "transport", status: "pending" }]);
-    await expect(caller.getPeers()).resolves.toEqual([
-      { id: 8, name: "Other", archetype: "urban_commuter", eloScore: 1100 },
+
+    const listRes = await caller.list();
+    expect(listRes.map(n => n.id)).toContain("1");
+    expect(listRes.map(n => n.id)).toContain("99");
+
+    const peersRes = await caller.getPeers();
+    expect(peersRes).toEqual([
+      { id: "8", name: "Other", archetype: "urban_commuter", eloScore: 1100 }
     ]);
-    await expect(caller.get({ id: 99 })).resolves.toMatchObject({
-      id: 99,
+
+    const singleRes = await caller.get({ id: "99" });
+    expect(singleRes).toMatchObject({
+      id: "99",
       turns: [{ speaker: "initiator", message: "hi" }],
     });
-    await expect(caller.stats()).resolves.toEqual({
-      total: 3,
-      agreed: 2,
-      totalKgPledged: 16,
+
+    const statsRes = await caller.stats();
+    expect(statsRes).toEqual({
+      total: 2,
+      agreed: 1,
+      totalKgPledged: 10,
     });
   });
 
   it("creates an agreed negotiation when the target accepts", async () => {
-    const harness = createHarness();
-    mocks.getDb.mockResolvedValue(harness.db);
-    harness.queueSelect(
-      [{ name: "Agent User", archetype: "eco_pioneer", weeklyBudgetKg: 55 }],
-      [{ name: "Target User", archetype: "urban_commuter", weeklyBudgetKg: 60 }],
+    mockDocs.push(
+      { id: "7", name: "Agent User", archetype: "eco_pioneer", weeklyBudgetKg: 55, _col: "users" },
+      { id: "8", name: "Target User", archetype: "urban_commuter", weeklyBudgetKg: 60, _col: "users" }
     );
-    harness.queueInsert([{ insertId: 17 }]);
-    mocks.invokeLLM.mockResolvedValue({
+
+    dbMocks.getUserById.mockImplementation(async (id) => {
+      return mockDocs.find(d => d.id === id && d._col === "users");
+    });
+
+    aiMocks.invokeLLM.mockResolvedValue({
       choices: [{ message: { content: "AGREED: 10kg" } }],
     });
 
     const { agentsRouter } = await loadAgentsRouter();
     const caller = agentsRouter.createCaller(makeCtx());
     const result = await caller.initiate({
-      targetUserId: 8,
+      targetUserId: "8",
       category: "transport",
       proposedKg: 10,
       message: "Let's do this.",
     });
 
     expect(result).toMatchObject({
-      id: 17,
       status: "agreed",
       agreedKg: 10,
     });
   });
 
   it("falls back to a rejected negotiation after counter-offers", async () => {
-    const harness = createHarness();
-    mocks.getDb.mockResolvedValue(harness.db);
-    harness.queueSelect(
-      [{ name: "Agent User", archetype: "eco_pioneer", weeklyBudgetKg: 55 }],
-      [{ name: "Target User", archetype: "urban_commuter", weeklyBudgetKg: 60 }],
+    mockDocs.push(
+      { id: "7", name: "Agent User", archetype: "eco_pioneer", weeklyBudgetKg: 55, _col: "users" },
+      { id: "8", name: "Target User", archetype: "urban_commuter", weeklyBudgetKg: 60, _col: "users" }
     );
-    harness.queueInsert([{ insertId: 18 }]);
-    mocks.invokeLLM
+
+    dbMocks.getUserById.mockImplementation(async (id) => {
+      return mockDocs.find(d => d.id === id && d._col === "users");
+    });
+
+    aiMocks.invokeLLM
       .mockResolvedValueOnce({ choices: [{ message: { content: "Too ambitious." } }] })
       .mockResolvedValueOnce({ choices: [{ message: { content: "Still too high." } }] });
 
     const { agentsRouter } = await loadAgentsRouter();
     const caller = agentsRouter.createCaller(makeCtx());
     const result = await caller.initiate({
-      targetUserId: 8,
+      targetUserId: "8",
       category: "meals",
       proposedKg: 12,
     });
 
     expect(result).toMatchObject({
-      id: 18,
       status: "rejected",
       agreedKg: null,
     });

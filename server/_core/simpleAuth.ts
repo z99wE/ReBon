@@ -1,7 +1,7 @@
 import { SignJWT, jwtVerify } from "jose";
 import { parse as parseCookieHeader } from "cookie";
 import type { Request } from "express";
-import type { User } from "../../drizzle/schema";
+import type { User } from "../types/db";
 import * as db from "../db";
 import { COOKIE_NAME } from "@shared/const";
 
@@ -99,7 +99,7 @@ class SimpleAuthService {
       });
     }
 
-    return user;
+    return user || null;
   }
 }
 

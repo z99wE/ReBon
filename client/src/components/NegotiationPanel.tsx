@@ -4,7 +4,7 @@ import { IconSwords } from "@/components/Icons";
 type NegotiationTurn = { speaker: string; message: string; proposedKg?: number | null };
 
 type NegotiationResult = {
-  id: number;
+  id: string;
   status: string;
   agreedKg: number | null;
   turns: NegotiationTurn[];
