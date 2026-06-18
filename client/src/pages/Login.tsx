@@ -12,7 +12,7 @@ type Step = "identifier" | "otp" | "name";
 export default function Login() {
   const [, setLocation] = useLocation();
   const [step, setStep] = useState<Step>("identifier");
-  const [identifierType, setIdentifierType] = useState<"email" | "phone">("email");
+
   const [identifier, setIdentifier] = useState("");
   const [otp, setOtp] = useState("");
   const [name, setName] = useState("");
@@ -83,7 +83,7 @@ export default function Login() {
 
   const handleSendOtp = (e: React.FormEvent) => {
     e.preventDefault();
-    sendOtpMutation.mutate({ identifier: identifier.trim(), identifierType });
+    sendOtpMutation.mutate({ identifier: identifier.trim(), identifierType: "email" });
   };
 
   const handleVerifyOtp = (e: React.FormEvent) => {
@@ -144,43 +144,23 @@ export default function Login() {
                 <div className="h-px bg-white/6 flex-1" />
               </div>
 
-              {/* Toggle email / phone */}
-              <div className="flex border border-white/8 bg-white/3 p-1 rounded-md" role="group" aria-label="Sign in method">
-                <button
-                  type="button"
-                  onClick={() => setIdentifierType("email")}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${identifierType === "email" ? "bg-[oklch(0.47_0.09_160)] text-white shadow-sm" : "text-white/40 hover:text-white/80"}`}
-                  aria-pressed={identifierType === "email"}
-                >
-                  <IconMail className="w-3.5 h-3.5" aria-hidden="true" /> Email
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIdentifierType("phone")}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${identifierType === "phone" ? "bg-[oklch(0.47_0.09_160)] text-white shadow-sm" : "text-white/40 hover:text-white/80"}`}
-                  aria-pressed={identifierType === "phone"}
-                >
-                  <IconPhone className="w-3.5 h-3.5" aria-hidden="true" /> Phone
-                </button>
-              </div>
-
               <div>
                 <label htmlFor="identifier" className="label-tech mb-2 block">
-                  {identifierType === "email" ? "Email Address" : "Phone Number"}
+                  Email Address
                 </label>
                 <input
                   id="identifier"
-                  type={identifierType === "email" ? "email" : "tel"}
+                  type="email"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
-                  placeholder={identifierType === "email" ? "name@example.com" : "+1 555 000 0000"}
+                  placeholder="name@example.com"
                   required
-                  autoComplete={identifierType === "email" ? "email" : "tel"}
+                  autoComplete="email"
                   className="w-full px-4 py-3 rounded bg-white/5 border border-white/8 text-white placeholder-white/20 focus:outline-none focus:border-[oklch(0.47_0.09_160)] transition-colors text-sm"
                   aria-describedby="identifier-hint"
                 />
                 <p id="identifier-hint" className="mt-2 text-[10px] text-white/30">
-                  {identifierType === "phone" ? "Include country code (e.g., +1 555...)" : "A one-time passcode will be delivered to this inbox."}
+                  A one-time passcode will be delivered to this inbox.
                 </p>
               </div>
 
@@ -270,7 +250,7 @@ export default function Login() {
 
               <button
                 type="button"
-                onClick={() => sendOtpMutation.mutate({ identifier: identifier.trim(), identifierType })}
+                onClick={() => sendOtpMutation.mutate({ identifier: identifier.trim(), identifierType: "email" })}
                 disabled={sendOtpMutation.isPending}
                 className="w-full text-center label-tech text-[9px] text-white/30 hover:text-white/60 bg-transparent border-0 cursor-pointer transition-colors"
               >

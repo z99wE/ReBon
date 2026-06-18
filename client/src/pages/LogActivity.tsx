@@ -122,18 +122,24 @@ export default function LogActivity() {
             {cat}
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2" role="group" aria-label={`${cat} presets`}>
-            {ACTIVITY_PRESETS[cat].map((preset) => (
+             {ACTIVITY_PRESETS[cat].map((preset) => (
               <button
                 key={preset.id}
                 onClick={() => setSelectedPreset({ ...preset, category: cat })}
                 aria-pressed={selectedPreset?.id === preset.id}
                 aria-label={`${preset.label}, ${preset.carbonKg} kg CO₂`}
-                className={`p-3 rounded-lg border text-left transition-all flex items-start gap-2 ${selectedPreset?.id === preset.id ? "border-primary bg-primary/10" : "border-white/10 hover:border-primary/40 hover:bg-primary/5"}`}
+                className={`p-3 rounded-lg border text-left transition-all flex items-start gap-2 group ${selectedPreset?.id === preset.id ? "border-green-500 bg-green-500/10" : "border-white/10 hover:border-green-500/40 hover:bg-green-500/5"}`}
               >
-                <div className="text-lg mb-1" aria-hidden="true">{preset.icon}</div>
+                <div className={`transition-colors mt-0.5 flex-shrink-0 ${selectedPreset?.id === preset.id ? "text-green-400" : "text-zinc-400 group-hover:text-green-400"}`}>
+                  {cat === "transport" && <IconCar className="w-5 h-5" />}
+                  {cat === "meals" && <IconRestaurant className="w-5 h-5" />}
+                  {cat === "energy" && <IconFlash className="w-5 h-5" />}
+                  {cat === "shopping" && <IconCart className="w-5 h-5" />}
+                  {!["transport","meals","energy","shopping"].includes(cat) && <IconAdd className="w-5 h-5" />}
+                </div>
                 <div>
-                  <div className="text-xs font-medium text-white leading-tight">{preset.label}</div>
-                  <div className="text-xs text-white/50">{preset.carbonKg} kg CO₂</div>
+                  <div className={`text-xs font-semibold leading-tight transition-colors ${selectedPreset?.id === preset.id ? "text-green-400" : "text-white group-hover:text-green-400"}`}>{preset.label}</div>
+                  <div className={`text-[10px] transition-colors ${selectedPreset?.id === preset.id ? "text-green-400/80" : "text-white/40 group-hover:text-green-400/70"}`}>{preset.carbonKg} kg CO₂</div>
                 </div>
               </button>
             ))}
