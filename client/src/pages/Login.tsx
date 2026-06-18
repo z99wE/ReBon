@@ -5,7 +5,7 @@ import { useLocation } from "wouter";
 import { toast } from "sonner";
 import { IconArrowForward, IconGlobe, IconLeaf, IconMail, IconPhone, IconShield, IconZap } from "@/components/Icons";
 import { auth as clientAuth, googleProvider } from "@/lib/firebase";
-import { signInWithPopup } from "firebase/auth";
+import { signInWithPopup, signInWithRedirect, getRedirectResult } from "firebase/auth";
 
 type Step = "identifier" | "otp" | "name";
 
@@ -26,13 +26,34 @@ export default function Login() {
     onError: (e) => toast.error(e.message),
   });
 
+  React.useEffect(() => {
+    getRedirectResult(clientAuth)
+      .then((result) => {
+        if (result) {
+          result.user.getIdToken().then((idToken) => {
+            verifyFirebaseTokenMutation.mutate({ idToken, name: result.user.displayName || undefined });
+          }).catch((tokenErr) => {
+            console.error("Failed to get ID token from redirect result:", tokenErr);
+          });
+        }
+      })
+      .catch((error) => {
+        console.error("Redirect sign-in error:", error);
+      });
+  }, []);
+
   const handleGoogleSignIn = async () => {
     try {
       const result = await signInWithPopup(clientAuth, googleProvider);
       const idToken = await result.user.getIdToken();
       verifyFirebaseTokenMutation.mutate({ idToken, name: result.user.displayName || undefined });
     } catch (e: any) {
-      toast.error(e.message || "Google Sign-In failed");
+      console.warn("Popup sign-in failed/closed, falling back to redirect...", e);
+      try {
+        await signInWithRedirect(clientAuth, googleProvider);
+      } catch (redirectErr: any) {
+        toast.error(redirectErr.message || "Google Sign-In failed");
+      }
     }
   };
 
