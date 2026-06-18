@@ -84,6 +84,23 @@ export default function Stories() {
     shareMutation.mutate({ storyId: story.id });
   };
 
+  const shareToPlatform = (platform: "x" | "linkedin" | "facebook" | "pinterest", story: any) => {
+    const text = `${story.headline}\n\n${story.narrative}\n\n— via ReBon Carbon Intelligence`;
+    const url = window.location.origin;
+    
+    shareMutation.mutate({ storyId: story.id });
+
+    if (platform === "x") {
+      window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+    } else if (platform === "linkedin") {
+      window.open(`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(url)}&title=${encodeURIComponent(story.headline)}&summary=${encodeURIComponent(story.narrative)}`, '_blank');
+    } else if (platform === "facebook") {
+      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
+    } else if (platform === "pinterest") {
+      window.open(`https://pinterest.com/pin/create/button/?url=${encodeURIComponent(url)}&description=${encodeURIComponent(text)}`, '_blank');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -184,6 +201,18 @@ export default function Stories() {
                   </div>
                 ))}
               </div>
+              
+              {/* Quick Share Platform Intents */}
+              <div className="pt-4 border-t border-white/5 flex flex-wrap items-center justify-between gap-3 text-[10px] text-white/40 font-mono">
+                <span className="font-bold tracking-wider uppercase text-pink-400">Share Story</span>
+                <div className="flex gap-1.5">
+                  <button onClick={() => shareToPlatform("x", activeStory)} className="px-2.5 py-1 rounded bg-white/5 border border-white/8 hover:bg-white/10 hover:text-white transition-colors" title="Post on X">X / Twitter</button>
+                  <button onClick={() => shareToPlatform("linkedin", activeStory)} className="px-2.5 py-1 rounded bg-white/5 border border-white/8 hover:bg-white/10 hover:text-white transition-colors" title="Share on LinkedIn">LinkedIn</button>
+                  <button onClick={() => shareToPlatform("facebook", activeStory)} className="px-2.5 py-1 rounded bg-white/5 border border-white/8 hover:bg-white/10 hover:text-white transition-colors" title="Post to Facebook">Facebook</button>
+                  <button onClick={() => shareToPlatform("pinterest", activeStory)} className="px-2.5 py-1 rounded bg-white/5 border border-white/8 hover:bg-white/10 hover:text-white transition-colors" title="Pin on Pinterest">Pinterest</button>
+                </div>
+              </div>
+
               <div className="text-[10px] text-white/40 text-right">Powered by ReBon · AI Generated</div>
             </div>
           ) : (
@@ -212,10 +241,18 @@ export default function Stories() {
                       <IconShare className="w-4 h-4 text-white/50" />
                     </button>
                   </div>
-                  <div className="flex items-center gap-4 text-xs text-white/50">
-                    <span className="text-white/70 font-medium">{story.carbonSavedKg?.toFixed(1)} kg CO₂</span>
+                  <div className="flex flex-wrap items-center gap-3 text-xs text-white/50 pt-2 border-t border-white/5">
+                    <span className="text-white/70 font-semibold">{story.carbonSavedKg?.toFixed(1)} kg CO₂</span>
+                    <span>·</span>
                     <span>{story.shareCount ?? 0} shares</span>
-                    <span className="ml-auto">via {story.aiProvider}</span>
+                    <span>·</span>
+                    <span className="text-[10px] text-white/30 font-mono">via {story.aiProvider}</span>
+                    <div className="ml-auto flex items-center gap-1.5">
+                      <span className="text-[9px] uppercase tracking-wider text-white/30 font-mono">Share:</span>
+                      <button onClick={() => shareToPlatform("x", story)} className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 border border-white/8 hover:text-white hover:bg-white/10 transition-all font-mono">X</button>
+                      <button onClick={() => shareToPlatform("linkedin", story)} className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 border border-white/8 hover:text-white hover:bg-white/10 transition-all font-mono">LI</button>
+                      <button onClick={() => shareToPlatform("facebook", story)} className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 border border-white/8 hover:text-white hover:bg-white/10 transition-all font-mono">FB</button>
+                    </div>
                   </div>
                 </div>
               ))}
