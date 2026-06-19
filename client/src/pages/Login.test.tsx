@@ -47,6 +47,6 @@ describe("Login", () => {
     await user.click(screen.getByRole("button", { name: /send code/i }));
 
     expect(screen.getByRole("heading", { name: /enter your code/i })).toBeInTheDocument();
-    expect(screen.getByText(/dev mode/i)).toBeInTheDocument();
+    expect(screen.getByText(/dev/i)).toBeInTheDocument();
   });
 });

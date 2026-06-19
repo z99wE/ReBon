@@ -163,7 +163,7 @@ describe("LogActivity", () => {
     render(<LogActivity />);
     const preset = ACTIVITY_PRESETS["transport" as keyof typeof ACTIVITY_PRESETS][0];
     fireEvent.click(screen.getByText(preset.label).closest("button")!);
-    const logBtn = screen.getByRole("button", { name: /^log$/i });
+    const logBtn = screen.getByRole("button", { name: /log →/i });
     fireEvent.click(logBtn);
     expect(mockLogMutate).toHaveBeenCalledWith(
       expect.objectContaining({

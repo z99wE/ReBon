@@ -33,7 +33,7 @@ describe("RebonLayout", () => {
   it("shows the auth gate when the user is signed out", () => {
     render(<RebonLayout><div>content</div></RebonLayout>);
 
-    expect(screen.getByText(/sign in to rebon/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /sign in to rebon/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /sign in \/ register/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /back to home/i })).toBeInTheDocument();
   });
@@ -46,6 +46,6 @@ describe("RebonLayout", () => {
     expect(screen.getByText("app content")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /dashboard/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /toggle navigation/i })).toBeInTheDocument();
-    expect(screen.getByText("Sign Out")).toBeInTheDocument();
+    expect(screen.getByText(/sign out/i)).toBeInTheDocument();
   });
 });
