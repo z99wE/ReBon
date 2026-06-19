@@ -756,3 +756,15 @@ hr {
     animation: none !important;
   }
 }
+
+/* ── Eliminate Grey Text: Map opacity white classes to elegant bottle green contrast variants ── */
+.text-white\/10 { color: oklch(0.70 0.10 160 / 0.25) !important; }
+.text-white\/20 { color: oklch(0.70 0.10 160 / 0.4) !important; }
+.text-white\/25 { color: oklch(0.70 0.10 160 / 0.45) !important; }
+.text-white\/30 { color: oklch(0.70 0.10 160 / 0.5) !important; }
+.text-white\/40 { color: oklch(0.70 0.10 160 / 0.65) !important; }
+.text-white\/50 { color: oklch(0.70 0.10 160 / 0.8) !important; }
+.text-white\/60 { color: oklch(0.70 0.10 160 / 0.9) !important; }
+.text-white\/70 { color: oklch(0.70 0.10 160) !important; }
+.text-white\/80 { color: oklch(0.70 0.10 160) !important; }
+
