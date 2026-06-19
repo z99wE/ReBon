@@ -14,20 +14,21 @@
 ## Table of Contents
 
 1. [Chosen Vertical](#chosen-vertical)
-2. [Approach and Logic](#approach-and-logic)
-3. [How the Solution Works](#how-the-solution-works)
-4. [Architecture Overview](#architecture-overview)
-5. [AI Features](#ai-features)
-6. [Security Implementation](#security-implementation)
-7. [Database Schema](#database-schema)
-8. [API Reference](#api-reference)
-9. [Testing Strategy](#testing-strategy)
-10. [Accessibility](#accessibility)
-11. [Setup and Running Locally](#setup-and-running-locally)
-12. [Environment Variables](#environment-variables)
-13. [Evaluation Criteria Compliance](#evaluation-criteria-compliance)
-14. [Repository Structure](#repository-structure)
-15. [Deployment](#deployment)
+2. [Problem Statement Alignment](#problem-statement-alignment)
+3. [Approach and Logic](#approach-and-logic)
+4. [How the Solution Works](#how-the-solution-works)
+5. [Architecture Overview](#architecture-overview)
+6. [AI Features](#ai-features)
+7. [Security Implementation](#security-implementation)
+8. [Database Schema](#database-schema)
+9. [API Reference](#api-reference)
+10. [Testing Strategy](#testing-strategy)
+11. [Accessibility](#accessibility)
+12. [Setup and Running Locally](#setup-and-running-locally)
+13. [Environment Variables](#environment-variables)
+14. [Evaluation Criteria Compliance](#evaluation-criteria-compliance)
+15. [Repository Structure](#repository-structure)
+16. [Deployment](#deployment)
 
 ---
 
@@ -42,6 +43,25 @@ ReBon addresses one of the most pressing challenges of our generation: making in
 **Multi-model AI routing** — a purpose-built AI dispatch layer selects the optimal model for each task: Groq (8B) for low-latency coaching, NVIDIA NIM (70B) for deep narrative generation and analysis, Deepgram for voice transcription, and Sarvam AI for multilingual support across 10 Indian languages.
 
 **Agent-to-agent negotiation** — a novel mechanism where user-owned AI agents compete and collaborate within collectives to reduce carbon footprints, modelling real-world carbon markets at the individual level.
+
+---
+
+## Problem Statement Alignment
+
+ReBon directly addresses the problem statement: **"Design a solution that helps individuals understand, track, and reduce their carbon footprint through simple actions and personalized insights."**
+
+Here are the **10 core points** demonstrating how ReBon aligns with this goal:
+
+1. **Carbon DNA Profiling**: Users complete a simple lifestyle survey to map their footprint to one of 8 archetypes, establishing personalized emission baselines instead of broad national averages.
+2. **Instant 1-Tap Presets**: 50+ common carbon activities are pre-calculated and mapped to responsive monochrome SVG icons, allowing users to track actions in under 2 seconds.
+3. **Natural Voice Logging**: Users describe activities in plain speech, and the AI extracts categories, units, and values to log them automatically—eliminating manual typing friction.
+4. **CarbonMirror Peer Comparison**: Segments carbon metrics against lifestyle peers, giving clear context (e.g., percentile rankings) on how individual footprints stack up.
+5. **Human-Centric Equivalence (CarbonStory)**: Converts abstract carbon weights (kg of CO₂) into tangible equivalents like trees planted or smartphone charges saved, making the impact relatable.
+6. **Adaptive Weekly Challenges**: Generates personalized, bite-sized tasks tailored to the user's specific lifestyle profile and streak to build progressive climate habits.
+7. **CarbonCollective Cooperatives**: Groups of users pool their offsets and work towards mutual targets, leveraging social accountability and collective goals.
+8. **Autonomous Agent Arena**: User-owned AI agents negotiate footprint commitments within a collective, simulating carbon markets and making climate action interactive.
+9. **Interactive Influence Leaderboards**: Tracks relative rankings based on carbon saved, log consistency, and streak days, motivating users through community competition.
+10. **Multilingual Access**: Supports tracking and coaching in 10 regional Indian languages, ensuring the platform is inclusive for diverse demographics.
 
 ---
 
