@@ -1,0 +1,28 @@
+{
+  "hosting": {
+    "public": "client/public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  },
+  "auth": {
+    "providers": {
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "ReBon",
+        "supportEmail": "neuralnamah@gmail.com",
+        "authorizedRedirectUris": [
+          "https://rebon-carbon-utzcfrqjyq-uc.a.run.app",
+          "http://localhost"
+        ]
+      }
+    }
+  }
+}

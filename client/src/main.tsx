@@ -1,8 +1,21 @@
+if (typeof window !== "undefined" && window.trustedTypes && window.trustedTypes.createPolicy) {
+  try {
+    window.trustedTypes.createPolicy("default", {
+      createHTML: (string) => string,
+      createScript: (string) => string,
+      createScriptURL: (string) => string,
+    });
+  } catch (e) {
+    console.warn("Failed to create default Trusted Types policy:", e);
+  }
+}
+
 import { trpc } from "@/lib/trpc";
 import { UNAUTHED_ERR_MSG } from '@shared/const';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink, TRPCClientError } from "@trpc/client";
 import { createRoot } from "react-dom/client";
+
 import superjson from "superjson";
 import App from "./App";
 import { getLoginUrl } from "./const";

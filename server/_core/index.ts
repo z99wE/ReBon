@@ -6,6 +6,8 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerSimpleAuthRoutes } from "./simpleLogin";
+import axios from "axios";
+
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
@@ -33,6 +35,47 @@ async function startServer() {
   const app = express();
   app.set("trust proxy", 1); // Trust first proxy (Cloud Run / GCP gateway)
   const server = createServer(app);
+
+  // ── Firebase Auth Same-Origin Proxy ─────────────────────────────────────────
+  app.all("/__/auth/*", async (req, res) => {
+    try {
+      const targetUrl = `https://buildwithai-499306.firebaseapp.com${req.originalUrl}`;
+      const response = await axios({
+        method: req.method as any,
+        url: targetUrl,
+        headers: {
+          ...req.headers,
+          host: "buildwithai-499306.firebaseapp.com",
+        },
+        data: req, // Stream the raw request body
+        responseType: "arraybuffer",
+        validateStatus: () => true,
+      });
+
+      Object.entries(response.headers).forEach(([key, val]) => {
+        if (val !== undefined && key.toLowerCase() !== "content-encoding") {
+          res.setHeader(key, val as any);
+        }
+      });
+
+      res.status(response.status).send(response.data);
+    } catch (error) {
+      console.error("Firebase auth proxy error:", error);
+      res.status(500).send("Proxy error");
+    }
+  });
+
+  app.get("/__/firebase/init.json", async (req, res) => {
+    try {
+      const targetUrl = `https://buildwithai-499306.firebaseapp.com${req.originalUrl}`;
+      const response = await axios.get(targetUrl);
+      res.json(response.data);
+    } catch (error) {
+      console.error("Firebase init proxy error:", error);
+      res.status(500).send("Proxy error");
+    }
+  });
+
 
   // ── Security headers (Helmet) ───────────────────────────────────────────────
   // CSP disabled to allow Vite HMR in dev; re-enable with strict policy in prod
