@@ -72,6 +72,33 @@ export const authRouter = router({
       else { const r = await sendPhoneOtp(input.identifier, otp); preview = r.preview; }
       return { sent: true, preview: process.env.NODE_ENV !== "production" ? preview : undefined };
     }),
+  devLogin: publicProcedure
+    .mutation(async ({ ctx }) => {
+      const openId = `dev:demo_user`;
+      const name = "Demo User";
+      const email = "demo@rebon.app";
+      await upsertUser({
+        openId,
+        name,
+        email,
+        loginMethod: "email_otp",
+        lastSignedIn: new Date(),
+      });
+      const secret = Buffer.from(ENV.cookieSecret, 'utf-8');
+      const token = await new SignJWT({
+        openId,
+        appId: ENV.appId,
+        name,
+        email,
+      })
+        .setProtectedHeader({ alg: "HS256" })
+        .setIssuedAt()
+        .setExpirationTime("30d")
+        .sign(secret);
+      const cookieOptions = getSessionCookieOptions(ctx.req);
+      ctx.res.cookie(COOKIE_NAME, token, { ...cookieOptions, maxAge: 30 * 24 * 60 * 60 * 1000 });
+      return { success: true };
+    }),
   verifyOtp: publicProcedure
     .input(z.object({ identifier: z.string().min(3).max(320), otp: z.string().length(6).regex(/^\d{6}$/, "OTP must be 6 digits"), name: z.string().min(1).max(64).optional() }))
     .mutation(async ({ input, ctx }) => {

@@ -768,3 +768,15 @@ hr {
 .text-white\/70 { color: oklch(0.70 0.10 160) !important; }
 .text-white\/80 { color: oklch(0.70 0.10 160) !important; }
 
+/* ── Bottom Marquee/Ticker animation for FOMO ── */
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  display: inline-block;
+  animation: marquee 40s linear infinite;
+}
+
+

@@ -26,6 +26,14 @@ export default function Login() {
     onError: (e) => toast.error(e.message),
   });
 
+  const devLoginMutation = trpc.auth.devLogin.useMutation({
+    onSuccess: () => {
+      toast.success("Welcome to the Demo Arena!");
+      window.location.href = "/dashboard";
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
   React.useEffect(() => {
     getRedirectResult(clientAuth)
       .then((result) => {
@@ -92,7 +100,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center p-4 relative overflow-hidden pb-16">
       {/* Premium organic/carbon gradient orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
         <div className="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-[oklch(0.47_0.09_160)]/15 blur-3xl animate-pulse" style={{ animationDuration: '6s' }} />
@@ -114,27 +122,39 @@ export default function Login() {
             <form onSubmit={handleSendOtp} noValidate className="space-y-6">
               <div>
                 <h1 className="text-lg font-bold text-white uppercase tracking-tight mb-1">Sign in to ReBon</h1>
-                <p className="text-xs text-white/40">Select your authorization channel to verify credentials.</p>
+                <p className="text-xs text-bottle">Choose your access method to enter the Arena.</p>
               </div>
 
-              <button
-                type="button"
-                onClick={handleGoogleSignIn}
-                disabled={verifyFirebaseTokenMutation.isPending}
-                className="btn-primary w-full justify-center gap-2 mb-2"
-              >
-                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M21.35,11.1H12v2.7h5.38c-0.24,1.28 -0.96,2.37 -2.04,3.1v2.6h3.3c1.93,-1.78 3.04,-4.4 3.04,-7.4C21.68,11.83 21.56,11.43 21.35,11.1z" />
-                  <path d="M12,20.6c2.43,0 4.47,-0.8 5.96,-2.2l-3.3,-2.6c-0.9,0.6 -2.07,0.98 -3.3,0.98 -2.34,0 -4.33,-1.58 -5.03,-3.7H3.03v2.7C4.52,18.73 8.04,20.6 12,20.6z" />
-                  <path d="M6.97,13.08a5.1,5.1 0 0 1 0,-3.2v-2.7H3.03a8.6,8.6 0 0 0 0,8.6z" />
-                  <path d="M12,7.22c1.32,0 2.5,0.45 3.44,1.35l2.58,-2.58C16.46,4.54 14.4,3.6 12,3.6 8.04,3.6 4.52,5.47 3.03,8.47l3.94,3.03C7.67,9.38 9.66,7.22 12,7.22z" />
-                </svg>
-                Continue with Google
-              </button>
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={handleGoogleSignIn}
+                  disabled={verifyFirebaseTokenMutation.isPending}
+                  className="btn-primary w-full justify-center gap-2"
+                >
+                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21.35,11.1H12v2.7h5.38c-0.24,1.28 -0.96,2.37 -2.04,3.1v2.6h3.3c1.93,-1.78 3.04,-4.4 3.04,-7.4C21.68,11.83 21.56,11.43 21.35,11.1z" />
+                    <path d="M12,20.6c2.43,0 4.47,-0.8 5.96,-2.2l-3.3,-2.6c-0.9,0.6 -2.07,0.98 -3.3,0.98 -2.34,0 -4.33,-1.58 -5.03,-3.7H3.03v2.7C4.52,18.73 8.04,20.6 12,20.6z" />
+                    <path d="M6.97,13.08a5.1,5.1 0 0 1 0,-3.2v-2.7H3.03a8.6,8.6 0 0 0 0,8.6z" />
+                    <path d="M12,7.22c1.32,0 2.5,0.45 3.44,1.35l2.58,-2.58C16.46,4.54 14.4,3.6 12,3.6 8.04,3.6 4.52,5.47 3.03,8.47l3.94,3.03C7.67,9.38 9.66,7.22 12,7.22z" />
+                  </svg>
+                  Continue with Google
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => devLoginMutation.mutate()}
+                  disabled={devLoginMutation.isPending}
+                  className="btn-primary w-full justify-center gap-2 border border-accent-bottlegreen/30 bg-accent-bottlegreen/10 text-white hover:bg-accent-bottlegreen/20"
+                >
+                  <IconZap className="w-4 h-4 text-[oklch(0.82_0.21_142)]" />
+                  Enter Instantly as Guest
+                </button>
+              </div>
 
               <div className="flex items-center gap-3 my-4">
                 <div className="h-px bg-white/6 flex-1" />
-                <span className="text-[9px] text-white/20 uppercase tracking-widest font-black font-mono">OR SIGN IN WITH CODE</span>
+                <span className="text-[9px] text-bottle uppercase tracking-widest font-black font-mono">OR SIGN IN WITH CODE</span>
                 <div className="h-px bg-white/6 flex-1" />
               </div>
 
@@ -153,8 +173,8 @@ export default function Login() {
                   className="w-full px-4 py-3 rounded bg-white/5 border border-white/8 text-white placeholder-white/20 focus:border-transparent transition-colors text-sm"
                   aria-describedby="identifier-hint"
                 />
-                <p id="identifier-hint" className="mt-2 text-[10px] text-white/30">
-                  A one-time passcode will be delivered to this inbox.
+                <p id="identifier-hint" className="mt-2 text-[10px] text-bottle">
+                  No password required. Enter your email to receive an instant access code.
                 </p>
               </div>
 
@@ -178,13 +198,13 @@ export default function Login() {
               <button
                 type="button"
                 onClick={() => { setStep("identifier"); setOtp(""); setDevOtp(null); }}
-                className="label-tech text-white/40 hover:text-white mb-2 flex items-center gap-1 transition-colors bg-transparent border-0 cursor-pointer p-0"
+                className="label-tech text-bottle hover:text-white mb-2 flex items-center gap-1 transition-colors bg-transparent border-0 cursor-pointer p-0"
               >
                 ← Back
               </button>
               <div>
                 <h1 className="text-lg font-bold text-white uppercase tracking-tight mb-1">Enter your code</h1>
-                <p className="text-xs text-white/40">
+                <p className="text-xs text-bottle">
                   We sent a 6-digit code to <span className="text-white/80 font-medium">{identifier}</span>
                 </p>
               </div>
@@ -246,7 +266,7 @@ export default function Login() {
                 type="button"
                 onClick={() => sendOtpMutation.mutate({ identifier: identifier.trim(), identifierType: "email" })}
                 disabled={sendOtpMutation.isPending}
-                className="w-full text-center label-tech text-[9px] text-white/30 hover:text-white/60 bg-transparent border-0 cursor-pointer transition-colors"
+                className="w-full text-center label-tech text-[9px] text-bottle hover:text-white/60 bg-transparent border-0 cursor-pointer transition-colors"
               >
                 Didn't receive it? Resend code
               </button>
@@ -256,11 +276,27 @@ export default function Login() {
 
         {/* Trust indicators — text only */}
         <div className="mt-8 flex items-center justify-center gap-6">
-          <span className="text-[9px] font-bold tracking-[0.2em] text-white/15 uppercase">Secure Auth</span>
+          <span className="text-[9px] font-bold tracking-[0.2em] text-bottle uppercase">Secure Auth</span>
           <span className="text-white/10">·</span>
-          <span className="text-[9px] font-bold tracking-[0.2em] text-white/15 uppercase">Instant ID</span>
+          <span className="text-[9px] font-bold tracking-[0.2em] text-bottle uppercase">Instant ID</span>
           <span className="text-white/10">·</span>
-          <span className="text-[9px] font-bold tracking-[0.2em] text-white/15 uppercase">Synced Access</span>
+          <span className="text-[9px] font-bold tracking-[0.2em] text-bottle uppercase">Synced Access</span>
+        </div>
+      </div>
+
+      {/* Rolling FOMO ticker at the bottom */}
+      <div className="absolute bottom-0 left-0 right-0 py-3 bg-white/[0.01] border-t border-white/[0.04] overflow-hidden whitespace-nowrap pointer-events-none select-none">
+        <div className="animate-marquee whitespace-nowrap inline-block text-[9px] tracking-[0.2em] text-bottle/60 uppercase font-mono">
+          🔥 42 new agents joined the Arena in the last hour &nbsp;&nbsp;•&nbsp;&nbsp;
+          🌿 Collective 'GreenTech' reduced 1.2 tons of CO₂ today &nbsp;&nbsp;•&nbsp;&nbsp;
+          🤖 Agent EcoBuddy negotiated 240kg offset &nbsp;&nbsp;•&nbsp;&nbsp;
+          🏆 Leaderboard season reset in 3 days &nbsp;&nbsp;•&nbsp;&nbsp;
+          🌎 14,820 kg total carbon saved by the network &nbsp;&nbsp;•&nbsp;&nbsp;
+          🔥 42 new agents joined the Arena in the last hour &nbsp;&nbsp;•&nbsp;&nbsp;
+          🌿 Collective 'GreenTech' reduced 1.2 tons of CO₂ today &nbsp;&nbsp;•&nbsp;&nbsp;
+          🤖 Agent EcoBuddy negotiated 240kg offset &nbsp;&nbsp;•&nbsp;&nbsp;
+          🏆 Leaderboard season reset in 3 days &nbsp;&nbsp;•&nbsp;&nbsp;
+          🌎 14,820 kg total carbon saved by the network &nbsp;&nbsp;•&nbsp;&nbsp;
         </div>
       </div>
     </div>
