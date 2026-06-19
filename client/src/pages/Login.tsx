@@ -151,7 +151,7 @@ export default function Login() {
                   placeholder="name@example.com"
                   required
                   autoComplete="email"
-                  className="w-full px-4 py-3 rounded bg-white/5 border border-white/8 text-white placeholder-white/20 focus:outline-none focus:border-[oklch(0.47_0.09_160)] transition-colors text-sm"
+                  className="w-full px-4 py-3 rounded bg-white/5 border border-white/8 text-white placeholder-white/20 focus:border-transparent transition-colors text-sm"
                   aria-describedby="identifier-hint"
                 />
                 <p id="identifier-hint" className="mt-2 text-[10px] text-white/30">
@@ -210,7 +210,7 @@ export default function Login() {
                   placeholder="000000"
                   required
                   autoComplete="one-time-code"
-                  className="w-full px-4 py-3 rounded bg-white/5 border border-white/8 text-white placeholder-white/10 focus:outline-none focus:border-[oklch(0.47_0.09_160)] transition-colors text-2xl font-mono tracking-[0.5em] text-center"
+                  className="w-full px-4 py-3 rounded bg-white/5 border border-white/8 text-white placeholder-white/10 focus:border-transparent transition-colors text-2xl font-mono tracking-[0.5em] text-center"
                   aria-label="One-time passcode"
                 />
               </div>
@@ -226,7 +226,7 @@ export default function Login() {
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. Alex"
                   autoComplete="name"
-                  className="w-full px-4 py-3 rounded bg-white/5 border border-white/8 text-white placeholder-white/20 focus:outline-none focus:border-[oklch(0.47_0.09_160)] transition-colors text-sm"
+                  className="w-full px-4 py-3 rounded bg-white/5 border border-white/8 text-white placeholder-white/20 focus:border-transparent transition-colors text-sm"
                 />
               </div>
 

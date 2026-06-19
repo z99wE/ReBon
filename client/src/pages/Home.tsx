@@ -187,12 +187,12 @@ export default function Home() {
         </div>
 
         {isAuthenticated ? (
-          <Link href="/dashboard">
-            <button className="btn-primary text-[10px] py-2 px-5">Open App</button>
+          <Link href="/dashboard" className="btn-primary text-[10px] py-2 px-5 no-underline">
+            Open App
           </Link>
         ) : (
-          <a href={getLoginUrl()}>
-            <button className="btn-primary text-[10px] py-2 px-5">Get Started</button>
+          <a href={getLoginUrl()} className="btn-primary text-[10px] py-2 px-5 no-underline">
+            Get Started
           </a>
         )}
       </nav>
@@ -223,16 +223,12 @@ export default function Home() {
 
           <div className="flex flex-wrap items-center gap-4 mb-20">
             {isAuthenticated ? (
-              <Link href="/dashboard">
-                <button className="btn-primary py-3 px-8 text-[11px]">
-                  Open your Dashboard →
-                </button>
+              <Link href="/dashboard" className="btn-primary py-3 px-8 text-[11px] no-underline">
+                Open your Dashboard →
               </Link>
             ) : (
-              <a href={getLoginUrl()}>
-                <button className="btn-primary py-3 px-8 text-[11px]">
-                  Begin your carbon journey →
-                </button>
+              <a href={getLoginUrl()} className="btn-primary py-3 px-8 text-[11px] no-underline">
+                Begin your carbon journey →
               </a>
             )}
             <a
@@ -387,12 +383,12 @@ export default function Home() {
             Join 18,000+ climate warriors already reducing their footprint with ReBon.
           </p>
           {isAuthenticated ? (
-            <Link href="/dashboard">
-              <button className="btn-primary py-3 px-10 text-[11px]">Go to your Dashboard →</button>
+            <Link href="/dashboard" className="btn-primary py-3 px-10 text-[11px] no-underline">
+              Go to your Dashboard →
             </Link>
           ) : (
-            <a href={getLoginUrl()}>
-              <button className="btn-primary py-3 px-10 text-[11px]">Start for free →</button>
+            <a href={getLoginUrl()} className="btn-primary py-3 px-10 text-[11px] no-underline">
+              Start for free →
             </a>
           )}
         </div>

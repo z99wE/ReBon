@@ -23,10 +23,10 @@ export default function Community() {
       {/* Top Influencers */}
       {influencersQuery.data && influencersQuery.data.length > 0 && (
         <div className="card-glass rounded-xl border border-white/10 p-5">
-          <h3 className="font-bold text-white mb-4 flex items-center gap-2"><IconStar className="w-4 h-4 text-white/70" /> Top Influencers</h3>
-          <div className="flex gap-3 overflow-x-auto pb-2">
+          <h3 className="font-bold text-white mb-4 flex items-center gap-2" id="top-influencers-heading"><IconStar className="w-4 h-4 text-white/70" /> Top Influencers</h3>
+          <div className="flex gap-3 overflow-x-auto pb-2" role="list" aria-labelledby="top-influencers-heading">
             {influencersQuery.data.map((inf, idx) => (
-              <div key={inf.id} className="flex-shrink-0 flex flex-col items-center gap-2 p-3 rounded-xl border border-white/10 bg-white/5/30 min-w-[90px]">
+              <div key={inf.id} className="flex-shrink-0 flex flex-col items-center gap-2 p-3 rounded-xl border border-white/10 bg-white/5/30 min-w-[90px]" role="listitem">
                 <div className="relative">
                   <div className="w-12 h-12 rounded-full bg-indigo-600/10 border-2 border-primary/30 flex items-center justify-center text-lg font-bold">
                     {(inf.name ?? "?")[0].toUpperCase()}
@@ -42,8 +42,8 @@ export default function Community() {
       )}
 
       {/* Live Feed */}
-      <div className="space-y-3">
-        <h3 className="font-bold text-white">Live Community Feed</h3>
+      <div className="space-y-3" role="list" aria-labelledby="live-feed-heading">
+        <h3 className="font-bold text-white" id="live-feed-heading">Live Community Feed</h3>
         {feedQuery.isLoading ? (
           <div className="text-center py-8 text-white/50">Loading feed...</div>
         ) : feedQuery.data?.length === 0 ? (
@@ -56,7 +56,7 @@ export default function Community() {
             const Icon = typeIcons[item.type] ?? IconZap;
             const color = typeColors[item.type] ?? "text-primary";
             return (
-              <div key={item.id} className={`card-glass rounded-xl border p-4 transition-all ${item.isInfluencer ? "border-white/20 bg-white/5" : "border-white/10"}`}>
+              <div key={item.id} className={`card-glass rounded-xl border p-4 transition-all ${item.isInfluencer ? "border-white/20 bg-white/5" : "border-white/10"}`} role="listitem">
                 <div className="flex items-start gap-3">
                   <div className={`w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0 text-sm font-bold`}>
                     {((item as any).user?.name ?? (item as any).userName ?? "?")[0].toUpperCase()}

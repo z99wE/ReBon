@@ -56,13 +56,13 @@ export default function Leaderboard() {
       {/* Podium — Top 3 */}
       {entries.length >= 3 && (
         <div className="glass-card p-6">
-          <p className="text-xs text-white/30 tracking-widest uppercase mb-6">Top Performers</p>
-          <div className="flex items-end justify-center gap-4">
+          <p className="text-xs text-white/30 tracking-widest uppercase mb-6" id="top-performers-heading">Top Performers</p>
+          <div className="flex items-end justify-center gap-4" role="list" aria-labelledby="top-performers-heading">
             {[entries[1], entries[0], entries[2]].map((entry, podiumIdx) => {
               const rank = podiumIdx === 1 ? 1 : podiumIdx === 0 ? 2 : 3;
               const isFirst = rank === 1;
               return (
-                <div key={(entry as any).userId ?? podiumIdx} className="flex flex-col items-center gap-2 flex-1">
+                <div key={(entry as any).userId ?? podiumIdx} className="flex flex-col items-center gap-2 flex-1" role="listitem">
                   <div className="text-center mb-1">
                     <div className={cn("font-black text-white text-sm", isFirst ? "text-base" : "")}>
                       {getName(entry)}
@@ -99,7 +99,7 @@ export default function Leaderboard() {
             <p className="text-white/20 text-xs mt-1">Log your first activity to claim your spot</p>
           </div>
         ) : (
-          <div className="divide-y divide-white/5">
+          <div className="divide-y divide-white/5" role="list" aria-label="Leaderboard Rankings">
             {entries.map((entry, i) => {
               const isMe = user && (entry as any).userId === (user as any).id;
               const streak = getStreak(entry);
@@ -107,6 +107,7 @@ export default function Leaderboard() {
               return (
                 <div
                   key={(entry as any).userId ?? i}
+                  role="listitem"
                   className={cn(
                     "flex items-center gap-4 px-4 py-3 transition-colors",
                     isMe ? "bg-white/8" : "hover:bg-white/3"

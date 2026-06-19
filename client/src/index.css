@@ -18,9 +18,9 @@
   --color-border:               oklch(0.97 0 0 / 0.07);   /* white/7 */
   --color-border-strong:        oklch(0.97 0 0 / 0.14);   /* white/14 */
 
-  /* ── Muted text → bottle green instead of grey/white opacity ── */
-  --color-muted:                oklch(0.47 0.09 160);     /* bottle green */
-  --color-muted-foreground:     oklch(0.47 0.09 160);     /* bottle green */
+  /* ── Muted text → lighter bottle green for WCAG AA contrast against black ── */
+  --color-muted:                oklch(0.70 0.10 160);     /* light bottle green */
+  --color-muted-foreground:     oklch(0.70 0.10 160);     /* light bottle green */
 
   /* ── Primary accent → FLUORESCENT GREEN ── */
   --color-primary:              oklch(0.82 0.21 142);     /* #4ade80 → vivid fluorescent green */
@@ -38,7 +38,7 @@
 
   /* ── Named brand colours ── */
   --accent-fluorescent:   oklch(0.82 0.21 142);   /* #4ade80 vivid green → PRIMARY */
-  --accent-bottlegreen:   oklch(0.47 0.09 160);   /* #2F6B52 muted text */
+  --accent-bottlegreen:   oklch(0.70 0.10 160);   /* WCAG accessible muted text */
   --color-green:          var(--accent-fluorescent);
   --color-violet:         oklch(0.65 0.22 280);
   --color-cyan:           oklch(0.75 0.15 195);
@@ -460,13 +460,13 @@ button:hover svg[data-rebon-icon],
   text-transform: uppercase;
 }
 
-/* Muted labels → bottle green instead of white/40 */
+/* Muted labels → light bottle green */
 .label-tech {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.3em;
   text-transform: uppercase;
-  color: oklch(0.47 0.09 160);   /* bottle green */
+  color: var(--accent-bottlegreen);
 }
 
 .label-tech-bright {
@@ -474,7 +474,7 @@ button:hover svg[data-rebon-icon],
   font-weight: 700;
   letter-spacing: 0.3em;
   text-transform: uppercase;
-  color: oklch(0.60 0.12 155);   /* mid bottle green, slightly lighter */
+  color: oklch(0.80 0.12 155);   /* brighter for emphasis */
 }
 
 /* Fluorescent green text utilities */
@@ -483,7 +483,7 @@ button:hover svg[data-rebon-icon],
 }
 
 .text-bottle {
-  color: oklch(0.47 0.09 160);
+  color: var(--accent-bottlegreen);
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -555,12 +555,12 @@ button:hover svg[data-rebon-icon],
   gap: 8px;
   padding: 11px 23px;
   background: transparent;
-  color: oklch(0.47 0.09 160);  /* bottle green default */
+  color: var(--accent-bottlegreen);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  border: 1px solid oklch(0.47 0.09 160 / 0.35);
+  border: 1px solid oklch(0.70 0.10 160 / 0.35);
   cursor: pointer;
   transition: all 0.22s cubic-bezier(0.23, 1, 0.32, 1);
 }
@@ -631,7 +631,7 @@ button:hover svg[data-rebon-icon],
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: oklch(0.47 0.09 160 / 0.4);
+  background: oklch(0.70 0.10 160 / 0.4);
   border-radius: 2px;
 }
 ::-webkit-scrollbar-thumb:hover {
@@ -693,7 +693,7 @@ button:hover svg[data-rebon-icon],
 .progress-fill {
   height: 100%;
   background: linear-gradient(90deg,
-    oklch(0.47 0.09 160),
+    var(--accent-bottlegreen),
     oklch(0.82 0.21 142)
   );
   border-radius: 2px;
@@ -713,11 +713,11 @@ select:focus {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   DIVIDERS — subtle bottle green tint
+   DIVIDERS — subtle light bottle green tint
    ══════════════════════════════════════════════════════════════ */
 hr {
   border: none;
-  border-top: 1px solid oklch(0.47 0.09 160 / 0.2);
+  border-top: 1px solid oklch(0.70 0.10 160 / 0.2);
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -728,9 +728,9 @@ hr {
   body { background-color: #050505; color: rgba(255,255,255,0.88); }
 }
 
-/* Muted text elements → bottle green */
+/* Muted text elements → light bottle green */
 .text-muted-foreground {
-  color: oklch(0.47 0.09 160) !important;
+  color: var(--accent-bottlegreen) !important;
 }
 
 /* ══════════════════════════════════════════════════════════════
