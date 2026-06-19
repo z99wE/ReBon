@@ -203,7 +203,7 @@ export default function Home() {
           {/* Hero heading — pure type, no decoration */}
           <h1 className="font-black leading-none tracking-tighter mb-8" style={{ fontSize: 'clamp(3.5rem, 10vw, 8rem)' }}>
             <span className="block text-white">YOUR CARBON</span>
-            <span className="block" style={{ color: 'rgba(255,255,255,0.12)' }}>FOOTPRINT.</span>
+            <span className="block" style={{ color: 'oklch(0.70 0.10 160 / 0.35)' }}>FOOTPRINT.</span>
             <span className="block gradient-text-green">REIMAGINED.</span>
           </h1>
 
@@ -340,10 +340,10 @@ export default function Home() {
 
           <blockquote className="font-black leading-tight tracking-tight mb-12" style={{ fontSize: 'clamp(1.6rem, 4vw, 2.8rem)' }}>
             <span className="text-white">"The climate crisis is a collective action problem. </span>
-            <span style={{ color: 'rgba(255,255,255,0.2)' }}>ReBon makes collective action feel like a game you can win."</span>
+            <span className="text-bottle">ReBon makes collective action feel like a game you can win."</span>
           </blockquote>
 
-          <p className="text-white/35 text-sm leading-relaxed font-light max-w-2xl mb-16">
+          <p className="text-bottle text-sm leading-relaxed font-light max-w-2xl mb-16">
             We believe the fastest path to behaviour change is not guilt — it is competition, community, and personalised intelligence.
             ReBon turns abstract carbon numbers into concrete daily actions, social accountability, and measurable progress toward a liveable planet.
           </p>
@@ -357,7 +357,7 @@ export default function Home() {
             ].map((p) => (
               <div key={p.label} className="bg-[#050505] p-8 group hover:bg-white/[0.015] transition-colors">
                 <h4 className="font-black text-white text-sm mb-3 group-hover:text-fluoro transition-colors">{p.label}</h4>
-                <p className="text-white/30 text-sm leading-relaxed font-light">{p.body}</p>
+                <p className="text-bottle text-sm leading-relaxed font-light">{p.body}</p>
               </div>
             ))}
           </div>
@@ -369,9 +369,9 @@ export default function Home() {
         <div className="max-w-4xl mx-auto">
           <h2 className="font-black leading-none tracking-tighter mb-8" style={{ fontSize: 'clamp(2.5rem, 7vw, 6rem)' }}>
             <span className="block text-white">THE PLANET</span>
-            <span className="block" style={{ color: 'rgba(255,255,255,0.1)' }}>CAN'T WAIT.</span>
+            <span className="block" style={{ color: 'oklch(0.70 0.10 160 / 0.35)' }}>CAN'T WAIT.</span>
           </h2>
-          <p className="text-white/30 mb-10 text-sm font-light">
+          <p className="text-bottle mb-10 text-sm font-light">
             Join 18,000+ climate warriors already reducing their footprint with ReBon.
           </p>
           {isAuthenticated ? (
