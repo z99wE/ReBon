@@ -16,14 +16,11 @@ gcloud config set project $PROJECT_ID
 echo "📋 Enabling required APIs..."
 gcloud services enable run.googleapis.com
 gcloud services enable containerregistry.googleapis.com
+gcloud services enable cloudbuild.googleapis.com
 
-# Build Docker image
-echo "🔨 Building Docker image..."
-docker build --platform linux/amd64 -t gcr.io/$PROJECT_ID/rebon:latest .
-
-# Push to Container Registry
-echo "📤 Pushing to Container Registry..."
-docker push gcr.io/$PROJECT_ID/rebon:latest
+# Build Docker image using Google Cloud Build
+echo "🔨 Building Docker image using Google Cloud Build..."
+gcloud builds submit --tag gcr.io/$PROJECT_ID/rebon:latest .
 
 # Deploy to Cloud Run
 echo "🚀 Deploying to Cloud Run..."
