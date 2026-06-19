@@ -34,6 +34,12 @@ vi.mock("@/lib/trpc", () => ({
           isPending: false,
         }),
       },
+      devLogin: {
+        useMutation: () => ({
+          mutate: vi.fn(),
+          isPending: false,
+        }),
+      },
     },
   },
 }));

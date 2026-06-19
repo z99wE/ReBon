@@ -70,7 +70,7 @@ export const authRouter = router({
       let preview: string | undefined;
       if (input.identifierType === "email") { const r = await sendEmailOtp(input.identifier, otp); preview = r.preview; }
       else { const r = await sendPhoneOtp(input.identifier, otp); preview = r.preview; }
-      return { sent: true, preview: process.env.NODE_ENV !== "production" ? preview : undefined };
+      return { sent: true, preview: (!process.env.SMTP_HOST || process.env.NODE_ENV !== "production") ? preview : undefined };
     }),
   devLogin: publicProcedure
     .mutation(async ({ ctx }) => {
