@@ -712,7 +712,7 @@ git push origin main   # triggers build → test → docker push → Cloud Run d
 
 **Live app:** `https://rebon-carbon-xxxxxx-uc.a.run.app`
 
-For detailed deployment steps see [CLOUD_RUN_DEPLOY.md](./CLOUD_RUN_DEPLOY.md) and [SETUP_AI_API_KEYS.md](./SETUP_AI_API_KEYS.md).
+For detailed deployment steps see [DEPLOYMENT.md](./DEPLOYMENT.md), [CLOUD_RUN_DEPLOY.md](./CLOUD_RUN_DEPLOY.md) and [SETUP_AI_API_KEYS.md](./SETUP_AI_API_KEYS.md).
 
 ---
 
