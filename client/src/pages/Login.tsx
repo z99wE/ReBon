@@ -1,23 +1,11 @@
 import React from "react";
-import { useState } from "react";
 import { trpc } from "@/lib/trpc";
-import { useLocation } from "wouter";
 import { toast } from "sonner";
 import { IconZap } from "@/components/Icons";
 import { auth as clientAuth, googleProvider } from "@/lib/firebase";
 import { signInWithPopup, signInWithRedirect, getRedirectResult } from "firebase/auth";
 
-type Step = "identifier" | "otp" | "name";
-
 export default function Login() {
-  const [, setLocation] = useLocation();
-  const [step, setStep] = useState<Step>("identifier");
-
-  const [identifier, setIdentifier] = useState("");
-  const [otp, setOtp] = useState("");
-  const [name, setName] = useState("");
-  const [devOtp, setDevOtp] = useState<string | null>(null);
-
   const verifyFirebaseTokenMutation = trpc.auth.verifyFirebaseToken.useMutation({
     onSuccess: () => {
       toast.success("Welcome to ReBon!");
@@ -65,40 +53,6 @@ export default function Login() {
     }
   };
 
-  const sendOtpMutation = trpc.auth.sendOtp.useMutation({
-    onSuccess: (data) => {
-      setStep("otp");
-      // In dev mode, show the OTP directly so demo works without email
-      if (data.preview?.startsWith("DEV_MODE:")) {
-        const code = data.preview.replace("DEV_MODE:", "");
-        setDevOtp(code);
-        toast.success(`Dev mode: your OTP is ${code}`, { duration: 30000 });
-      } else {
-        toast.success(`Code sent to ${identifier}`);
-      }
-    },
-    onError: (e) => toast.error(e.message),
-  });
-
-  const verifyOtpMutation = trpc.auth.verifyOtp.useMutation({
-    onSuccess: () => {
-      toast.success("Welcome to ReBon!");
-      // Force a page reload to pick up the new session cookie
-      window.location.href = "/dashboard";
-    },
-    onError: (e) => toast.error(e.message),
-  });
-
-  const handleSendOtp = (e: React.FormEvent) => {
-    e.preventDefault();
-    sendOtpMutation.mutate({ identifier: identifier.trim(), identifierType: "email" });
-  };
-
-  const handleVerifyOtp = (e: React.FormEvent) => {
-    e.preventDefault();
-    verifyOtpMutation.mutate({ identifier: identifier.trim(), otp: otp.trim(), name: name.trim() || undefined });
-  };
-
   return (
     <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center p-4 relative overflow-hidden pb-16">
       {/* Premium organic/carbon gradient orbs */}
@@ -117,165 +71,43 @@ export default function Login() {
       {/* Card */}
       <div className="relative z-10 w-full max-w-md animate-fade-up">
         <div className="glass-card border border-white/8 rounded-md p-8 shadow-2xl">
+          <div className="space-y-6">
+            <div className="text-center mb-6">
+              <h1 className="text-lg font-bold text-white uppercase tracking-tight mb-1">Sign in to ReBon</h1>
+              <p className="text-xs text-bottle">Choose your access method to enter the Arena.</p>
+            </div>
 
-          {step === "identifier" && (
-            <form onSubmit={handleSendOtp} noValidate className="space-y-6">
-              <div>
-                <h1 className="text-lg font-bold text-white uppercase tracking-tight mb-1">Sign in to ReBon</h1>
-                <p className="text-xs text-bottle">Choose your access method to enter the Arena.</p>
-              </div>
-
-              <div className="space-y-2">
-                <button
-                  type="button"
-                  onClick={handleGoogleSignIn}
-                  disabled={verifyFirebaseTokenMutation.isPending}
-                  className="btn-primary w-full justify-center gap-2"
-                >
-                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M21.35,11.1H12v2.7h5.38c-0.24,1.28 -0.96,2.37 -2.04,3.1v2.6h3.3c1.93,-1.78 3.04,-4.4 3.04,-7.4C21.68,11.83 21.56,11.43 21.35,11.1z" />
-                    <path d="M12,20.6c2.43,0 4.47,-0.8 5.96,-2.2l-3.3,-2.6c-0.9,0.6 -2.07,0.98 -3.3,0.98 -2.34,0 -4.33,-1.58 -5.03,-3.7H3.03v2.7C4.52,18.73 8.04,20.6 12,20.6z" />
-                    <path d="M6.97,13.08a5.1,5.1 0 0 1 0,-3.2v-2.7H3.03a8.6,8.6 0 0 0 0,8.6z" />
-                    <path d="M12,7.22c1.32,0 2.5,0.45 3.44,1.35l2.58,-2.58C16.46,4.54 14.4,3.6 12,3.6 8.04,3.6 4.52,5.47 3.03,8.47l3.94,3.03C7.67,9.38 9.66,7.22 12,7.22z" />
-                  </svg>
-                  Continue with Google
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => devLoginMutation.mutate()}
-                  disabled={devLoginMutation.isPending}
-                  className="btn-primary w-full justify-center gap-2 border border-accent-bottlegreen/30 bg-accent-bottlegreen/10 text-white hover:bg-accent-bottlegreen/20"
-                >
-                  <IconZap className="w-4 h-4 text-[oklch(0.82_0.21_142)]" />
-                  Enter Instantly as Guest
-                </button>
-              </div>
-
-              <div className="flex items-center gap-3 my-4">
-                <div className="h-px bg-white/6 flex-1" />
-                <span className="text-[9px] text-bottle uppercase tracking-widest font-black font-mono">OR SIGN IN WITH CODE</span>
-                <div className="h-px bg-white/6 flex-1" />
-              </div>
-
-              <div>
-                <label htmlFor="identifier" className="label-tech mb-2 block">
-                  Email Address
-                </label>
-                <input
-                  id="identifier"
-                  type="email"
-                  value={identifier}
-                  onChange={(e) => setIdentifier(e.target.value)}
-                  placeholder="name@example.com"
-                  required
-                  autoComplete="email"
-                  className="w-full px-4 py-3 rounded bg-white/5 border border-white/8 text-white placeholder-white/20 focus:border-transparent transition-colors text-sm"
-                  aria-describedby="identifier-hint"
-                />
-                <p id="identifier-hint" className="mt-2 text-[10px] text-bottle">
-                  No password required. Enter your email to receive an instant access code.
-                </p>
-              </div>
-
-              <button
-                type="submit"
-                disabled={!identifier.trim() || sendOtpMutation.isPending}
-                className="btn-primary w-full justify-center disabled:opacity-30 disabled:cursor-not-allowed"
-                aria-busy={sendOtpMutation.isPending}
-              >
-                {sendOtpMutation.isPending ? (
-                  <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" aria-hidden="true" />
-                ) : (
-                  <>Send code →</>
-                )}
-              </button>
-            </form>
-          )}
-
-          {step === "otp" && (
-            <form onSubmit={handleVerifyOtp} noValidate className="space-y-6">
+            <div className="space-y-3">
               <button
                 type="button"
-                onClick={() => { setStep("identifier"); setOtp(""); setDevOtp(null); }}
-                className="label-tech text-bottle hover:text-white mb-2 flex items-center gap-1 transition-colors bg-transparent border-0 cursor-pointer p-0"
+                onClick={handleGoogleSignIn}
+                disabled={verifyFirebaseTokenMutation.isPending}
+                className="btn-primary w-full justify-center gap-2 py-3.5"
               >
-                ← Back
-              </button>
-              <div>
-                <h1 className="text-lg font-bold text-white uppercase tracking-tight mb-1">Enter your code</h1>
-                <p className="text-xs text-bottle">
-                  We sent a 6-digit code to <span className="text-white/80 font-medium">{identifier}</span>
-                </p>
-              </div>
-
-              {devOtp && (
-                <div className="p-4 border border-white/[0.08] text-white/80 text-xs flex items-center gap-2">
-                  <span className="text-[9px] font-black tracking-widest text-bottle">DEV</span>
-                  <span>Code: <strong className="font-mono text-sm tracking-wider text-white">{devOtp}</strong></span>
-                </div>
-              )}
-
-              <div>
-                <label htmlFor="otp" className="label-tech mb-2 block">One-Time Passcode</label>
-                <input
-                  id="otp"
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]{6}"
-                  maxLength={6}
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                  placeholder="000000"
-                  required
-                  autoComplete="one-time-code"
-                  className="w-full px-4 py-3 rounded bg-white/5 border border-white/8 text-white placeholder-white/10 focus:border-transparent transition-colors text-2xl font-mono tracking-[0.5em] text-center"
-                  aria-label="One-time passcode"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="display-name" className="label-tech mb-2 block">
-                  Your name <span className="text-white/20 font-normal">(optional)</span>
-                </label>
-                <input
-                  id="display-name"
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Alex"
-                  autoComplete="name"
-                  className="w-full px-4 py-3 rounded bg-white/5 border border-white/8 text-white placeholder-white/20 focus:border-transparent transition-colors text-sm"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={otp.length !== 6 || verifyOtpMutation.isPending}
-                className="btn-primary w-full justify-center disabled:opacity-30 disabled:cursor-not-allowed"
-                aria-busy={verifyOtpMutation.isPending}
-              >
-                {verifyOtpMutation.isPending ? (
-                  <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" aria-hidden="true" />
-                ) : (
-                  <>Verify &amp; enter →</>
-                )}
+                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M21.35,11.1H12v2.7h5.38c-0.24,1.28 -0.96,2.37 -2.04,3.1v2.6h3.3c1.93,-1.78 3.04,-4.4 3.04,-7.4C21.68,11.83 21.56,11.43 21.35,11.1z" />
+                  <path d="M12,20.6c2.43,0 4.47,-0.8 5.96,-2.2l-3.3,-2.6c-0.9,0.6 -2.07,0.98 -3.3,0.98 -2.34,0 -4.33,-1.58 -5.03,-3.7H3.03v2.7C4.52,18.73 8.04,20.6 12,20.6z" />
+                  <path d="M6.97,13.08a5.1,5.1 0 0 1 0,-3.2v-2.7H3.03a8.6,8.6 0 0 0 0,8.6z" />
+                  <path d="M12,7.22c1.32,0 2.5,0.45 3.44,1.35l2.58,-2.58C16.46,4.54 14.4,3.6 12,3.6 8.04,3.6 4.52,5.47 3.03,8.47l3.94,3.03C7.67,9.38 9.66,7.22 12,7.22z" />
+                </svg>
+                Continue with Google
               </button>
 
               <button
                 type="button"
-                onClick={() => sendOtpMutation.mutate({ identifier: identifier.trim(), identifierType: "email" })}
-                disabled={sendOtpMutation.isPending}
-                className="w-full text-center label-tech text-[9px] text-bottle hover:text-white/60 bg-transparent border-0 cursor-pointer transition-colors"
+                onClick={() => devLoginMutation.mutate()}
+                disabled={devLoginMutation.isPending}
+                className="btn-primary w-full justify-center gap-2 py-3.5 border border-accent-bottlegreen/30 bg-accent-bottlegreen/10 text-white hover:bg-accent-bottlegreen/20"
               >
-                Didn't receive it? Resend code
+                <IconZap className="w-4 h-4 text-[oklch(0.82_0.21_142)]" />
+                Enter Instantly as Guest
               </button>
-            </form>
-          )}
+            </div>
+          </div>
         </div>
 
         {/* Trust indicators — text only */}
-        <div className="mt-8 flex items-center justify-center gap-6">
+        <div className="mt-8 flex items-center justify-center gap-6 text-center">
           <span className="text-[9px] font-bold tracking-[0.2em] text-bottle uppercase">Secure Auth</span>
           <span className="text-white/10">·</span>
           <span className="text-[9px] font-bold tracking-[0.2em] text-bottle uppercase">Instant ID</span>

@@ -4,7 +4,8 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import Login from "./Login";
 
-let sendOtpOnSuccess: ((value: { preview?: string }) => void) | undefined;
+const mockDevLoginMutate = vi.fn();
+const mockGoogleSignIn = vi.fn();
 
 vi.mock("wouter", () => ({
   useLocation: () => ["/login", vi.fn()],
@@ -13,21 +14,6 @@ vi.mock("wouter", () => ({
 vi.mock("@/lib/trpc", () => ({
   trpc: {
     auth: {
-      sendOtp: {
-        useMutation: (opts: { onSuccess?: (value: { preview?: string }) => void }) => {
-          sendOtpOnSuccess = opts.onSuccess;
-          return {
-            mutate: vi.fn(() => sendOtpOnSuccess?.({ preview: "DEV_MODE:123456" })),
-            isPending: false,
-          };
-        },
-      },
-      verifyOtp: {
-        useMutation: () => ({
-          mutate: vi.fn(),
-          isPending: false,
-        }),
-      },
       verifyFirebaseToken: {
         useMutation: () => ({
           mutate: vi.fn(),
@@ -36,7 +22,7 @@ vi.mock("@/lib/trpc", () => ({
       },
       devLogin: {
         useMutation: () => ({
-          mutate: vi.fn(),
+          mutate: mockDevLoginMutate,
           isPending: false,
         }),
       },
@@ -45,14 +31,17 @@ vi.mock("@/lib/trpc", () => ({
 }));
 
 describe("Login", () => {
-  it("shows the OTP step after requesting a code", async () => {
+  it("renders Google Sign-In and Guest buttons, clicking guest triggers devLogin", async () => {
     const user = userEvent.setup();
     render(<Login />);
 
-    await user.type(screen.getByLabelText(/email address/i), "demo@example.com");
-    await user.click(screen.getByRole("button", { name: /send code/i }));
+    const googleBtn = screen.getByRole("button", { name: /continue with google/i });
+    const guestBtn = screen.getByRole("button", { name: /enter instantly as guest/i });
 
-    expect(screen.getByRole("heading", { name: /enter your code/i })).toBeInTheDocument();
-    expect(screen.getByText(/dev/i)).toBeInTheDocument();
+    expect(googleBtn).toBeInTheDocument();
+    expect(guestBtn).toBeInTheDocument();
+
+    await user.click(guestBtn);
+    expect(mockDevLoginMutate).toHaveBeenCalled();
   });
 });
