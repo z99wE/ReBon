@@ -50,7 +50,6 @@ export async function sendEmailOtp(email: string, otp: string): Promise<{ previe
     <div style="font-family: 'Inter', sans-serif; max-width: 480px; margin: 0 auto; background: #0a0a0a; color: #e8e8e8; padding: 40px; border-radius: 12px; border: 1px solid #1a1a1a;">
       <div style="text-align: center; margin-bottom: 32px;">
         <div style="display: inline-block; background: linear-gradient(135deg, #6366f1, #8b5cf6); padding: 12px 24px; border-radius: 8px; font-weight: 700; font-size: 20px; letter-spacing: 2px;">ReBon</div>
-        <p style="color: #888; margin-top: 8px; font-size: 13px;">Carbon Intelligence Platform</p>
       </div>
       <h2 style="font-size: 22px; font-weight: 600; margin-bottom: 8px;">Your sign-in code</h2>
       <p style="color: #888; font-size: 14px; margin-bottom: 24px;">Enter this code to access your ReBon account. It expires in 10 minutes.</p>

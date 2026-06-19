@@ -104,7 +104,6 @@ export default function Login() {
       {/* Wordmark only — no icon squatting */}
       <div className="relative z-10 mb-8 text-center animate-fade-up">
         <p className="font-black text-white tracking-[0.25em] text-sm uppercase mb-1">REBON</p>
-        <p className="text-[9px] font-bold tracking-[0.3em] text-bottle uppercase">Carbon Intelligence Platform</p>
       </div>
 
       {/* Card */}

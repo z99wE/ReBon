@@ -200,14 +200,6 @@ export default function Home() {
       {/* ── Hero ── */}
       <section className="relative z-10 pt-36 pb-28 px-6 md:px-12">
         <div className="max-w-4xl mx-auto">
-          {/* Tiny status chip */}
-          <div className="inline-flex items-center gap-2 mb-10">
-            <span className="w-1 h-1 rounded-full bg-[oklch(0.82_0.21_142)] animate-pulse-dot" />
-            <span className="text-[9px] font-bold tracking-[0.3em] text-bottle uppercase">
-              Carbon Intelligence Platform
-            </span>
-          </div>
-
           {/* Hero heading — pure type, no decoration */}
           <h1 className="font-black leading-none tracking-tighter mb-8" style={{ fontSize: 'clamp(3.5rem, 10vw, 8rem)' }}>
             <span className="block text-white">YOUR CARBON</span>

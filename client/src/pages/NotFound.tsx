@@ -48,7 +48,7 @@ export default function NotFound() {
         </div>
 
         <p className="mt-8 text-white/20 text-xs tracking-widest uppercase">
-          ReBon · Carbon Intelligence Platform
+          ReBon
         </p>
       </div>
     </div>
