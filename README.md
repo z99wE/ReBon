@@ -377,7 +377,7 @@ const logActivitySchema = z.object({
 
 ### Auth Rate Limiting
 
-Auth endpoints are rate-limited per IP to prevent brute-force attacks.
+Auth endpoints are rate-limited per IP to prevent brute-force attacks. Additionally, development/demo login features are strictly gated at both the UI layer (using Vite env variables) and the backend router (using `ENV.isProduction`) to prevent unauthorized access in production.
 
 ---
 

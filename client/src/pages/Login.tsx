@@ -28,6 +28,7 @@ export default function Login() {
     },
     onError: (e) => toast.error(e.message),
   });
+  const showDevLogin = import.meta.env.DEV || import.meta.env.MODE === "test" || import.meta.env.VITE_ALLOW_DEMO_AUTH === "true";
 
   React.useEffect(() => {
     if (isAuthenticated) {
@@ -60,12 +61,12 @@ export default function Login() {
       const result = await signInWithPopup(clientAuth, googleProvider);
       const idToken = await result.user.getIdToken();
       verifyFirebaseTokenMutation.mutate({ idToken, name: result.user.displayName || undefined });
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.warn("Popup sign-in failed/closed, falling back to redirect...", e);
       try {
         await signInWithRedirect(clientAuth, googleProvider);
-      } catch (redirectErr: any) {
-        toast.error(redirectErr.message || "Google Sign-In failed");
+      } catch (redirectErr: unknown) {
+        toast.error(redirectErr instanceof Error ? redirectErr.message : "Google Sign-In failed");
         setCheckingRedirect(false);
       }
     }
@@ -117,14 +118,16 @@ export default function Login() {
                   Continue with Google
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => devLoginMutation.mutate()}
-                  disabled={devLoginMutation.isPending}
-                  className="btn-primary w-full justify-center gap-2 py-3.5 border border-accent-bottlegreen/30 bg-accent-bottlegreen/10 text-white hover:bg-accent-bottlegreen/20"
-                >
-                  Enter Instantly as Guest
-                </button>
+                {showDevLogin && (
+                  <button
+                    type="button"
+                    onClick={() => devLoginMutation.mutate()}
+                    disabled={devLoginMutation.isPending}
+                    className="btn-primary w-full justify-center gap-2 py-3.5 border border-accent-bottlegreen/30 bg-accent-bottlegreen/10 text-white hover:bg-accent-bottlegreen/20"
+                  >
+                    Enter Instantly as Guest
+                  </button>
+                )}
               </div>
             </div>
           </div>
