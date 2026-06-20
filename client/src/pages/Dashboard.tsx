@@ -21,8 +21,8 @@ export default function Dashboard() {
 
   const isLoading = isProfileLoading || isActivitiesLoading || isChallengesLoading;
   const activeChallenges = (challenges ?? []).filter(
-    (challenge): challenge is ActiveChallenge => !challenge.completedAt
-  );
+    (challenge) => !challenge.completedAt
+  ) as ActiveChallenge[];
 
   if (profileError) {
     return (
