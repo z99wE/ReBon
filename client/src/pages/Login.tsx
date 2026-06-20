@@ -9,6 +9,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 export default function Login() {
   const { isAuthenticated, loading: authLoading } = useAuth();
   const [checkingRedirect, setCheckingRedirect] = React.useState(true);
+  const [loginStatus, setLoginStatus] = React.useState<string | null>(null);
 
   const verifyFirebaseTokenMutation = trpc.auth.verifyFirebaseToken.useMutation({
     onSuccess: () => {
@@ -17,6 +18,7 @@ export default function Login() {
     },
     onError: (e) => {
       toast.error(e.message);
+      setLoginStatus(null);
       setCheckingRedirect(false);
     },
   });
@@ -39,18 +41,22 @@ export default function Login() {
     getRedirectResult(clientAuth)
       .then((result) => {
         if (result) {
+          setLoginStatus("Finishing Google sign-in...");
           result.user.getIdToken().then((idToken) => {
             verifyFirebaseTokenMutation.mutate({ idToken, name: result.user.displayName || undefined });
           }).catch((tokenErr) => {
             console.error("Failed to get ID token from redirect result:", tokenErr);
+            setLoginStatus(null);
             setCheckingRedirect(false);
           });
         } else {
+          setLoginStatus(null);
           setCheckingRedirect(false);
         }
       })
       .catch((error) => {
         console.error("Redirect sign-in error:", error);
+        setLoginStatus(null);
         setCheckingRedirect(false);
       });
   }, [isAuthenticated]);
@@ -58,24 +64,25 @@ export default function Login() {
   const handleGoogleSignIn = async () => {
     try {
       setCheckingRedirect(true);
-      await signInWithRedirect(clientAuth, googleProvider);
+      setLoginStatus("Opening Google sign-in...");
+      const result = await signInWithPopup(clientAuth, googleProvider);
+      setLoginStatus("Finishing login...");
+      const idToken = await result.user.getIdToken();
+      verifyFirebaseTokenMutation.mutate({ idToken, name: result.user.displayName || undefined });
     } catch (e: unknown) {
-      console.error("Redirect sign-in initiation failed", e);
-      toast.error(e instanceof Error ? e.message : "Google Sign-In failed");
-      setCheckingRedirect(false);
+      console.warn("Popup sign-in failed/closed, falling back to redirect...", e);
+      try {
+        setLoginStatus("Redirecting to Google...");
+        await signInWithRedirect(clientAuth, googleProvider);
+      } catch (redirectErr: unknown) {
+        toast.error(redirectErr instanceof Error ? redirectErr.message : "Google Sign-In failed");
+        setLoginStatus(null);
+        setCheckingRedirect(false);
+      }
     }
   };
 
   const showLoading = authLoading || checkingRedirect || verifyFirebaseTokenMutation.isPending;
-
-  if (showLoading && !isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center p-4">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/10 border-t-white/60 mb-4" />
-        <p className="text-white/40 text-xs tracking-widest uppercase font-mono">Authenticating securely…</p>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center p-4 relative overflow-hidden">
@@ -106,17 +113,30 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={handleGoogleSignIn}
-                  disabled={verifyFirebaseTokenMutation.isPending}
+                  disabled={showLoading}
                   className="btn-primary w-full justify-center gap-2 py-3.5"
                 >
-                  Continue with Google
+                  {showLoading && !isAuthenticated ? (
+                    <>
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white/80" />
+                      Signing in...
+                    </>
+                  ) : (
+                    "Continue with Google"
+                  )}
                 </button>
+
+                {showLoading && !isAuthenticated && loginStatus && (
+                  <p className="text-xs text-white/45 text-center font-mono tracking-wide">
+                    {loginStatus}
+                  </p>
+                )}
 
                 {showDevLogin && (
                   <button
                     type="button"
                     onClick={() => devLoginMutation.mutate()}
-                    disabled={devLoginMutation.isPending}
+                    disabled={showLoading || devLoginMutation.isPending}
                     className="btn-primary w-full justify-center gap-2 py-3.5 border border-accent-bottlegreen/30 bg-accent-bottlegreen/10 text-white hover:bg-accent-bottlegreen/20"
                   >
                     Enter Instantly as Guest
