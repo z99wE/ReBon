@@ -6,8 +6,8 @@
 [![CI](https://github.com/z99wE/ReBon/actions/workflows/ci.yml/badge.svg)](https://github.com/z99wE/ReBon/actions/workflows/ci.yml)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19-61dafb)](https://react.dev/)
-[![Tests](https://img.shields.io/badge/tests-292%20passing-brightgreen)](#testing-strategy)
-[![Coverage](https://img.shields.io/badge/coverage-server%20%2B%20client-green)](#testing-strategy)
+[![Tests](https://img.shields.io/badge/tests-345%20passing-brightgreen)](#testing-strategy)
+[![Coverage](https://img.shields.io/badge/coverage-Dashboard%20100%25-green)](#testing-strategy)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 
 **🌐 Live App:** [https://rebon-carbon-432200473806.us-central1.run.app](https://rebon-carbon-432200473806.us-central1.run.app)
@@ -186,7 +186,7 @@ Influence scores use live database counts (activity count, completed challenges,
 | AI — Voice | Deepgram Nova-2 |
 | AI — Multilingual | Sarvam AI (sarvam-m) |
 | Deployment | Google Cloud Run (Docker, GitHub Actions CI/CD) |
-| Testing | Vitest (292 tests, 26 test files) |
+| Testing | Vitest (345 tests, 29 test files) |
 
 ### Project Structure
 
@@ -650,8 +650,11 @@ trpc.agents.stats.useQuery();                          // Public stats
 
 ### Coverage Summary
 
-- **292 tests passing** across **26 test files** (5 marked TODO for future work)
+- **345 tests passing** across **29 test files** (5 marked TODO for future work)
 - **0 test failures**, **0 TypeScript errors**
+- `Dashboard.tsx` — 100% statement coverage
+- `Mirror.tsx` — 91% statement coverage, 89% branch coverage
+- `otpAuth.ts` — `generateOtp`, `hashOtp`, `verifyOtpHash` fully covered
 - Covers: unit logic, AI routing, security, auth flows, database operations, component rendering, and user interactions
 
 ### Test Categories
@@ -660,12 +663,14 @@ trpc.agents.stats.useQuery();                          // Public stats
 |---|---|---|
 | Unit — helpers | 17 | `parseAIJson` (9 scenarios), `getWeekNumber` (4), `computeArchetype` (4) |
 | Unit — AI router | 22 | Model routing, prompt injection (12 patterns), rate limiting (3), fallback chains, missing API keys, security suffix |
-| Unit — OTP auth | 9 | OTP session lifecycle |
+| Unit — OTP auth | 18 | `generateOtp`, `hashOtp`, `verifyOtpHash`, timing safety, bypass guard |
 | Integration — core | 37 | Auth flow, JWT validation, context building |
 | Integration — routers | 50+ | Activity log, challenge lifecycle, collective joins, leaderboard ranking |
 | Integration — agents | 4 | A2A negotiation: agreed/rejected/empty states |
 | Integration — rebon | 30+ | Full tRPC procedure coverage with edge cases |
-| Component — all pages | 40+ | Dashboard (7), Login (5), Leaderboard (6), LogActivity (5), Collective (8), Mirror (5), Stories (3), Assistant (3), Onboarding (5), Community (2), AgentArena (2) |
+| Component — Dashboard | 30 | Loading/error/empty/populated states, stat cards, challenges, archetype, fallbacks, axe a11y |
+| Component — Mirror | 24 | Unauthenticated, no-data, below/above-average states with axe a11y assertions |
+| Component — other pages | 40+ | Login (5), Leaderboard (6), LogActivity (5), Collective (8), Stories (3), Assistant (3), Onboarding (5), Community (2), AgentArena (2) |
 
 ### Test Files
 
@@ -679,14 +684,16 @@ trpc.agents.stats.useQuery();                          // Public stats
 | `server/rebon.test.ts` | All tRPC procedures including edge cases |
 | `server/routers.p1.test.ts` | Idempotency and modular router tests |
 | `server/agents.p1.test.ts` | A2A negotiation engine: agreed, rejected, empty |
-| `server/services/otpAuth.test.ts` | OTP session lifecycle |
-| `client/src/pages/*.test.tsx` | Component render + interaction (all 12 pages) |
+| `server/services/otpAuth.test.ts` | `generateOtp`, `hashOtp`, `verifyOtpHash`, timing-safety, bypass guard (18 tests) |
+| `client/src/pages/Dashboard.test.tsx` | All Dashboard states: loading, error, empty, populated, axe a11y (30 tests) |
+| `client/src/pages/Mirror.test.tsx` | All Mirror states: unauthed, no-data, below/above-average, axe a11y (24 tests) |
+| `client/src/pages/*.test.tsx` | All remaining pages: component render + interaction |
 | `client/src/test/shared-carbonData.test.ts` | Shared carbon calculation helpers |
 
 ### Running Tests
 
 ```bash
-pnpm test               # All 292 tests
+pnpm test               # All 345 tests
 pnpm test --watch       # Watch mode
 pnpm test --coverage    # Coverage report (v8 provider)
 pnpm tsc --noEmit       # Type check (0 errors)
