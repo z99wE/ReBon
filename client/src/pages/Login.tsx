@@ -58,17 +58,11 @@ export default function Login() {
   const handleGoogleSignIn = async () => {
     try {
       setCheckingRedirect(true);
-      const result = await signInWithPopup(clientAuth, googleProvider);
-      const idToken = await result.user.getIdToken();
-      verifyFirebaseTokenMutation.mutate({ idToken, name: result.user.displayName || undefined });
+      await signInWithRedirect(clientAuth, googleProvider);
     } catch (e: unknown) {
-      console.warn("Popup sign-in failed/closed, falling back to redirect...", e);
-      try {
-        await signInWithRedirect(clientAuth, googleProvider);
-      } catch (redirectErr: unknown) {
-        toast.error(redirectErr instanceof Error ? redirectErr.message : "Google Sign-In failed");
-        setCheckingRedirect(false);
-      }
+      console.error("Redirect sign-in initiation failed", e);
+      toast.error(e instanceof Error ? e.message : "Google Sign-In failed");
+      setCheckingRedirect(false);
     }
   };
 
