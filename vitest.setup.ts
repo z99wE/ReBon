@@ -7,12 +7,13 @@ afterEach(() => {
   cleanup();
 });
 
-// Set required environment variables for tests
-if (!process.env.JWT_SECRET) process.env.JWT_SECRET = "test-secret-key-for-jwt-signing-in-tests";
-if (!process.env.VITE_APP_ID) process.env.VITE_APP_ID = "test-app-id";
-if (!process.env.DATABASE_URL) process.env.DATABASE_URL = "mysql://test:test@localhost/test";
-if (!process.env.JWT_SECRET) process.env.JWT_SECRET = "test-jwt-secret";
-if (!process.env.OWNER_OPEN_ID) process.env.OWNER_OPEN_ID = "test-owner-id";
+// ── Test environment bootstrap ────────────────────────────────────────────────
+// These values must be set before any server module is imported.
+// Keep in sync with the required fields in server/_core/env.ts.
+if (!process.env.JWT_SECRET)       process.env.JWT_SECRET       = "test-secret-key-for-jwt-signing-in-tests-minimum-32-chars";
+if (!process.env.VITE_APP_ID)      process.env.VITE_APP_ID      = "test-app-id";
+if (!process.env.DATABASE_URL)     process.env.DATABASE_URL     = "mysql://test:test@localhost/test";
+if (!process.env.OWNER_OPEN_ID)    process.env.OWNER_OPEN_ID    = "test-owner-id";
 
 // Mock ResizeObserver
 beforeAll(() => {
