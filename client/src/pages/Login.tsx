@@ -6,6 +6,7 @@ import {
   browserLocalPersistence,
   getRedirectResult,
   setPersistence,
+  signInWithPopup,
   signInWithRedirect,
 } from "firebase/auth";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -72,13 +73,30 @@ export default function Login() {
   const handleGoogleSignIn = async () => {
     try {
       setCheckingRedirect(true);
-      setLoginStatus("Preparing Google sign-in...");
+      setLoginStatus("Opening Google sign-in popup...");
       await setPersistence(clientAuth, browserLocalPersistence);
-      setLoginStatus("Redirecting to Google...");
-      await signInWithRedirect(clientAuth, googleProvider);
-    } catch (error: unknown) {
-      console.error("Google sign-in redirect failed:", error);
-      toast.error(error instanceof Error ? error.message : "Google Sign-In failed");
+      
+      const result = await signInWithPopup(clientAuth, googleProvider);
+      setLoginStatus("Finishing Google sign-in...");
+      
+      const idToken = await result.user.getIdToken();
+      verifyFirebaseTokenMutation.mutate({
+        idToken,
+        name: result.user.displayName || undefined,
+      });
+      
+    } catch (error: any) {
+      console.error("Google sign-in popup failed:", error);
+      
+      // Ignore user closed popup errors
+      if (error.code === 'auth/popup-closed-by-user') {
+        toast.error("Sign-in cancelled");
+      } else if (error.code === 'auth/unauthorized-domain') {
+        toast.error("Error: This domain is not authorized in Firebase Console.");
+      } else {
+        toast.error(error.message || "Google Sign-In failed");
+      }
+      
       setLoginStatus(null);
       setCheckingRedirect(false);
     }
