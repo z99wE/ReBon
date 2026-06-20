@@ -10,7 +10,7 @@ export default function Leaderboard() {
   const { user } = useAuth();
   const lbQuery = trpc.leaderboard.current.useQuery();
   const season = lbQuery.data?.season ?? null;
-  const entries = lbQuery.data?.entries ?? [];
+  const entries = (lbQuery.data?.entries ?? []) as LeaderboardRow[];
 
   const getName = (entry: LeaderboardRow) => entry.user?.name ?? "Anonymous";
   const getArchetype = (entry: LeaderboardRow) => entry.user?.archetypeLabel ?? "Explorer";
