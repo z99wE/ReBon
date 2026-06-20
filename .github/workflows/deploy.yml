@@ -17,6 +17,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Validate Google Cloud secret exists
+        env:
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+        run: |
+          if [ -z "$GCP_SA_KEY" ]; then
+            echo "::error::Missing GCP_SA_KEY secret. Add the service account JSON key in GitHub repo secrets."
+            exit 1
+          fi
+
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
@@ -50,10 +59,10 @@ jobs:
             --timeout 300s \
             --set-env-vars DATABASE_URL="${{ secrets.DATABASE_URL }}" \
             --set-env-vars JWT_SECRET="${{ secrets.JWT_SECRET }}" \
-            --set-env-vars GROQ_API_KEY="gsk_XmqGPMqkGzr1YftrYH6zWGdyb3FYZJLUQhKo5bgdyhTV3GqAGGfzXD" \
-            --set-env-vars NVIDIA_NIM_API_KEY="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" \
-            --set-env-vars DEEPGRAM_API_KEY="857350ae54cb167bfa5093f2b968c3366a527135" \
-            --set-env-vars SARVAM_API_KEY="sk_hrvqm*****OQ"
+            --set-env-vars GROQ_API_KEY="${{ secrets.GROQ_API_KEY }}" \
+            --set-env-vars NVIDIA_NIM_API_KEY="${{ secrets.NVIDIA_NIM_API_KEY }}" \
+            --set-env-vars DEEPGRAM_API_KEY="${{ secrets.DEEPGRAM_API_KEY }}" \
+            --set-env-vars SARVAM_API_KEY="${{ secrets.SARVAM_API_KEY }}"
 
       - name: Get service URL
         run: |
