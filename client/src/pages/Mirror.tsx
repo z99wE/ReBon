@@ -6,12 +6,21 @@ import { toast } from "sonner";
 import { ARCHETYPES } from "../../../shared/carbonData";
 import { SocialShare } from "@/components/SocialShare";
 
+type MirrorSnapshot = {
+  userCarbonKg: number;
+  peerAvgKg: number;
+  percentileRank: number;
+  archetype: string | null;
+  peerCount?: number;
+  insights?: string[];
+};
+
 export default function Mirror() {
   const { isAuthenticated } = useAuth();
   const latestQuery = trpc.mirror.latest.useQuery(undefined, { enabled: isAuthenticated });
   const compareMutation = trpc.mirror.compare.useMutation({ onSuccess: () => latestQuery.refetch(), onError: e => toast.error(e.message) });
 
-  const data = latestQuery.data;
+  const data = latestQuery.data as MirrorSnapshot | undefined;
   const arch = data?.archetype ? ARCHETYPES[data.archetype as keyof typeof ARCHETYPES] : null;
   const diff = data ? data.userCarbonKg - data.peerAvgKg : 0;
   const better = diff < 0;
@@ -58,7 +67,7 @@ export default function Mirror() {
                 <div className="card-glass rounded-xl border border-white/10 p-5 text-center">
                   <div className="text-xs text-white/50 mb-2 flex items-center justify-center gap-1"><IconPeople className="w-3 h-3" /> Peer Average</div>
                   <div className="text-3xl font-black text-white">{data.peerAvgKg.toFixed(1)}</div>
-                  <div className="text-xs text-white/50">kg CO₂ ({(data as any).peerCount ?? 0} peers)</div>
+                  <div className="text-xs text-white/50">kg CO₂ ({data?.peerCount ?? 0} peers)</div>
                 </div>
               </div>
 
@@ -81,10 +90,10 @@ export default function Mirror() {
               </div>
 
               {/* AI Insights */}
-              {(data as any).insights && (
+              {data?.insights?.length ? (
                 <div className="card-glass rounded-xl border border-primary/20 p-5 space-y-3">
                   <div className="text-sm font-bold text-white">ReBon Insights</div>
-                  {((data as any).insights as string[]).map((insight, i) => (
+                  {data.insights.map((insight, i) => (
                     <div key={i} className="flex items-start gap-2 text-sm text-white/50">
                       <span className="text-primary mt-0.5 flex-shrink-0">→</span>
                       {insight}
