@@ -13,6 +13,9 @@ function ParticleField() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    // Respect OS reduced-motion preference — skip animation entirely
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
     let w = (canvas.width = window.innerWidth);
     let h = (canvas.height = window.innerHeight);
     let animId: number;
