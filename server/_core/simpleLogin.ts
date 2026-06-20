@@ -7,7 +7,7 @@ export function registerSimpleAuthRoutes(app: Express) {
   // Simple login endpoint - creates a user session
   app.post("/api/simple-auth/login", async (req, res) => {
     const { email, name } = req.body;
-    
+
     if (!email || !name) {
       return res.status(400).json({ error: "Email and name required" });
     }
