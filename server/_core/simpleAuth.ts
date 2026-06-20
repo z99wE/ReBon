@@ -48,7 +48,7 @@ class SimpleAuthService {
       const { payload } = await jwtVerify(cookieValue, secretKey, {
         algorithms: ["HS256"],
       });
-      
+
       const { openId, name, email } = payload as Record<string, unknown>;
 
       if (typeof openId !== "string" || typeof name !== "string" || typeof email !== "string") {
