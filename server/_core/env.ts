@@ -44,7 +44,6 @@ function validateProductionEnv(): void {
 
   const required: Array<{ key: keyof typeof ENV; envVar: string }> = [
     { key: "cookieSecret", envVar: "JWT_SECRET" },
-    { key: "databaseUrl",  envVar: "DATABASE_URL" },
   ];
 
   const missing = required.filter(({ key }) => !ENV[key]);
