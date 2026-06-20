@@ -14,8 +14,11 @@
 export const ENV = {
   /** Application identifier; scoped to JWT tokens. */
   appId: process.env.VITE_APP_ID ?? "rebon-standalone",
-  /** Secret used to sign session JWTs. Must be at least 32 chars in production. */
-  cookieSecret: process.env.JWT_SECRET ?? "fallback-secret-for-dev",
+  /** Secret used to sign session JWTs. Production must provide JWT_SECRET. */
+  cookieSecret:
+    process.env.NODE_ENV === "production"
+      ? (process.env.JWT_SECRET ?? "")
+      : (process.env.JWT_SECRET ?? "fallback-secret-for-dev"),
   /** PostgreSQL connection string (Neon / any postgres-compatible). */
   databaseUrl: process.env.DATABASE_URL ?? "",
   /** Optional OAuth server URL for federated login flows. */
@@ -54,9 +57,9 @@ function validateProductionEnv(): void {
     );
   }
 
-  if (ENV.cookieSecret === "fallback-secret-for-dev") {
+  if (ENV.cookieSecret.length < 32) {
     throw new Error(
-      "[ReBon] JWT_SECRET must not use the development fallback in production. Set a secure random secret (≥32 chars)."
+      "[ReBon] JWT_SECRET must be at least 32 characters long in production."
     );
   }
 }

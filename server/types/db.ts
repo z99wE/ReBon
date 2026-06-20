@@ -1,5 +1,15 @@
 export type JsonRecord = Record<string, unknown>;
 
+export type RoadmapPhase = {
+  phase: number;
+  title: string;
+  actions: Array<{ action: string; carbonSavingKg: number }>;
+};
+
+export type Roadmap = {
+  phases: RoadmapPhase[];
+};
+
 export type StoryEquivalents = {
   trees: number;
   km_not_driven: number;
@@ -19,14 +29,8 @@ export interface User {
   archetype: string | null;
   archetypeLabel: string | null;
   onboardingCompleted: boolean;
-  onboardingAnswers?: Record<string, string>;
-  roadmap?: {
-    phases: Array<{
-      phase: number;
-      title: string;
-      actions: Array<{ action: string; carbonSavingKg: number }>;
-    }>;
-  };
+  onboardingAnswers?: Record<string, string> | null;
+  roadmap?: Roadmap | null;
   totalCarbonKg: number;
   weeklyBudgetKg: number;
   eloScore: number;
@@ -83,7 +87,7 @@ export interface Story {
   narrative: string;
   headline: string;
   carbonSavedKg: number;
-  equivalents?: StoryEquivalents;
+  equivalents?: StoryEquivalents | null;
   period: "week" | "month" | "alltime";
   shareCount: number;
   aiProvider?: string | null;
@@ -120,7 +124,7 @@ export interface LeaderboardSeason {
   name?: string | null;
   startDate: Date;
   endDate: Date;
-  endsAt?: Date;
+  endsAt?: Date | null;
   isActive: boolean;
   createdAt: Date;
 }
@@ -136,7 +140,7 @@ export interface LeaderboardEntry {
   challengesCompleted: number;
   influenceScore: number;
   rivalUserId?: string | null;
-  streakDays?: number;
+  streakDays?: number | null;
   updatedAt: Date;
 }
 
@@ -158,7 +162,7 @@ export interface FeedItem {
   isInfluencer: boolean;
   amplified: boolean;
   likeCount: number;
-  metadata?: JsonRecord;
+  metadata?: JsonRecord | null;
   createdAt: Date;
 }
 
@@ -169,8 +173,8 @@ export interface PeerSnapshot {
   userCarbonKg: number;
   peerAvgKg: number;
   percentileRank: number;
-  categoryBreakdown?: Record<string, number>;
-  peerCategoryBreakdown?: Record<string, number>;
+  categoryBreakdown?: Record<string, number> | null;
+  peerCategoryBreakdown?: Record<string, number> | null;
   snapshotDate: Date;
 }
 

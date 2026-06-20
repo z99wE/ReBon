@@ -10,7 +10,7 @@
 [![Coverage](https://img.shields.io/badge/coverage-server%20%2B%20client-green)](#testing-strategy)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 
-**🌐 Live App:** [https://rebon-carbon-utzcfrqjyq-uc.a.run.app](https://rebon-carbon-utzcfrqjyq-uc.a.run.app)
+**🌐 Live App:** [https://rebon-carbon-432200473806.us-central1.run.app](https://rebon-carbon-432200473806.us-central1.run.app)
 
 ---
 
@@ -420,6 +420,10 @@ Key documented modules: [`server/_core/env.ts`](./server/_core/env.ts), [`server
 | tRPC routers | camelCase + `Router` suffix | `activitiesRouter`, `agentsRouter` |
 | Server infrastructure | `_core/` prefix | `_core/env.ts`, `_core/trpc.ts` |
 
+### Strict Type Safety
+
+The entire codebase is typed end-to-end, enforcing strict TypeScript boundaries. `tsc --noEmit` passes cleanly, and internal database layers heavily restrict the use of `any` casts in favour of strict data validation and helper generic extraction methods.
+
 ### Centralised & Validated Environment Configuration
 
 `server/_core/env.ts` is the **single source of truth** for all environment variables:
@@ -433,7 +437,7 @@ Key documented modules: [`server/_core/env.ts`](./server/_core/env.ts), [`server
  */
 export const ENV = {
   appId:                  process.env.VITE_APP_ID          ?? "rebon-standalone",
-  cookieSecret:           process.env.JWT_SECRET           ?? "fallback-secret-for-dev",
+  cookieSecret:           process.env.NODE_ENV === "production" ? (process.env.JWT_SECRET ?? "") : (process.env.JWT_SECRET ?? "fallback-secret-for-dev"),
   databaseUrl:            process.env.DATABASE_URL         ?? "",
   firebaseServiceAccount: process.env.FIREBASE_SERVICE_ACCOUNT ?? "",
   isProduction:           process.env.NODE_ENV === "production",
@@ -957,7 +961,7 @@ git push origin main   # triggers build → test → docker push → Cloud Run d
 - Backend: Express + tRPC on port 8080
 - Database: External MySQL/TiDB (not containerised)
 
-**Live app:** [https://rebon-carbon-utzcfrqjyq-uc.a.run.app](https://rebon-carbon-utzcfrqjyq-uc.a.run.app)
+**Live app:** [https://rebon-carbon-432200473806.us-central1.run.app](https://rebon-carbon-432200473806.us-central1.run.app)
 
 For detailed deployment steps see [DEPLOYMENT.md](./DEPLOYMENT.md), [CLOUD_RUN_DEPLOY.md](./CLOUD_RUN_DEPLOY.md) and [SETUP_AI_API_KEYS.md](./SETUP_AI_API_KEYS.md).
 

@@ -4,6 +4,7 @@ import type { Request } from "express";
 import type { User } from "../types/db";
 import * as db from "../db";
 import { COOKIE_NAME } from "@shared/const";
+import { ENV } from "./env";
 
 export type SessionPayload = {
   openId: string;
@@ -13,8 +14,7 @@ export type SessionPayload = {
 
 class SimpleAuthService {
   private getSessionSecret() {
-    const secret = process.env.JWT_SECRET || "fallback-secret-for-dev";
-    return new TextEncoder().encode(secret);
+    return new TextEncoder().encode(ENV.cookieSecret);
   }
 
   async createSessionToken(

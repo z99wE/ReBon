@@ -22,7 +22,7 @@
         "oAuthBrandDisplayName": "ReBon",
         "supportEmail": "neuralnamah@gmail.com",
         "authorizedRedirectUris": [
-          "https://rebon-carbon-utzcfrqjyq-uc.a.run.app",
+          "https://rebon-carbon-432200473806.us-central1.run.app",
           "http://localhost"
         ]
       }

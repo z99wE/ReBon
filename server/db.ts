@@ -11,6 +11,9 @@ const generateId = () => Math.random().toString(36).substring(2, 15);
 
 type TimestampLike = { toDate: () => Date };
 
+type UserUpdateData = Pick<User, "updatedAt" | "lastSignedIn"> &
+  Partial<Pick<User, "name" | "email" | "loginMethod" | "role">>;
+
 const toDate = (value: unknown): Date | undefined => {
   if (value instanceof Date) return value;
   if (
@@ -58,7 +61,7 @@ export async function upsertUser(user: InsertUser): Promise<void> {
   } else {
     // Update existing
     const doc = snapshot.docs[0];
-    const updateData: any = { updatedAt: now, lastSignedIn: user.lastSignedIn || now };
+    const updateData: UserUpdateData = { updatedAt: now, lastSignedIn: user.lastSignedIn || now };
     if (user.name !== undefined) updateData.name = user.name;
     if (user.email !== undefined) updateData.email = user.email;
     if (user.loginMethod !== undefined) updateData.loginMethod = user.loginMethod;
@@ -236,15 +239,15 @@ export async function createChallenge(data: Omit<Challenge, 'id' | 'createdAt'>)
   });
 }
 
-export async function completeChallenge(challengeId: string, userId: string) {
+export async function completeChallenge(challengeId: string, userId: string): Promise<Challenge> {
   const ref = db.collection('challenges').doc(challengeId);
   const userRef = db.collection('users').doc(userId);
-  let challengeData: any;
+  let challengeData: Challenge | undefined;
   
   await db.runTransaction(async (t) => {
     const doc = await t.get(ref);
     if (!doc.exists) throw new Error("Challenge not found");
-    challengeData = doc.data();
+    challengeData = doc.data() as Challenge;
     if (challengeData.userId !== userId) throw new Error("Unauthorized");
     if (challengeData.status !== "active") throw new Error("Challenge already completed");
     
@@ -261,6 +264,10 @@ export async function completeChallenge(challengeId: string, userId: string) {
     }
   });
   
+  if (!challengeData) {
+    throw new Error("Challenge not found");
+  }
+
   return challengeData;
 }
 
@@ -276,11 +283,14 @@ export async function saveStory(data: Omit<Story, 'id' | 'generatedAt' | 'shareC
   return { id, generatedAt: now };
 }
 
-export async function getUserStories(userId: string, limit = 10) {
+export async function getUserStories(userId: string, limit = 10): Promise<Story[]> {
   const snapshot = await db.collection('stories').where('userId', '==', userId).orderBy('generatedAt', 'desc').limit(limit).get();
   return snapshot.docs.map(doc => {
-    const data = doc.data() as any;
-    return { ...data, generatedAt: data.generatedAt?.toDate() } as Story;
+    const data = doc.data() as Story;
+    return {
+      ...data,
+      generatedAt: toDate(data.generatedAt) ?? new Date(),
+    };
   });
 }
 
