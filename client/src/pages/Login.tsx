@@ -4,14 +4,21 @@ import { toast } from "sonner";
 import { IconZap } from "@/components/Icons";
 import { auth as clientAuth, googleProvider } from "@/lib/firebase";
 import { signInWithPopup, signInWithRedirect, getRedirectResult } from "firebase/auth";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 export default function Login() {
+  const { isAuthenticated, loading: authLoading } = useAuth();
+  const [checkingRedirect, setCheckingRedirect] = React.useState(true);
+
   const verifyFirebaseTokenMutation = trpc.auth.verifyFirebaseToken.useMutation({
     onSuccess: () => {
       toast.success("Welcome to ReBon!");
       window.location.href = "/dashboard";
     },
-    onError: (e) => toast.error(e.message),
+    onError: (e) => {
+      toast.error(e.message);
+      setCheckingRedirect(false);
+    },
   });
 
   const devLoginMutation = trpc.auth.devLogin.useMutation({
@@ -23,6 +30,11 @@ export default function Login() {
   });
 
   React.useEffect(() => {
+    if (isAuthenticated) {
+      window.location.href = "/dashboard";
+      return;
+    }
+
     getRedirectResult(clientAuth)
       .then((result) => {
         if (result) {
@@ -30,16 +42,21 @@ export default function Login() {
             verifyFirebaseTokenMutation.mutate({ idToken, name: result.user.displayName || undefined });
           }).catch((tokenErr) => {
             console.error("Failed to get ID token from redirect result:", tokenErr);
+            setCheckingRedirect(false);
           });
+        } else {
+          setCheckingRedirect(false);
         }
       })
       .catch((error) => {
         console.error("Redirect sign-in error:", error);
+        setCheckingRedirect(false);
       });
-  }, []);
+  }, [isAuthenticated]);
 
   const handleGoogleSignIn = async () => {
     try {
+      setCheckingRedirect(true);
       const result = await signInWithPopup(clientAuth, googleProvider);
       const idToken = await result.user.getIdToken();
       verifyFirebaseTokenMutation.mutate({ idToken, name: result.user.displayName || undefined });
@@ -49,9 +66,21 @@ export default function Login() {
         await signInWithRedirect(clientAuth, googleProvider);
       } catch (redirectErr: any) {
         toast.error(redirectErr.message || "Google Sign-In failed");
+        setCheckingRedirect(false);
       }
     }
   };
+
+  const showLoading = authLoading || checkingRedirect || verifyFirebaseTokenMutation.isPending;
+
+  if (showLoading && !isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center p-4">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/10 border-t-white/60 mb-4" />
+        <p className="text-white/40 text-xs tracking-widest uppercase font-mono">Authenticating securely…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center p-4 relative overflow-hidden pb-16">

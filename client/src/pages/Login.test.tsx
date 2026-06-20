@@ -11,6 +11,21 @@ vi.mock("wouter", () => ({
   useLocation: () => ["/login", vi.fn()],
 }));
 
+vi.mock("@/_core/hooks/useAuth", () => ({
+  useAuth: () => ({
+    isAuthenticated: false,
+    loading: false,
+  }),
+}));
+
+vi.mock("firebase/auth", () => ({
+  getAuth: vi.fn(),
+  getRedirectResult: vi.fn(async () => null),
+  signInWithPopup: vi.fn(),
+  signInWithRedirect: vi.fn(),
+  GoogleAuthProvider: vi.fn().mockImplementation(() => ({})),
+}));
+
 vi.mock("@/lib/trpc", () => ({
   trpc: {
     auth: {
@@ -35,8 +50,8 @@ describe("Login", () => {
     const user = userEvent.setup();
     render(<Login />);
 
-    const googleBtn = screen.getByRole("button", { name: /continue with google/i });
-    const guestBtn = screen.getByRole("button", { name: /enter instantly as guest/i });
+    const googleBtn = await screen.findByRole("button", { name: /continue with google/i });
+    const guestBtn = await screen.findByRole("button", { name: /enter instantly as guest/i });
 
     expect(googleBtn).toBeInTheDocument();
     expect(guestBtn).toBeInTheDocument();
