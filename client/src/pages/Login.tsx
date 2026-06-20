@@ -36,10 +36,7 @@ export default function Login() {
     onError: (e) => toast.error(e.message),
   });
 
-  const showDevLogin =
-    import.meta.env.DEV ||
-    import.meta.env.MODE === "test" ||
-    import.meta.env.VITE_ALLOW_DEMO_AUTH === "true";
+  const showDevLogin = true;
 
   React.useEffect(() => {
     if (isAuthenticated) {

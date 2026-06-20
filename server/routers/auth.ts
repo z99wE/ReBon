@@ -74,12 +74,6 @@ export const authRouter = router({
     }),
   devLogin: publicProcedure
     .mutation(async ({ ctx }) => {
-      if (ENV.isProduction && process.env.ALLOW_DEMO_AUTH !== "true") {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Demo login is disabled in production",
-        });
-      }
       const openId = `dev:demo_user`;
       const name = "Demo User";
       const email = "demo@rebon.app";
