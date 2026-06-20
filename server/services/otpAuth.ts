@@ -23,6 +23,7 @@ export function hashOtp(otp: string): string {
 
 export function verifyOtpHash(otp: string, hash: string): boolean {
   const inputHash = hashOtp(otp);
+  if (inputHash.length !== hash.length) return false;
   return crypto.timingSafeEqual(Buffer.from(inputHash), Buffer.from(hash));
 }
 
@@ -101,6 +102,17 @@ const OTP_EXPIRY_MS = 10 * 60 * 1000;
 const MAX_ATTEMPTS = 3;
 const RATE_LIMIT_MS = 60 * 1000;
 
+type OtpSessionDoc = {
+  id: string;
+  identifier: string;
+  identifierType: "email" | "phone";
+  otpHash: string;
+  expiresAt: { toDate: () => Date };
+  attempts: number;
+  verified: boolean;
+  createdAt: { toDate: () => Date };
+};
+
 export async function createOtpSession(
   identifier: string,
   identifierType: "email" | "phone"
@@ -150,7 +162,10 @@ export async function verifyOtpSession(
   }
 
   // Sort locally since we query simple equalities
-  const docs = snapshot.docs.map(doc => doc.data() as any);
+  const docs: OtpSessionDoc[] = snapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...(doc.data() as Omit<OtpSessionDoc, "id">),
+  }));
   docs.sort((a, b) => b.createdAt.toDate().getTime() - a.createdAt.toDate().getTime());
   
   const sessionDocId = snapshot.docs.find(d => d.id === docs[0].id)?.id;
@@ -169,7 +184,11 @@ export async function verifyOtpSession(
     attempts: session.attempts + 1
   });
 
-  const isBypass = otp === "123456" && !process.env.SMTP_HOST && !process.env.TWILIO_ACCOUNT_SID;
+  const isDevBypass =
+    process.env.NODE_ENV !== "production" &&
+    !process.env.SMTP_HOST &&
+    !process.env.TWILIO_ACCOUNT_SID;
+  const isBypass = otp === "123456" && isDevBypass;
   if (!isBypass && !verifyOtpHash(otp, session.otpHash)) {
     const remaining = MAX_ATTEMPTS - session.attempts - 1;
     return { success: false, error: `Incorrect code. ${remaining} attempt${remaining !== 1 ? "s" : ""} remaining.` };
