@@ -6,7 +6,7 @@
 [![CI](https://github.com/z99wE/ReBon/actions/workflows/ci.yml/badge.svg)](https://github.com/z99wE/ReBon/actions/workflows/ci.yml)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19-61dafb)](https://react.dev/)
-[![Tests](https://img.shields.io/badge/tests-345%20passing-brightgreen)](#testing-strategy)
+[![Tests](https://img.shields.io/badge/Tests-357%20Passing-success)](#testing-strategy)
 [![Coverage](https://img.shields.io/badge/coverage-Dashboard%20100%25-green)](#testing-strategy)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 
@@ -186,7 +186,7 @@ Influence scores use live database counts (activity count, completed challenges,
 | AI — Voice | Deepgram Nova-2 |
 | AI — Multilingual | Sarvam AI (sarvam-m) |
 | Deployment | Google Cloud Run (Docker, GitHub Actions CI/CD) |
-| Testing | Vitest (345 tests, 29 test files) |
+| Testing | Vitest (357 tests, 29 test files) |
 
 ### Project Structure
 
