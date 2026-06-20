@@ -34,7 +34,11 @@ vi.mock("firebase/auth", () => ({
   getRedirectResult: mocks.getRedirectResult,
   signInWithPopup: mocks.googleSignIn,
   signInWithRedirect: vi.fn(),
-  GoogleAuthProvider: vi.fn().mockImplementation(() => ({})),
+  setPersistence: vi.fn().mockResolvedValue(undefined),
+  browserLocalPersistence: {},
+  GoogleAuthProvider: vi.fn().mockImplementation(() => ({
+    setCustomParameters: vi.fn(),
+  })),
 }));
 
 vi.mock("@/lib/trpc", () => ({
