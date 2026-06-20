@@ -13,7 +13,7 @@ export default function Collective() {
   const [desc, setDesc] = useState("");
   const [inviteCode, setInviteCode] = useState("");
   const [whatIfScenario, setWhatIfScenario] = useState("");
-  const [selectedCollective, setSelectedCollective] = useState<number | null>(null);
+  const [selectedCollective, setSelectedCollective] = useState<string | null>(null);
 
   const myCollectivesQuery = trpc.collective.myCollectives.useQuery(undefined, { enabled: isAuthenticated });
   const publicQuery = trpc.collective.publicList.useQuery();

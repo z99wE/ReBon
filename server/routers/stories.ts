@@ -100,6 +100,7 @@ Return JSON format strictly: { headline: string, narrative: string }`;
         narrative: storyData.narrative ?? fallbackStory.narrative,
         carbonSavedKg: carbonSaved,
         equivalents,
+        period: input.period,
       };
     }),
 

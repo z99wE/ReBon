@@ -1,9 +1,10 @@
-if (typeof window !== "undefined" && window.trustedTypes && window.trustedTypes.createPolicy) {
+const win = typeof window !== "undefined" ? (window as any) : undefined;
+if (win && win.trustedTypes && win.trustedTypes.createPolicy) {
   try {
-    window.trustedTypes.createPolicy("default", {
-      createHTML: (string) => string,
-      createScript: (string) => string,
-      createScriptURL: (string) => string,
+    win.trustedTypes.createPolicy("default", {
+      createHTML: (str: string) => str,
+      createScript: (str: string) => str,
+      createScriptURL: (str: string) => str,
     });
   } catch (e) {
     console.warn("Failed to create default Trusted Types policy:", e);
