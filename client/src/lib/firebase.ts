@@ -3,7 +3,7 @@ import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAawOH1WliSoOJNPKJbO0s08qOhanxLUf4",
-  authDomain: typeof window !== "undefined" ? window.location.host : "buildwithai-499306.firebaseapp.com",
+  authDomain: "buildwithai-499306.firebaseapp.com",
   projectId: "buildwithai-499306",
   storageBucket: "buildwithai-499306.firebasestorage.app",
   messagingSenderId: "432200473806",
