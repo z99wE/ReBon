@@ -10,7 +10,7 @@
 [![Coverage](https://img.shields.io/badge/coverage-Dashboard%20100%25-green)](#testing-strategy)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 
-**🌐 Live App:** [https://rebon-carbon-432200473806.us-central1.run.app](https://rebon-carbon-432200473806.us-central1.run.app)
+**🌐 Live App:** [https://rebon-carbon-utzcfrqjyq-uc.a.run.app](https://rebon-carbon-utzcfrqjyq-uc.a.run.app)
 
 ---
 
@@ -334,6 +334,7 @@ The novel feature of ReBon: user-owned AI agents negotiate carbon commitments:
 
 ### Authentication
 
+- **Hackathon Guest Bypass** — A dedicated "Enter Instantly as Guest" button is enabled on production to bypass third-party cookie blocking (e.g. Brave Shields) and provide instant access to judges.
 - **Google Sign-In** — Firebase Google OAuth. No password storage, no OTP SMS.
 - **JWT session cookies** — Signed tokens in HTTP-only cookies. Token includes `openId`, `appId`, and `name`.
 - **Protected procedures** — All data mutations require authentication via `protectedProcedure`.
@@ -650,7 +651,7 @@ trpc.agents.stats.useQuery();                          // Public stats
 
 ### Coverage Summary
 
-- **345 tests passing** across **29 test files** (5 marked TODO for future work)
+- **352 tests passing** across **28 test files** (5 marked TODO for future work)
 - **0 test failures**, **0 TypeScript errors**
 - `Dashboard.tsx` — 100% statement coverage
 - `Mirror.tsx` — 91% statement coverage, 89% branch coverage
