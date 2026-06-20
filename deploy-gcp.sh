@@ -34,10 +34,10 @@ gcloud run deploy $SERVICE_NAME \
   --timeout 300s \
   --set-env-vars DATABASE_URL="$DATABASE_URL" \
   --set-env-vars JWT_SECRET="$(openssl rand -hex 32)" \
-  --set-env-vars GROQ_API_KEY="gsk_XmqGPMqkGzr1YftrYH6zWGdyb3FYZJLUQhKo5bgdyhTV3GqAGGfzXD" \
-  --set-env-vars NVIDIA_NIM_API_KEY="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" \
-  --set-env-vars DEEPGRAM_API_KEY="857350ae54cb167bfa5093f2b968c3366a527135" \
-  --set-env-vars SARVAM_API_KEY="sk_hrvqm*****OQ"
+  --set-env-vars GROQ_API_KEY="$GROQ_API_KEY" \
+  --set-env-vars NVIDIA_NIM_API_KEY="$NVIDIA_NIM_API_KEY" \
+  --set-env-vars DEEPGRAM_API_KEY="$DEEPGRAM_API_KEY" \
+  --set-env-vars SARVAM_API_KEY="$SARVAM_API_KEY"
 
 # Get service URL
 SERVICE_URL=$(gcloud run services describe $SERVICE_NAME \
