@@ -359,7 +359,7 @@ export function detectPromptInjection(text: string): boolean { ... }
 
 ### Input Validation
 
-All tRPC inputs are validated with Zod schemas before touching the database:
+All tRPC inputs and REST authentication endpoints (like simple login) are validated with Zod schemas before touching the database. This includes automatic lowercase normalization for user emails to prevent duplicate accounts:
 
 ```typescript
 const logActivitySchema = z.object({
