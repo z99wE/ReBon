@@ -100,7 +100,7 @@ export default function Mirror() {
                     </div>
                   ))}
                 </div>
-              )}
+              ) : null}
 
               {/* Share comparison result */}
               <div className="card-glass rounded-xl border border-white/10 p-4 flex flex-wrap items-center justify-between gap-3">
