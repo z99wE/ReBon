@@ -42,10 +42,6 @@ export function useAuth(options?: UseAuthOptions) {
   }, [logoutMutation, utils]);
 
   const state = useMemo(() => {
-    // Store user info in localStorage for persistence
-    if (meQuery.data) {
-      localStorage.setItem("user-info", JSON.stringify(meQuery.data));
-    }
     return {
       user: meQuery.data ?? null,
       loading: meQuery.isLoading || logoutMutation.isPending,
@@ -59,6 +55,11 @@ export function useAuth(options?: UseAuthOptions) {
     logoutMutation.error,
     logoutMutation.isPending,
   ]);
+
+  useEffect(() => {
+    if (!meQuery.data || typeof window === "undefined") return;
+    localStorage.setItem("user-info", JSON.stringify(meQuery.data));
+  }, [meQuery.data]);
 
   useEffect(() => {
     if (!redirectOnUnauthenticated) return;

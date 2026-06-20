@@ -3,7 +3,7 @@ import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { IconZap } from "@/components/Icons";
 import { auth as clientAuth, googleProvider } from "@/lib/firebase";
-import { signInWithPopup, signInWithRedirect, getRedirectResult } from "firebase/auth";
+import { browserLocalPersistence, getRedirectResult, setPersistence, signInWithPopup, signInWithRedirect } from "firebase/auth";
 import { useAuth } from "@/_core/hooks/useAuth";
 
 export default function Login() {
@@ -65,20 +65,29 @@ export default function Login() {
     try {
       setCheckingRedirect(true);
       setLoginStatus("Opening Google sign-in...");
+      await setPersistence(clientAuth, browserLocalPersistence);
       const result = await signInWithPopup(clientAuth, googleProvider);
       setLoginStatus("Finishing login...");
       const idToken = await result.user.getIdToken();
       verifyFirebaseTokenMutation.mutate({ idToken, name: result.user.displayName || undefined });
     } catch (e: unknown) {
-      console.warn("Popup sign-in failed/closed, falling back to redirect...", e);
-      try {
-        setLoginStatus("Redirecting to Google...");
-        await signInWithRedirect(clientAuth, googleProvider);
-      } catch (redirectErr: unknown) {
-        toast.error(redirectErr instanceof Error ? redirectErr.message : "Google Sign-In failed");
-        setLoginStatus(null);
-        setCheckingRedirect(false);
+      const code = typeof e === "object" && e && "code" in e ? String((e as { code?: unknown }).code) : "";
+      console.warn("Popup sign-in failed", e);
+
+      if (code === "auth/popup-blocked" || code === "auth/operation-not-supported-in-this-environment") {
+        try {
+          setLoginStatus("Redirecting to Google...");
+          await signInWithRedirect(clientAuth, googleProvider);
+          return;
+        } catch (redirectErr: unknown) {
+          toast.error(redirectErr instanceof Error ? redirectErr.message : "Google Sign-In failed");
+        }
+      } else {
+        toast.error(e instanceof Error ? e.message : "Google Sign-In failed");
       }
+
+      setLoginStatus(null);
+      setCheckingRedirect(false);
     }
   };
 
