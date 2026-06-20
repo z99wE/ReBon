@@ -44,11 +44,11 @@ export const authRouter = router({
         const cookieOptions = getSessionCookieOptions(ctx.req);
         ctx.res.cookie(COOKIE_NAME, token, { ...cookieOptions, maxAge: 30 * 24 * 60 * 60 * 1000 });
         return { success: true };
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Firebase token verification failed:", error);
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: error.message || "Invalid Firebase ID token",
+          message: error instanceof Error ? error.message : "Invalid Firebase ID token",
         });
       }
     }),
@@ -70,10 +70,16 @@ export const authRouter = router({
       let preview: string | undefined;
       if (input.identifierType === "email") { const r = await sendEmailOtp(input.identifier, otp); preview = r.preview; }
       else { const r = await sendPhoneOtp(input.identifier, otp); preview = r.preview; }
-      return { sent: true, preview: (!process.env.SMTP_HOST || process.env.NODE_ENV !== "production") ? preview : undefined };
+      return { sent: true, preview: ENV.isProduction ? undefined : preview };
     }),
   devLogin: publicProcedure
     .mutation(async ({ ctx }) => {
+      if (ENV.isProduction && process.env.ALLOW_DEMO_AUTH !== "true") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Demo login is disabled in production",
+        });
+      }
       const openId = `dev:demo_user`;
       const name = "Demo User";
       const email = "demo@rebon.app";
