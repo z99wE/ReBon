@@ -1,5 +1,16 @@
+export type JsonRecord = Record<string, unknown>;
+
+export type StoryEquivalents = {
+  trees: number;
+  km_not_driven: number;
+  flights_avoided: number;
+  phone_charges: number;
+  meals_saved: number;
+  lightbulb_hours: number;
+};
+
 export interface User {
-  id: string; // Migrated to string for Firestore
+  id: string;
   openId: string;
   name: string | null;
   email: string | null;
@@ -8,8 +19,14 @@ export interface User {
   archetype: string | null;
   archetypeLabel: string | null;
   onboardingCompleted: boolean;
-  onboardingAnswers?: any;
-  roadmap?: any;
+  onboardingAnswers?: Record<string, string>;
+  roadmap?: {
+    phases: Array<{
+      phase: number;
+      title: string;
+      actions: Array<{ action: string; carbonSavingKg: number }>;
+    }>;
+  };
   totalCarbonKg: number;
   weeklyBudgetKg: number;
   eloScore: number;
@@ -66,7 +83,7 @@ export interface Story {
   narrative: string;
   headline: string;
   carbonSavedKg: number;
-  equivalents?: any;
+  equivalents?: StoryEquivalents;
   period: "week" | "month" | "alltime";
   shareCount: number;
   aiProvider?: string | null;
@@ -100,8 +117,10 @@ export interface LeaderboardSeason {
   seasonNumber: number;
   year: number;
   weekNumber: number;
+  name?: string | null;
   startDate: Date;
   endDate: Date;
+  endsAt?: Date;
   isActive: boolean;
   createdAt: Date;
 }
@@ -117,6 +136,7 @@ export interface LeaderboardEntry {
   challengesCompleted: number;
   influenceScore: number;
   rivalUserId?: string | null;
+  streakDays?: number;
   updatedAt: Date;
 }
 
@@ -138,7 +158,7 @@ export interface FeedItem {
   isInfluencer: boolean;
   amplified: boolean;
   likeCount: number;
-  metadata?: any;
+  metadata?: JsonRecord;
   createdAt: Date;
 }
 
@@ -149,8 +169,8 @@ export interface PeerSnapshot {
   userCarbonKg: number;
   peerAvgKg: number;
   percentileRank: number;
-  categoryBreakdown?: any;
-  peerCategoryBreakdown?: any;
+  categoryBreakdown?: Record<string, number>;
+  peerCategoryBreakdown?: Record<string, number>;
   snapshotDate: Date;
 }
 

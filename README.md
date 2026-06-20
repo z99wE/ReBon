@@ -179,7 +179,7 @@ Influence scores use live database counts (activity count, completed challenges,
 |---|---|
 | Frontend | React 19, Vite, Vanilla CSS (glassmorphism theme) |
 | Backend | Express 4, tRPC 11 (type-safe RPC) |
-| Database | MySQL / TiDB with Drizzle ORM |
+| Database | Firebase Firestore |
 | Authentication | Firebase Google OAuth + JWT session cookies |
 | AI — Fast | Groq (llama-3.1-8b-instant, llama-3.3-70b-versatile) |
 | AI — Deep | NVIDIA NIM (llama-3.3-70b-instruct) |
@@ -472,55 +472,92 @@ Zero TypeScript errors: `pnpm tsc --noEmit` passes clean. All domain types defin
 
 ---
 
-## Database Schema
+## Database Schema (Firestore Collection Design)
 
-### Core Tables
+### Core Collections
 
-**users** — profiles with archetype, Elo score, influence score, and streak tracking
+**users** — documents containing user profile data, archetype, Elo score, influence score, and streak tracking:
+- `id` (string)
+- `openId` (string)
+- `email` (string)
+- `name` (string)
+- `archetype` (string)
+- `archetypeLabel` (string)
+- `weeklyBudgetKg` (number)
+- `totalCarbonKg` (number)
+- `eloScore` (number)
+- `influenceScore` (number)
+- `currentStreak` (number)
+- `longestStreak` (number)
+- `preferredLanguage` (string)
+- `onboardingCompleted` (boolean)
+- `role` (string)
+- `createdAt` (timestamp)
+- `updatedAt` (timestamp)
+- `lastSignedIn` (timestamp)
 
-```sql
-id, openId, email, name, archetype, archetypeLabel,
-weeklyBudgetKg, totalCarbonKg, eloScore, influenceScore,
-currentStreak, preferredLanguage, createdAt
-```
+**activities** — documents representing user carbon activity logs:
+- `id` (string)
+- `userId` (string)
+- `category` (string)
+- `subcategory` (string)
+- `label` (string)
+- `carbonKg` (number)
+- `quantity` (number)
+- `unit` (string)
+- `inputMethod` (string)
+- `voiceTranscript` (string)
+- `notes` (string)
+- `loggedAt` (timestamp)
+- `createdAt` (timestamp)
 
-**activities** — carbon activity log with input method tracking
+**challenges** — AI-generated user challenges with idempotent completion tracking:
+- `id` (string)
+- `userId` (string)
+- `title` (string)
+- `description` (string)
+- `category` (string)
+- `difficulty` (string)
+- `carbonSavingKg` (number)
+- `pointsReward` (number)
+- `status` (string)
+- `completedAt` (timestamp | null)
+- `createdAt` (timestamp)
 
-```sql
-id, userId, category, subcategory, label, carbonKg,
-quantity, unit, inputMethod, voiceTranscript, loggedAt
-```
+**collectives** — user group cooperatives for collaborative carbon reduction:
+- `id` (string)
+- `name` (string)
+- `description` (string)
+- `inviteCode` (string)
+- `memberCount` (number)
+- `totalCarbonKg` (number)
+- `isPublic` (boolean)
+- `createdAt` (timestamp)
+- `updatedAt` (timestamp)
 
-**challenges** — AI-generated challenges with idempotent completion
+**collective_members** — membership maps linking users to collectives.
 
-```sql
-id, userId, title, description, category, difficulty,
-carbonSavingKg, pointsReward, status, completedAt, createdAt
-```
+**leaderboard_seasons** — seasonal settings for leaderboards.
 
-**collectives** — user groups for collaborative carbon reduction
+**leaderboard_entries** — seasonal user rankings with Elo score, streak, and log counts.
 
-```sql
-id, name, description, inviteCode, memberCount,
-totalCarbonSavedKg, createdAt
-```
+**peer_snapshots** — peer comparison reports snapshots cached per user.
 
-**collectiveMembers** — membership with `UNIQUE(collectiveId, userId)` constraint
+**feed_items** — community feed posts (activities, collective events, challenges).
 
-**leaderboardEntries** — seasonal rankings with Elo score, streak, and activity count
+**stories** — AI-generated CarbonStory cards:
+- `id` (string)
+- `userId` (string)
+- `period` (string)
+- `headline` (string)
+- `narrative` (string)
+- `carbonSavedKg` (number)
+- `equivalents` (map)
+- `shareCount` (number)
+- `aiProvider` (string)
+- `generatedAt` (timestamp)
 
-**mirrorSnapshots** — cached peer comparison results per user
-
-**stories** — AI-generated narrative cards with share tracking
-
-```sql
-id, userId, period, headline, narrative, carbonSavedKg,
-equivalents (JSON), shareCount, aiProvider, generatedAt
-```
-
-**agents** — A2A agent state with Elo rating and negotiation history
-
-**agentNegotiations** — round-by-round negotiation records between agents
+**agent_negotiations** — round-by-round negotiation records between agents.
 
 ---
 

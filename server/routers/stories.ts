@@ -78,7 +78,7 @@ export const storiesRouter = router({
     };
     storyData = parseAIJson(response.content, storyData);
     
-    await saveStory({ 
+    const saved = await saveStory({ 
       userId: ctx.user.id, 
       narrative: storyData.narrative, 
       headline: storyData.headline, 
@@ -88,7 +88,18 @@ export const storiesRouter = router({
       aiProvider: response.provider 
     });
 
-    return { ...storyData, carbonSavedKg: carbonSaved, equivalents };
+    return { 
+      id: saved?.id ?? "mock-story-id",
+      userId: ctx.user.id,
+      narrative: storyData.narrative,
+      headline: storyData.headline,
+      carbonSavedKg: carbonSaved,
+      equivalents,
+      period: input.period,
+      shareCount: 0,
+      aiProvider: response.provider,
+      generatedAt: saved?.generatedAt ?? new Date()
+    };
   }),
   list: protectedProcedure.query(async ({ ctx }) => getUserStories(ctx.user.id)),
   share: protectedProcedure.input(z.object({ storyId: z.string() })).mutation(async ({ input }) => { await incrementStoryShares(input.storyId); return { success: true }; }),
