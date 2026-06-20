@@ -6,7 +6,7 @@ import { z } from "zod";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { db } from "../firebase";
 import { getUserById } from "../db";
-import { invokeLLM } from "../_core/llm";
+import { routeAI } from "../services/aiRouter";
 import { ARCHETYPES } from "../../shared/carbonData";
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -78,17 +78,16 @@ Rules:
       ? `Agent A just proposed: ${turns[turns.length - 1]?.message ?? `reducing ${category} emissions by ${proposedKg}kg/week`}. Agent B, respond:`
       : `Agent B responded: ${turns[turns.length - 1]?.message}. Agent A, finalize or counter:`;
 
-  const response = await invokeLLM({
-    model: "llama3-8b-instant",
+  const response = await routeAI({
+    task: "fast_inference",
     messages: [
       { role: "system", content: systemPrompt },
       { role: "user", content: history ? `Conversation so far:\n${history}\n\n${userMessage}` : userMessage },
     ],
-    max_tokens: 120,
-  } as Parameters<typeof invokeLLM>[0]);
+    maxTokens: 120,
+  });
 
-  const rawContent = response.choices[0]?.message?.content ?? "";
-  const content = typeof rawContent === "string" ? rawContent : JSON.stringify(rawContent);
+  const content = response.content;
   const agreedMatch = content.match(/AGREED:\s*(\d+(?:\.\d+)?)\s*kg/i);
 
   return {

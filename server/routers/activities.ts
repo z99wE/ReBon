@@ -8,7 +8,7 @@ import { Buffer } from "buffer";
 
 export const activitiesRouter = router({
   log: protectedProcedure
-    .input(z.object({ category: z.enum(["transport", "meals", "energy", "shopping", "other"]), subcategory: z.string(), label: z.string(), carbonKg: z.number().positive(), quantity: z.number().optional(), unit: z.string().optional(), inputMethod: z.enum(["tap", "voice", "manual"]).default("tap"), voiceTranscript: z.string().optional(), notes: z.string().optional() }))
+    .input(z.object({ category: z.enum(["transport", "meals", "energy", "shopping", "other"]), subcategory: z.string(), label: z.string(), carbonKg: z.number().nonnegative(), quantity: z.number().optional(), unit: z.string().optional(), inputMethod: z.enum(["tap", "voice", "manual"]).default("tap"), voiceTranscript: z.string().optional(), notes: z.string().optional() }))
     .mutation(async ({ ctx, input }) => {
       await logActivity({ ...input, userId: ctx.user.id, loggedAt: new Date() });
       await createFeedItem({ userId: ctx.user.id, type: "activity", title: `Logged: ${input.label}`, body: `${input.carbonKg.toFixed(2)} kg CO₂`, carbonKg: input.carbonKg, isInfluencer: (ctx.user.influenceScore ?? 0) > 100, amplified: false });

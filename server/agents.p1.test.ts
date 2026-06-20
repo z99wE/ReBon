@@ -91,7 +91,7 @@ const dbMocks = vi.hoisted(() => ({
 }));
 
 const aiMocks = vi.hoisted(() => ({
-  invokeLLM: vi.fn(),
+  routeAI: vi.fn(),
 }));
 
 // Mock the firebase-admin modules directly
@@ -115,8 +115,8 @@ vi.mock("./db", () => ({
   getUserById: dbMocks.getUserById,
 }));
 
-vi.mock("./_core/llm", () => ({
-  invokeLLM: aiMocks.invokeLLM,
+vi.mock("./services/aiRouter", () => ({
+  routeAI: aiMocks.routeAI,
 }));
 
 function makeCtx(): TrpcContext {
@@ -216,8 +216,8 @@ describe("server/routers/agents", () => {
       return mockDocs.find(d => d.id === id && d._col === "users");
     });
 
-    aiMocks.invokeLLM.mockResolvedValue({
-      choices: [{ message: { content: "AGREED: 10kg" } }],
+    aiMocks.routeAI.mockResolvedValue({
+      content: "AGREED: 10kg",
     });
 
     const { agentsRouter } = await loadAgentsRouter();
@@ -245,9 +245,9 @@ describe("server/routers/agents", () => {
       return mockDocs.find(d => d.id === id && d._col === "users");
     });
 
-    aiMocks.invokeLLM
-      .mockResolvedValueOnce({ choices: [{ message: { content: "Too ambitious." } }] })
-      .mockResolvedValueOnce({ choices: [{ message: { content: "Still too high." } }] });
+    aiMocks.routeAI
+      .mockResolvedValueOnce({ content: "Too ambitious." })
+      .mockResolvedValueOnce({ content: "Still too high." });
 
     const { agentsRouter } = await loadAgentsRouter();
     const caller = agentsRouter.createCaller(makeCtx());

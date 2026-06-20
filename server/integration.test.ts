@@ -195,7 +195,7 @@ describe("Activity logging — input validation", () => {
     ).rejects.toThrow();
   });
 
-  it("rejects zero carbonKg", async () => {
+  it("allows zero carbonKg", async () => {
     const caller = appRouter.createCaller(makeAuthCtx());
     await expect(
       caller.activities.log({
@@ -204,7 +204,7 @@ describe("Activity logging — input validation", () => {
         carbonKg: 0,
         label: "Beef burger",
       })
-    ).rejects.toThrow();
+    ).resolves.toEqual({ success: true });
   });
 
   it("rejects unauthenticated activity logging", async () => {

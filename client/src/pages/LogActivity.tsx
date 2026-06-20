@@ -145,51 +145,55 @@ export default function LogActivity() {
       ))}
       </section>
 
-      {/* Log Selected Preset — bottom sheet */}
+      {/* Log Selected Preset — centered modal popup */}
       {selectedPreset && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label={`Log ${selectedPreset.label}`}
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 glass-premium border border-[oklch(0.82_0.21_142_/_0.25)] p-5 shadow-2xl w-[calc(100%-2rem)] max-w-sm"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <div className="label-tech mb-1">{selectedPreset.category}</div>
-              <div className="font-black text-white text-base">{selectedPreset.label}</div>
-              <div className="text-[11px] font-mono text-fluoro tabular-nums">{(selectedPreset.carbonKg * quantity).toFixed(2)} kg CO₂</div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Log ${selectedPreset.label}`}
+            className="glass-premium border border-[oklch(0.82_0.21_142_/_0.25)] p-6 shadow-2xl w-full max-w-sm animate-in fade-in zoom-in-95 duration-200"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <div className="label-tech mb-1">{selectedPreset.category}</div>
+                <div className="font-black text-white text-lg">{selectedPreset.label}</div>
+                <div className="text-xs font-mono text-fluoro tabular-nums mt-0.5">{(selectedPreset.carbonKg * quantity).toFixed(2)} kg CO₂</div>
+              </div>
             </div>
-          </div>
-          <div className="flex items-center gap-3 mb-3">
-            <label htmlFor="preset-qty" className="text-xs text-white/50">Qty:</label>
-            <input
-              id="preset-qty"
-              type="number"
-              min={0.1}
-              step={0.1}
-              value={quantity}
-              onChange={e => setQuantity(parseFloat(e.target.value) || 1)}
-              className="w-20 px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-sm text-white"
-            />
-            <span className="text-xs text-white/50">{selectedPreset.unit}</span>
-          </div>
-          <div className="flex gap-2">
-            <button onClick={() => setSelectedPreset(null)} className="flex-1 py-2.5 border border-white/[0.08] text-[10px] font-black tracking-widest uppercase text-bottle hover:text-white transition-colors">Cancel</button>
-            <button
-              onClick={() => logMutation.mutate({
-                category: selectedPreset.category as "transport" | "meals" | "energy" | "shopping" | "other",
-                subcategory: selectedPreset.subcategory,
-                label: selectedPreset.label,
-                carbonKg: selectedPreset.carbonKg * quantity,
-                quantity,
-                unit: selectedPreset.unit,
-                inputMethod: "tap",
-              })}
-              disabled={logMutation.isPending}
-              className="flex-1 btn-primary py-2.5 text-[10px] font-black tracking-widest justify-center"
-            >
-              {logMutation.isPending ? "···" : "Log →"}
-            </button>
+
+            <div className="flex items-center gap-3 mb-5">
+              <label htmlFor="preset-qty" className="text-xs text-white/50">Qty:</label>
+              <input
+                id="preset-qty"
+                type="number"
+                min={0.1}
+                step={0.1}
+                value={quantity}
+                onChange={e => setQuantity(parseFloat(e.target.value) || 1)}
+                className="w-24 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-sm text-white"
+              />
+              <span className="text-xs text-white/50">{selectedPreset.unit}</span>
+            </div>
+
+            <div className="flex gap-3">
+              <button onClick={() => setSelectedPreset(null)} className="flex-1 py-2.5 border border-white/[0.08] text-[10px] font-black tracking-widest uppercase text-bottle hover:text-white transition-colors">Cancel</button>
+              <button
+                onClick={() => logMutation.mutate({
+                  category: selectedPreset.category as "transport" | "meals" | "energy" | "shopping" | "other",
+                  subcategory: selectedPreset.subcategory,
+                  label: selectedPreset.label,
+                  carbonKg: selectedPreset.carbonKg * quantity,
+                  quantity,
+                  unit: selectedPreset.unit,
+                  inputMethod: "tap",
+                })}
+                disabled={logMutation.isPending}
+                className="flex-1 btn-primary py-2.5 text-[10px] font-black tracking-widest justify-center"
+              >
+                {logMutation.isPending ? "···" : "Log →"}
+              </button>
+            </div>
           </div>
         </div>
       )}
