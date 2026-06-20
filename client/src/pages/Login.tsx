@@ -74,7 +74,12 @@ export default function Login() {
       const code = typeof e === "object" && e && "code" in e ? String((e as { code?: unknown }).code) : "";
       console.warn("Popup sign-in failed", e);
 
-      if (code === "auth/popup-blocked" || code === "auth/operation-not-supported-in-this-environment") {
+      if (
+        code === "auth/popup-blocked" ||
+        code === "auth/operation-not-supported-in-this-environment" ||
+        code === "auth/popup-closed-by-user" ||
+        code === "auth/cancelled-popup-request"
+      ) {
         try {
           setLoginStatus("Redirecting to Google...");
           await signInWithRedirect(clientAuth, googleProvider);
